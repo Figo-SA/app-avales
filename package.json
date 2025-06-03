@@ -11,8 +11,10 @@
     "lint": "expo lint"
   },
   "dependencies": {
+    "@backpackapp-io/react-native-toast": "^0.14.0",
     "@expo/vector-icons": "^14.1.0",
     "@hookform/resolvers": "^5.0.1",
+    "@react-native-community/datetimepicker": "8.3.0",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
@@ -20,6 +22,7 @@
     "expo": "~53.0.9",
     "expo-blur": "~14.1.4",
     "expo-constants": "~17.1.6",
+    "expo-document-picker": "~13.1.5",
     "expo-font": "~13.3.1",
     "expo-haptics": "~14.1.4",
     "expo-image": "~2.1.7",

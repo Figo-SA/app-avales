@@ -33,6 +33,8 @@ export const authLogin = async (email: string, password: string) => {
       password,
     });
 
+    console.log("Login successful:", data);
+
     return returnUserToken(data);
   } catch (error) {
     console.error("Error during login:", error);
@@ -45,7 +47,8 @@ export const authCheckStatus = async () => {
     const { data } = await avalesApi.get<AuthResponse>("/auth/check-status");
     return returnUserToken(data);
   } catch (error) {
-    console.error("Error checking auth status:", error);
-    throw new Error("Failed to check authentication status.");
+    console.log("Error checking authentication status:", error);
+    // console.error("Error checking auth status:", error);
+    // throw new Error("Failed to check authentication status.");
   }
 };
