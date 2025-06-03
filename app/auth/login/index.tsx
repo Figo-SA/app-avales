@@ -42,7 +42,7 @@ const LoginScreen = () => {
   const onSubmit = async (data: LoginFormData) => {
     const wasSuccessful = await login(data.email, data.password);
     if (wasSuccessful) {
-      router.replace("/(avales-app)/(home)");
+      router.replace("/(avales-app)/(tabs)");
       return;
     }
   };

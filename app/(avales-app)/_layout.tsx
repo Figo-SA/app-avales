@@ -1,4 +1,3 @@
-import LogoutIconButton from "@/presentation/auth/components/LogoutIconButton";
 import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
 import { Redirect, Stack } from "expo-router";
 import { useEffect } from "react";
@@ -26,10 +25,7 @@ const CheckAuthenticationLayout = () => {
 
   return (
     <Stack>
-      <Stack.Screen
-        name="(home)/index"
-        options={{ title: "Avales", headerLeft: () => <LogoutIconButton /> }}
-      />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );
 };

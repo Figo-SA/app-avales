@@ -6,9 +6,16 @@ interface Props extends TextInputProps {
   icon?: string;
   type?: "text" | "password" | "numeric";
   errorMessage?: string;
+  multiline?: boolean;
 }
 
-const ThemedTextInput = ({ icon, type, errorMessage, ...rest }: Props) => {
+const ThemedTextInput = ({
+  icon,
+  type,
+  errorMessage,
+  multiline,
+  ...rest
+}: Props) => {
   const [showPassword, setShowPassword] = useState(false);
   const theme = useTheme();
   const isPassword = type === "password";
@@ -18,11 +25,13 @@ const ThemedTextInput = ({ icon, type, errorMessage, ...rest }: Props) => {
     <View style={{ marginBottom: 8 }}>
       <TextInput
         {...rest}
-        mode="outlined" // ← Agregar esto
+        mode="outlined"
         error={hasError}
         secureTextEntry={isPassword && !showPassword}
         keyboardType={type === "numeric" ? "numeric" : "default"}
-        textColor={theme.colors.onSurface} // ← Color del texto
+        textColor={theme.colors.onSurface}
+        multiline={multiline}
+        numberOfLines={multiline ? 4 : 1}
         left={icon ? <TextInput.Icon icon={icon} /> : undefined}
         right={
           isPassword ? (
