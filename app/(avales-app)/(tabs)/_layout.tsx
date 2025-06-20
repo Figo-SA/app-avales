@@ -75,7 +75,7 @@ export default function TabLayout() {
             borderTopWidth: 0,
 
             // SOLO cambiar padding en Android
-            // paddingBottom: Platform.OS === "ios" ? 20 : 15, // Más padding en Android
+            paddingBottom: Platform.OS === "ios" ? 20 : 15, // Más padding en Android
 
             // Agregar margin bottom solo en Android
             marginBottom: Platform.OS === "android" ? 10 : 0, // CLAVE: separar del borde
@@ -137,7 +137,7 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen
-          name="settings"
+          name="profile"
           options={{
             title: "Perfil",
             headerTitle: "Mi Perfil",

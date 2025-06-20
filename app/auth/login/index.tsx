@@ -97,7 +97,7 @@ const LoginScreen = () => {
                   autoCapitalize="none"
                   autoComplete="email"
                   textContentType="emailAddress"
-                  icon="email-outline"
+                  icon="mail-outline"
                   value={value}
                   onChangeText={onChange}
                   errorMessage={errors.email?.message}
@@ -117,7 +117,7 @@ const LoginScreen = () => {
                   autoCapitalize="none"
                   autoComplete="password"
                   textContentType="password"
-                  icon="lock-outline"
+                  icon="lock-closed-outline"
                   type="password"
                   value={value}
                   onChangeText={onChange}
@@ -141,7 +141,7 @@ const LoginScreen = () => {
             loading={isSubmitting}
             mode="contained"
             onPress={handleSubmit(onSubmit)}
-            icon={isSubmitting ? undefined : "login"}
+            icon={isSubmitting ? undefined : "log-in-outline"}
             disabled={isSubmitting}
           >
             {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
