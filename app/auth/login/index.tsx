@@ -14,6 +14,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Image,
   useWindowDimensions,
 } from "react-native";
 import { useTheme } from "react-native-paper";
@@ -68,7 +69,16 @@ const LoginScreen = () => {
           <ThemedView style={styles.headerContainer}>
             <ThemedView style={styles.logoContainer}>
               {/* Logo de la aplicación */}
-              <ThemedView style={[{ backgroundColor: theme.colors.primary }]} />
+
+              <Image
+                source={require("@/assets/images/loja.png")}
+                style={{
+                  width: 200,
+                  height: 200,
+                  borderRadius: 20,
+                }}
+                resizeMode="cover"
+              />
             </ThemedView>
 
             <ThemedText
