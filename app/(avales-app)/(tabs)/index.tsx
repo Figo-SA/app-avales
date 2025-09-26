@@ -1,17 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import ListaAvalesScreen from "@/presentation/aval/screens/ListaAvalesScreen";
 
-export default function Tab() {
-  return (
-    <View style={styles.container}>
-      <Text>Tab [Home|Settings]</Text>
-    </View>
-  );
+export default function AvalesTab() {
+  return <ListaAvalesScreen />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
