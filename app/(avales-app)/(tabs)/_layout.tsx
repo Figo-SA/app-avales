@@ -1,7 +1,7 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import { useRef } from "react";
-import { Animated, Platform, TouchableOpacity, View } from "react-native";
+import { Animated, Platform, TouchableOpacity } from "react-native";
 import { useTheme } from "react-native-paper";
 
 export default function TabLayout() {
@@ -24,15 +24,16 @@ export default function TabLayout() {
       }),
     ]).start();
 
-    router.push("/(avales-app)/(tabs)/aval");
+    // Navegar al modal en lugar del tab
+    router.push("/(avales-app)/nuevo-aval");
   };
 
   const FloatingAddButton = () => (
     <Animated.View
       style={{
         position: "absolute",
-        // Ajustar botón flotante según nueva posición del tab
-        bottom: Platform.OS === "ios" ? 25 : 25, // Subir en Android también
+        // Centrar el botón flotante entre los dos tabs
+        bottom: Platform.OS === "ios" ? 25 : 25,
         left: "50%",
         marginLeft: -40, // Centrar correctamente (80/2)
         transform: [{ scale: scaleValue }],
@@ -73,12 +74,7 @@ export default function TabLayout() {
           tabBarStyle: {
             backgroundColor: theme.colors.surface,
             borderTopWidth: 0,
-
-            // SOLO cambiar padding en Android
-            paddingBottom: Platform.OS === "ios" ? 20 : 15, // Más padding en Android
-
-            // Agregar margin bottom solo en Android
-            marginBottom: Platform.OS === "android" ? 10 : 0, // CLAVE: separar del borde
+            paddingBottom: Platform.OS === "ios" ? 20 : 15,
             elevation: 12,
             shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: -4 },
@@ -114,23 +110,6 @@ export default function TabLayout() {
                 size={focused ? 28 : 24}
                 name="description"
                 color={color}
-              />
-            ),
-          }}
-        />
-
-        <Tabs.Screen
-          name="aval"
-          options={{
-            title: "",
-            headerTitle: "Nuevo Aval",
-            tabBarButton: () => (
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
               />
             ),
           }}

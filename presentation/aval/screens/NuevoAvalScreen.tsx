@@ -11,7 +11,7 @@ import React, { useState } from "react";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { ProgressBar, Text, useTheme } from "react-native-paper";
 
-export default function NuevaSolicitudAval() {
+export default function NuevoAvalScreen() {
   const theme = useTheme();
   const router = useRouter();
   const [pasoActual, setPasoActual] = useState(1);
@@ -150,7 +150,7 @@ export default function NuevaSolicitudAval() {
     }
   };
 
-  // Estilos dinámicos que dependen del tem
+  // Estilos dinámicos que dependen del tema
   const dynamicStyles = {
     controls: {
       borderTopColor: theme.colors.outlineVariant || "rgba(0, 0, 0, 0.12)",
