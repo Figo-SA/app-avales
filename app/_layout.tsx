@@ -89,10 +89,13 @@ export default function RootLayout() {
       >
         <GestureHandlerRootView style={{ flex: 1 }}>
           <StatusBar
-            barStyle="dark-content" // Iconos oscuros
-            backgroundColor="#000" // Fondo negro (Android)
+            barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
+            backgroundColor={
+              colorScheme === "dark"
+                ? customDarkTheme.colors.background
+                : customLightTheme.colors.background
+            }
           />
-
           <Stack screenOptions={{ headerShown: false }} />
           <Toasts />
         </GestureHandlerRootView>

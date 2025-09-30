@@ -4,7 +4,7 @@ import { Text, TextInput, TextInputProps, useTheme } from "react-native-paper";
 
 interface Props extends TextInputProps {
   icon?: string;
-  type?: "text" | "password" | "numeric";
+  type?: "text" | "password" | "numeric" | "email";
   errorMessage?: string;
   multiline?: boolean;
 }
@@ -28,10 +28,18 @@ const ThemedTextInput = ({
         mode="outlined"
         error={hasError}
         secureTextEntry={isPassword && !showPassword}
-        keyboardType={type === "numeric" ? "numeric" : "default"}
+        keyboardType={
+          type === "numeric"
+            ? "numeric"
+            : type === "email"
+            ? "email-address"
+            : "default"
+        }
         textColor={theme.colors.onSurface}
         multiline={multiline}
         numberOfLines={multiline ? 4 : 1}
+        autoCapitalize={type === "email" ? "none" : "sentences"}
+        autoCorrect={type === "email" ? false : true}
         left={icon ? <TextInput.Icon icon={icon} /> : undefined}
         right={
           isPassword ? (

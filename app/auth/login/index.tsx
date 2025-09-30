@@ -97,6 +97,7 @@ const LoginScreen = () => {
                   autoCapitalize="none"
                   autoComplete="email"
                   textContentType="emailAddress"
+                  type="email"
                   icon="mail-outline"
                   value={value}
                   onChangeText={onChange}
