@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
 import { ThemeButton } from "@/presentation/theme/components/ThemedButton";
+import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
@@ -152,224 +153,226 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
-      {/* Header con información del usuario */}
-      <Surface
-        style={[styles.headerCard, { backgroundColor: theme.colors.surface }]}
-        elevation={3}
-      >
-        <View style={styles.headerContent}>
-          <Avatar.Text
-            size={80}
-            label={getInitials(user?.nombre || "", user?.apellido || "")}
-            style={{ backgroundColor: theme.colors.primary }}
-            labelStyle={{
-              color: theme.colors.onPrimary,
-              fontSize: 28,
-              fontWeight: "bold",
-            }}
-          />
-          <View style={styles.userInfo}>
-            <Text
-              variant="headlineSmall"
-              style={[styles.userName, { color: theme.colors.onSurface }]}
-            >
-              {user?.nombre} {user?.apellido}
-            </Text>
-            <Text
-              variant="bodyMedium"
-              style={{ color: theme.colors.onSurfaceVariant }}
-            >
-              {user?.email}
-            </Text>
-            <Text
-              variant="bodySmall"
-              style={{ color: theme.colors.onSurfaceVariant }}
-            >
-              C.I: {user?.cedula}
-            </Text>
-            <View style={styles.rolesContainer}>
-              {user?.roles?.map((role, index) => (
-                <Surface
-                  key={index}
-                  style={[
-                    styles.roleChip,
-                    { backgroundColor: theme.colors.secondaryContainer },
-                  ]}
-                  elevation={1}
-                >
-                  <Text
-                    variant="labelSmall"
-                    style={{ color: theme.colors.onSecondaryContainer }}
+      <ThemedView>
+        {/* Header con información del usuario */}
+        <Surface
+          style={[styles.headerCard, { backgroundColor: theme.colors.surface }]}
+          elevation={3}
+        >
+          <View style={styles.headerContent}>
+            <Avatar.Text
+              size={80}
+              label={getInitials(user?.nombre || "", user?.apellido || "")}
+              style={{ backgroundColor: theme.colors.primary }}
+              labelStyle={{
+                color: theme.colors.onPrimary,
+                fontSize: 28,
+                fontWeight: "bold",
+              }}
+            />
+            <View style={styles.userInfo}>
+              <Text
+                variant="headlineSmall"
+                style={[styles.userName, { color: theme.colors.onSurface }]}
+              >
+                {user?.nombre} {user?.apellido}
+              </Text>
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                {user?.email}
+              </Text>
+              <Text
+                variant="bodySmall"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                C.I: {user?.cedula}
+              </Text>
+              <View style={styles.rolesContainer}>
+                {user?.roles?.map((role, index) => (
+                  <Surface
+                    key={index}
+                    style={[
+                      styles.roleChip,
+                      { backgroundColor: theme.colors.secondaryContainer },
+                    ]}
+                    elevation={1}
                   >
-                    {role}
-                  </Text>
-                </Surface>
-              ))}
+                    <Text
+                      variant="labelSmall"
+                      style={{ color: theme.colors.onSecondaryContainer }}
+                    >
+                      {role}
+                    </Text>
+                  </Surface>
+                ))}
+              </View>
             </View>
+            <ThemeButton
+              mode="outlined"
+              compact
+              icon="create-outline"
+              onPress={handleEditProfile}
+              style={styles.editButton}
+            >
+              Editar
+            </ThemeButton>
           </View>
-          <ThemeButton
-            mode="outlined"
-            compact
-            icon="create-outline"
-            onPress={handleEditProfile}
-            style={styles.editButton}
+        </Surface>
+
+        {/* Estadísticas */}
+        <View style={styles.statsSection}>
+          <Text
+            variant="titleMedium"
+            style={[styles.sectionTitle, { color: theme.colors.onBackground }]}
           >
-            Editar
+            Mis Estadísticas
+          </Text>
+          <View style={styles.statsGrid}>
+            <StatCard
+              title="Total Avales"
+              value={stats.totalAvales}
+              icon="document-text"
+              color={theme.colors.primary}
+            />
+            <StatCard
+              title="Pendientes"
+              value={stats.pendientes}
+              icon="time"
+              color={theme.colors.secondary}
+            />
+            <StatCard
+              title="Aprobados"
+              value={stats.aprobados}
+              icon="checkmark-circle"
+              color="#4CAF50"
+            />
+            <StatCard
+              title="Rechazados"
+              value={stats.rechazados}
+              icon="close-circle"
+              color="#F44336"
+            />
+          </View>
+        </View>
+
+        {/* Configuración de Cuenta */}
+        <View style={styles.section}>
+          <Text
+            variant="titleMedium"
+            style={[styles.sectionTitle, { color: theme.colors.onBackground }]}
+          >
+            Configuración de Cuenta
+          </Text>
+          <Surface
+            style={[
+              styles.menuContainer,
+              { backgroundColor: theme.colors.surface },
+            ]}
+            elevation={1}
+          >
+            <MenuOption
+              title="Cambiar Contraseña"
+              subtitle="Actualiza tu contraseña de acceso"
+              icon="lock-closed"
+              onPress={handleChangePassword}
+            />
+            <MenuOption
+              title="Notificaciones"
+              subtitle="Recibe alertas sobre tus avales"
+              icon="notifications"
+              onPress={() => setNotificationsEnabled(!notificationsEnabled)}
+              rightElement={
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={setNotificationsEnabled}
+                  thumbColor={
+                    notificationsEnabled
+                      ? theme.colors.outlineVariant
+                      : theme.colors.outline
+                  }
+                  trackColor={{
+                    false: theme.colors.outline + "50",
+                    true: theme.colors.primary + "50",
+                  }}
+                />
+              }
+            />
+            <MenuOption
+              title="Tema Oscuro"
+              subtitle="Cambiar apariencia de la aplicación"
+              icon="moon"
+              onPress={() => setDarkModeEnabled(!darkModeEnabled)}
+              rightElement={
+                <Switch
+                  value={darkModeEnabled}
+                  onValueChange={setDarkModeEnabled}
+                  thumbColor={
+                    darkModeEnabled
+                      ? theme.colors.outlineVariant
+                      : theme.colors.outline
+                  }
+                  trackColor={{
+                    false: theme.colors.outline + "50",
+                    true: theme.colors.primary + "50",
+                  }}
+                />
+              }
+            />
+          </Surface>
+        </View>
+
+        {/* Ayuda y Soporte */}
+        <View style={styles.section}>
+          <Text
+            variant="titleMedium"
+            style={[styles.sectionTitle, { color: theme.colors.onBackground }]}
+          >
+            Ayuda y Soporte
+          </Text>
+          <Surface
+            style={[
+              styles.menuContainer,
+              { backgroundColor: theme.colors.surface },
+            ]}
+            elevation={1}
+          >
+            <MenuOption
+              title="Centro de Ayuda"
+              subtitle="Encuentra respuestas a tus preguntas"
+              icon="help-circle"
+              onPress={handleSupport}
+            />
+            <MenuOption
+              title="Contactar Soporte"
+              subtitle="Obtén ayuda personalizada"
+              icon="chatbubble-ellipses"
+              onPress={handleSupport}
+            />
+            <MenuOption
+              title="Acerca de"
+              subtitle="Información de la aplicación"
+              icon="information-circle"
+              onPress={handleAbout}
+            />
+          </Surface>
+        </View>
+
+        {/* Botón de Cerrar Sesión */}
+        <View style={styles.logoutSection}>
+          <ThemeButton
+            mode="contained"
+            icon="log-out"
+            onPress={handleLogout}
+            buttonColor={theme.colors.error}
+            textColor={theme.colors.onError}
+            style={styles.logoutButton}
+          >
+            Cerrar Sesión
           </ThemeButton>
         </View>
-      </Surface>
-
-      {/* Estadísticas */}
-      <View style={styles.statsSection}>
-        <Text
-          variant="titleMedium"
-          style={[styles.sectionTitle, { color: theme.colors.onBackground }]}
-        >
-          Mis Estadísticas
-        </Text>
-        <View style={styles.statsGrid}>
-          <StatCard
-            title="Total Avales"
-            value={stats.totalAvales}
-            icon="document-text"
-            color={theme.colors.primary}
-          />
-          <StatCard
-            title="Pendientes"
-            value={stats.pendientes}
-            icon="time"
-            color={theme.colors.secondary}
-          />
-          <StatCard
-            title="Aprobados"
-            value={stats.aprobados}
-            icon="checkmark-circle"
-            color="#4CAF50"
-          />
-          <StatCard
-            title="Rechazados"
-            value={stats.rechazados}
-            icon="close-circle"
-            color="#F44336"
-          />
-        </View>
-      </View>
-
-      {/* Configuración de Cuenta */}
-      <View style={styles.section}>
-        <Text
-          variant="titleMedium"
-          style={[styles.sectionTitle, { color: theme.colors.onBackground }]}
-        >
-          Configuración de Cuenta
-        </Text>
-        <Surface
-          style={[
-            styles.menuContainer,
-            { backgroundColor: theme.colors.surface },
-          ]}
-          elevation={1}
-        >
-          <MenuOption
-            title="Cambiar Contraseña"
-            subtitle="Actualiza tu contraseña de acceso"
-            icon="lock-closed"
-            onPress={handleChangePassword}
-          />
-          <MenuOption
-            title="Notificaciones"
-            subtitle="Recibe alertas sobre tus avales"
-            icon="notifications"
-            onPress={() => setNotificationsEnabled(!notificationsEnabled)}
-            rightElement={
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                thumbColor={
-                  notificationsEnabled
-                    ? theme.colors.outlineVariant
-                    : theme.colors.outline
-                }
-                trackColor={{
-                  false: theme.colors.outline + "50",
-                  true: theme.colors.primary + "50",
-                }}
-              />
-            }
-          />
-          <MenuOption
-            title="Tema Oscuro"
-            subtitle="Cambiar apariencia de la aplicación"
-            icon="moon"
-            onPress={() => setDarkModeEnabled(!darkModeEnabled)}
-            rightElement={
-              <Switch
-                value={darkModeEnabled}
-                onValueChange={setDarkModeEnabled}
-                thumbColor={
-                  darkModeEnabled
-                    ? theme.colors.outlineVariant
-                    : theme.colors.outline
-                }
-                trackColor={{
-                  false: theme.colors.outline + "50",
-                  true: theme.colors.primary + "50",
-                }}
-              />
-            }
-          />
-        </Surface>
-      </View>
-
-      {/* Ayuda y Soporte */}
-      <View style={styles.section}>
-        <Text
-          variant="titleMedium"
-          style={[styles.sectionTitle, { color: theme.colors.onBackground }]}
-        >
-          Ayuda y Soporte
-        </Text>
-        <Surface
-          style={[
-            styles.menuContainer,
-            { backgroundColor: theme.colors.surface },
-          ]}
-          elevation={1}
-        >
-          <MenuOption
-            title="Centro de Ayuda"
-            subtitle="Encuentra respuestas a tus preguntas"
-            icon="help-circle"
-            onPress={handleSupport}
-          />
-          <MenuOption
-            title="Contactar Soporte"
-            subtitle="Obtén ayuda personalizada"
-            icon="chatbubble-ellipses"
-            onPress={handleSupport}
-          />
-          <MenuOption
-            title="Acerca de"
-            subtitle="Información de la aplicación"
-            icon="information-circle"
-            onPress={handleAbout}
-          />
-        </Surface>
-      </View>
-
-      {/* Botón de Cerrar Sesión */}
-      <View style={styles.logoutSection}>
-        <ThemeButton
-          mode="contained"
-          icon="log-out"
-          onPress={handleLogout}
-          buttonColor={theme.colors.error}
-          textColor={theme.colors.onError}
-          style={styles.logoutButton}
-        >
-          Cerrar Sesión
-        </ThemeButton>
-      </View>
+      </ThemedView>
     </ScrollView>
   );
 }

@@ -23,7 +23,6 @@ export function ThemedView({
   let backgroundColor: string | undefined;
 
   if (backgroundVariant === "elevation") {
-    // Verifica si elevation existe y usa el nivel especificado, con fallback a background
     backgroundColor =
       theme.colors.elevation && elevationLevel in theme.colors.elevation
         ? theme.colors.elevation[elevationLevel]

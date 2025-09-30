@@ -1,5 +1,5 @@
 // React y React Native
-import { useColorScheme } from "react-native"; // Hook nativo
+import { StatusBar, useColorScheme } from "react-native"; // Hook nativo
 
 // Navegación
 import { Stack } from "expo-router";
@@ -17,7 +17,16 @@ import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { Toasts } from "@backpackapp-io/react-native-toast";
 import { useMaterial3Theme } from "@pchmn/expo-material3-theme";
 // Constantes del proyecto
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Colors } from "../constants/Colors";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -41,46 +50,53 @@ export default function RootLayout() {
   const paperTheme =
     colorScheme === "dark" ? customDarkTheme : customLightTheme;
   return (
-    <PaperProvider
-      theme={paperTheme}
-      settings={{
-        icon: ({ name, size, color }) => {
-          // Detectar familia por prefijo: "ion:", "mc:", "fe:"
-          if (name?.startsWith("ion:")) {
-            return (
-              <Ionicons
-                name={name.replace("ion:", "") as any}
-                size={size}
-                color={color}
-              />
-            );
-          } else if (name?.startsWith("fa:")) {
-            return (
-              <FontAwesome5
-                name={name.replace("fa:", "") as any}
-                size={size}
-                color={color}
-              />
-            );
-          } else if (name?.startsWith("fe:")) {
-            return (
-              <Feather
-                name={name.replace("fe:", "") as any}
-                size={size}
-                color={color}
-              />
-            );
-          }
+    <QueryClientProvider client={queryClient}>
+      <PaperProvider
+        theme={paperTheme}
+        settings={{
+          icon: ({ name, size, color }) => {
+            // Detectar familia por prefijo: "ion:", "mc:", "fe:"
+            if (name?.startsWith("ion:")) {
+              return (
+                <Ionicons
+                  name={name.replace("ion:", "") as any}
+                  size={size}
+                  color={color}
+                />
+              );
+            } else if (name?.startsWith("fa:")) {
+              return (
+                <FontAwesome5
+                  name={name.replace("fa:", "") as any}
+                  size={size}
+                  color={color}
+                />
+              );
+            } else if (name?.startsWith("fe:")) {
+              return (
+                <Feather
+                  name={name.replace("fe:", "") as any}
+                  size={size}
+                  color={color}
+                />
+              );
+            }
 
-          // Por defecto, usa Ionicons
-          return <Ionicons name={name as any} size={size} color={color} />;
-        },
-      }}
-    >
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack screenOptions={{ headerShown: false }} />
-        <Toasts />
-      </GestureHandlerRootView>
-    </PaperProvider>
+            // Por defecto, usa Ionicons
+            return <Ionicons name={name as any} size={size} color={color} />;
+          },
+        }}
+      >
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <StatusBar
+            barStyle="dark-content" // Iconos oscuros
+            backgroundColor="#000" // Fondo negro (Android)
+          />
+
+          <Stack screenOptions={{ headerShown: false }} />
+          <Toasts />
+        </GestureHandlerRootView>
+      </PaperProvider>
+    </QueryClientProvider>
   );
 }
