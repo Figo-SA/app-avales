@@ -1,7 +1,9 @@
-import { AvalCard } from "@/presentation/aval/components/AvalCard";
+import { AvalFilters } from "@/presentation/aval/components/AvalFilters";
+import { AvalList } from "@/presentation/aval/components/AvalList";
+import { useAvalFilters } from "@/presentation/aval/hooks/useAvalFilters";
 import { useAvales } from "@/presentation/aval/hooks/useAvales";
 import React from "react";
-import { FlatList, View } from "react-native";
+import { View } from "react-native";
 import { useTheme } from "react-native-paper";
 
 export default function AvalesTab() {
@@ -9,17 +11,24 @@ export default function AvalesTab() {
   const theme = useTheme();
 
   const avales = avalesQuery.data?.pages.flat() || [];
+  const { selectedStatus, setSelectedStatus, counts, filteredAvales } =
+    useAvalFilters(avales);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <FlatList
-        data={avales}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <AvalCard aval={item} />}
-        onEndReached={() => loadNextPage()}
-        onEndReachedThreshold={0.5}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 16 }}
+      <AvalFilters
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+        counts={counts}
+      />
+
+      <AvalList
+        avales={filteredAvales}
+        onEndReached={() => {
+          if (selectedStatus === "all") {
+            loadNextPage();
+          }
+        }}
       />
     </View>
   );
