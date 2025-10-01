@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: "bold",
     marginBottom: 4,
-    fontSize: 18, // Título más grande
+    fontSize: 18,
   },
   amount: {
     fontWeight: "600",
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   date: {
-    marginTop: 4, // Espacio debajo del chip
+    marginTop: 4,
     fontSize: 11,
   },
   description: {
