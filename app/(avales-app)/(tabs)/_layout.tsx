@@ -38,6 +38,20 @@ export default function TabLayout() {
             ),
           }}
         />
+        <Tabs.Screen
+          name="event"
+          options={{
+            title: "Eventos",
+            headerTitle: "Eventos",
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                size={focused ? 26 : 22}
+                name="calendar"
+                color={color}
+              />
+            ),
+          }}
+        />
 
         <Tabs.Screen
           name="profile"

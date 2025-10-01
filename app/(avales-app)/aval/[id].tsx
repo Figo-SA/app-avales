@@ -2,7 +2,7 @@ import { AvalDetail } from "@/presentation/aval/components/AvalDetail";
 import { useAval } from "@/presentation/aval/hooks/useAval";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import { Stack, useLocalSearchParams } from "expo-router";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { View } from "react-native";
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 
@@ -62,7 +62,7 @@ export default function AvalDetailScreen() {
     <>
       <Stack.Screen
         options={{
-          title: avalQuery.data.title, // Ahora sí tiene los datos
+          title: avalQuery.data.title,
           headerStyle: {
             backgroundColor: theme.colors.primary,
           },
