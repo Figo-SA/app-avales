@@ -356,7 +356,7 @@ export const avales: Aval[] = [
     id: "40",
     title: "Producto NN",
     description: "Desc NN",
-    status: "pending",
+    status: "sent",
     amount: 1334,
     createdAt: new Date(),
     updatedAt: new Date(),
