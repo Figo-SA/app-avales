@@ -18,7 +18,6 @@ export default function ProfileScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
-  // Mock data para estadísticas
   const stats = {
     totalAvales: 12,
     pendientes: 3,
@@ -42,12 +41,10 @@ export default function ProfileScreen() {
   };
 
   const handleEditProfile = () => {
-    // TODO: Navegar a pantalla de edición de perfil
     Alert.alert("Próximamente", "Funcionalidad de edición en desarrollo");
   };
 
   const handleChangePassword = () => {
-    // TODO: Navegar a pantalla de cambio de contraseña
     Alert.alert(
       "Próximamente",
       "Funcionalidad de cambio de contraseña en desarrollo"
@@ -68,7 +65,6 @@ export default function ProfileScreen() {
     );
   };
 
-  // Generar iniciales del usuario
   const getInitials = (nombre: string, apellido: string) => {
     return `${nombre?.[0] || ""}${apellido?.[0] || ""}`.toUpperCase();
   };
@@ -382,7 +378,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100, // Espacio para tab bar
+    paddingBottom: 100,
   },
   headerCard: {
     margin: 16,
