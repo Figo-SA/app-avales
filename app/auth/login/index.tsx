@@ -8,6 +8,7 @@ import ThemedTextInput from "@/presentation/theme/components/ThemedTextInput";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
+import { useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   KeyboardAvoidingView,
@@ -16,6 +17,7 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from "react-native";
+import { TextInput } from "react-native-gesture-handler";
 import { useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
@@ -26,6 +28,8 @@ const LoginScreen = () => {
   const { height } = useWindowDimensions();
   const theme = useTheme();
   const { login } = useAuthStore();
+
+  const passwordRef = useRef<TextInput>(null);
 
   const {
     control,
@@ -54,7 +58,6 @@ const LoginScreen = () => {
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
       >
         <ScrollView
           contentContainerStyle={[
@@ -103,6 +106,8 @@ const LoginScreen = () => {
                   onChangeText={onChange}
                   errorMessage={errors.email?.message}
                   returnKeyType="next"
+                  onSubmitEditing={() => passwordRef.current?.focus()}
+                  blurOnSubmit={false}
                 />
               )}
             />
@@ -125,6 +130,8 @@ const LoginScreen = () => {
                   errorMessage={errors.password?.message}
                   returnKeyType="done"
                   onSubmitEditing={handleSubmit(onSubmit)}
+                  ref={passwordRef}
+                  blurOnSubmit={false}
                 />
               )}
             />
