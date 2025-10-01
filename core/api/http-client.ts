@@ -1,5 +1,6 @@
 import { SecureStorageAdapter } from "@/helpers/adapters/secure-storage.adapter";
 import axios from "axios";
+import { logger } from "../logger";
 import { API_CONFIG } from "./api.config";
 
 export const httpClient = axios.create({
@@ -21,7 +22,7 @@ httpClient.interceptors.request.use(
 httpClient.interceptors.response.use(
   (res) => res,
   (err) => {
-    console.error("API Error:", err.response?.data || err.message);
+    logger.error("API Error:", err.response?.data || err.message);
     return Promise.reject(err);
   }
 );

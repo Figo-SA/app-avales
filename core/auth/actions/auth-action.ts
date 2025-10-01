@@ -1,5 +1,7 @@
 import { httpClient } from "@/core/api/http-client";
 import { logger } from "@/core/logger";
+
+import { toast } from "@backpackapp-io/react-native-toast";
 import { User } from "../interface/user";
 
 export interface AuthResponse {
@@ -35,8 +37,17 @@ export const authLogin = async (email: string, password: string) => {
     });
 
     return returnUserToken(data);
-  } catch (error) {
-    throw new Error("Login failed. Please check your credentials.");
+  } catch (error: any) {
+    logger.error("Login failed", error);
+
+    const errorMessage =
+      error?.response?.data?.err ||
+      error?.response?.data?.message ||
+      "Error de conexión. Intenta nuevamente.";
+
+    toast.error(errorMessage);
+
+    throw new Error(errorMessage);
   }
 };
 
@@ -46,6 +57,7 @@ export const authCheckStatus = async () => {
     logger.info("Check status successful", data);
     return returnUserToken(data);
   } catch (error: any) {
+    logger.info("Check status failed - user not authenticated");
     return null;
   }
 };

@@ -49,6 +49,7 @@ export default function RootLayout() {
   };
   const paperTheme =
     colorScheme === "dark" ? customDarkTheme : customLightTheme;
+
   return (
     <QueryClientProvider client={queryClient}>
       <PaperProvider
@@ -82,12 +83,12 @@ export default function RootLayout() {
               );
             }
 
-            // Por defecto, usa Ionicons
             return <Ionicons name={name as any} size={size} color={color} />;
           },
         }}
       >
         <GestureHandlerRootView style={{ flex: 1 }}>
+          <Toasts />
           <StatusBar
             barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
             backgroundColor={
