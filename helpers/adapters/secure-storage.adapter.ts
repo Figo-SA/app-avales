@@ -1,3 +1,4 @@
+import { logger } from "@/core/logger";
 import * as SecureStore from "expo-secure-store";
 
 export class SecureStorageAdapter {
@@ -5,7 +6,7 @@ export class SecureStorageAdapter {
     try {
       await SecureStore.setItemAsync(key, value);
     } catch (error) {
-      console.error(`Error setting item in secure storagee: ${error}`);
+      logger.error(`Error setting item in secure storagee: ${error}`);
       throw error;
     }
   }
@@ -14,7 +15,7 @@ export class SecureStorageAdapter {
       const value = await SecureStore.getItemAsync(key);
       return value;
     } catch (error) {
-      console.error(`Error getting item from secure storage: ${error}`);
+      logger.error(`Error getting item from secure storage: ${error}`);
       throw error;
     }
   }
@@ -22,7 +23,7 @@ export class SecureStorageAdapter {
     try {
       await SecureStore.deleteItemAsync(key);
     } catch (error) {
-      console.error(`Error removing item from secure storage: ${error}`);
+      logger.error(`Error removing item from secure storage: ${error}`);
       throw error;
     }
   }

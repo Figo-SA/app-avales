@@ -1,4 +1,5 @@
 import { registerSchema } from "@/core/auth/schemas/registerSchema";
+import { logger } from "@/core/logger";
 import { ThemeButton } from "@/presentation/theme/components/ThemedButton";
 
 import ThemedLink from "@/presentation/theme/components/ThemedLink";
@@ -46,7 +47,7 @@ const RegisterScreen = () => {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    console.log("Datos del registro:", data);
+    logger.info("Datos del registro:", data);
     // Aquí integrarías con tu store de auth
     // await authStore.register(data);
   };

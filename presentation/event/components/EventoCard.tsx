@@ -1,9 +1,10 @@
 import { Evento } from "@/core/eventos/interfaces/evento";
+import { logger } from "@/core/logger";
 import { ThemedText } from "@/presentation/theme/components/ThemedText";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { useTheme } from "react-native-paper";
+import { Icon, useTheme } from "react-native-paper";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -19,7 +20,7 @@ export const EventoCard = ({ evento }: { evento: Evento }) => {
 
   const handlePress = () => {
     // Navegar a detalle del evento - por ahora solo log
-    console.log("Ver detalle del evento:", evento.codigoItem);
+    logger.info("Ver detalle del evento:", evento.codigoItem);
   };
 
   const totalAtletas =
@@ -44,35 +45,39 @@ export const EventoCard = ({ evento }: { evento: Evento }) => {
         </View>
 
         <View style={styles.content}>
-          <View style={styles.infoRow}>
-            <View style={styles.sportContainer}>
-              <ThemedText style={styles.sportText}>{evento.deporte}</ThemedText>
-            </View>
-            <View style={styles.locationContainer}>
-              <ThemedText style={styles.locationText}>
-                📍 {evento.provincia}
-              </ThemedText>
-            </View>
+          <View style={styles.mainInfo}>
+            <ThemedText style={styles.sportText}>{evento.deporte}</ThemedText>
+            <ThemedText style={styles.dividerText}>•</ThemedText>
+            <ThemedText style={styles.locationText}>
+              {evento.provincia}
+            </ThemedText>
+            <ThemedText style={styles.dividerText}>•</ThemedText>
+            <ThemedText style={styles.alcanceText}>{evento.alcance}</ThemedText>
           </View>
 
-          <View style={styles.dateContainer}>
-            <ThemedText style={styles.dateLabel}>📅</ThemedText>
-            <ThemedText style={styles.dateText}>
-              {formatDate(evento.fechaInicio)} - {formatDate(evento.fechaFin)}
-            </ThemedText>
-          </View>
+          <ThemedText style={styles.dateText}>
+            {formatDate(evento.fechaInicio)} - {formatDate(evento.fechaFin)}
+          </ThemedText>
 
           <View style={styles.separator} />
 
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <ThemedText style={styles.statIcon}>👥</ThemedText>
+              <Icon
+                source="ion:people-outline"
+                size={16}
+                color={theme.colors.primary}
+              />
               <ThemedText style={styles.statText}>{totalAtletas}</ThemedText>
               <ThemedText style={styles.statLabel}>atletas</ThemedText>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <ThemedText style={styles.statIcon}>🏃‍♂️</ThemedText>
+              <Icon
+                source="fa:user-tie"
+                size={14}
+                color={theme.colors.primary}
+              />
               <ThemedText style={styles.statText}>
                 {totalEntrenadores}
               </ThemedText>
@@ -99,11 +104,9 @@ const createStyles = (theme: any) =>
         width: 0,
         height: 2,
       },
-      shadowOpacity: 0.1,
+      shadowOpacity: 0.2,
       shadowRadius: 4,
       elevation: 3,
-      borderWidth: 0.5,
-      borderColor: theme.colors.outline,
     },
     header: {
       flexDirection: "row",
@@ -132,41 +135,39 @@ const createStyles = (theme: any) =>
       textTransform: "uppercase",
     },
     content: {
-      gap: 8,
+      gap: 10,
     },
-    infoRow: {
+    mainInfo: {
       flexDirection: "row",
-      justifyContent: "space-between",
       alignItems: "center",
-    },
-    sportContainer: {
-      flex: 1,
+      flexWrap: "wrap",
     },
     sportText: {
       fontSize: 14,
       color: theme.colors.onSurface,
       fontWeight: "600",
     },
-    locationContainer: {
-      alignItems: "flex-end",
+    dividerText: {
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      marginHorizontal: 6,
     },
     locationText: {
-      fontSize: 12,
+      fontSize: 13,
       color: theme.colors.onSurfaceVariant,
       fontWeight: "500",
     },
-    dateContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-    },
-    dateLabel: {
+    alcanceText: {
       fontSize: 12,
+      color: theme.colors.secondary,
+      fontWeight: "600",
+      textTransform: "capitalize",
     },
     dateText: {
       fontSize: 12,
       color: theme.colors.onSurfaceVariant,
       fontWeight: "500",
+      fontStyle: "italic",
     },
     separator: {
       height: 1,
@@ -192,9 +193,7 @@ const createStyles = (theme: any) =>
       backgroundColor: theme.colors.outline,
       opacity: 0.3,
     },
-    statIcon: {
-      fontSize: 14,
-    },
+
     statText: {
       fontSize: 14,
       color: theme.colors.onSurface,

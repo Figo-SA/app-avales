@@ -18,7 +18,9 @@ import { Toasts } from "@backpackapp-io/react-native-toast";
 import { useMaterial3Theme } from "@pchmn/expo-material3-theme";
 // Constantes del proyecto
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Colors } from "../constants/Colors";
+import { useThemeStore } from "../presentation/theme/store/useThemeStore";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,8 +31,24 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const systemColorScheme = useColorScheme();
   const { theme } = useMaterial3Theme();
+  const { themeMode, isDarkMode, setIsDarkMode, loadThemeFromStorage } =
+    useThemeStore();
+
+  // Load theme preference on app start
+  useEffect(() => {
+    loadThemeFromStorage();
+  }, [loadThemeFromStorage]);
+
+  // Update theme based on user preference and system theme
+  useEffect(() => {
+    if (themeMode === "system") {
+      setIsDarkMode(systemColorScheme === "dark");
+    } else {
+      setIsDarkMode(themeMode === "dark");
+    }
+  }, [themeMode, systemColorScheme, setIsDarkMode]);
 
   const customDarkTheme = {
     ...MD3DarkTheme,
@@ -47,8 +65,7 @@ export default function RootLayout() {
       ...Colors.light,
     },
   };
-  const paperTheme =
-    colorScheme === "dark" ? customDarkTheme : customLightTheme;
+  const paperTheme = isDarkMode ? customDarkTheme : customLightTheme;
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -90,9 +107,9 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Toasts />
           <StatusBar
-            barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
+            barStyle={isDarkMode ? "light-content" : "dark-content"}
             backgroundColor={
-              colorScheme === "dark"
+              isDarkMode
                 ? customDarkTheme.colors.background
                 : customLightTheme.colors.background
             }

@@ -1,9 +1,13 @@
 export const Colors = {
   light: {
     primary: "#004679",
+    primaryContainer: "#E0F2FF",
     secondary: "#0066CC",
     background: "#FFFFFF",
-    surface: "#FFFFFF",
+    // Surface gris para las cards
+    surface: "#F5F5F7",
+    surfaceVariant: "#E8E8EA",
+
     customBrand: "#004679",
     accent: "#0099FF",
     tertiary: "#66A3D2",
@@ -14,12 +18,17 @@ export const Colors = {
     warning: "#FF9800",
     error: "#F44336",
     info: "#004679",
+    onSurfaceVariant: "#605E5C",
   },
   dark: {
     primary: "#4A9EE7",
+    primaryContainer: "#1E3A5F",
     secondary: "#7BB3F0",
     background: "#0A0F1C",
-    surface: "#1A2332",
+    // Surface gris oscuro para las cards
+    surface: "#1C1C1E",
+    surfaceVariant: "#2C2C2E",
+
     customBrand: "#4A9EE7",
     accent: "#60A5FA",
     tertiary: "#8BB5F8",
@@ -31,5 +40,6 @@ export const Colors = {
     warning: "#F59E0B",
     error: "#EF4444",
     info: "#4A9EE7",
+    onSurfaceVariant: "#C4C6C8",
   },
 };
