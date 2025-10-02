@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "app-avales",
+    "name": "Avales app",
     "slug": "app-avales",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,14 +9,19 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.chavi12.appavales",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.chavi12.appavales"
     },
     "web": {
       "bundler": "metro",
@@ -40,6 +45,18 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/36c6f0e2-ee0c-40c4-8287-be0272a32347"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "36c6f0e2-ee0c-40c4-8287-be0272a32347"
+      }
     }
   }
 }

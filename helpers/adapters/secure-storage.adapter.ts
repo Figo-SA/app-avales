@@ -5,7 +5,7 @@ export class SecureStorageAdapter {
     try {
       await SecureStore.setItemAsync(key, value);
     } catch (error) {
-      console.error(`Error setting item in secure storage: ${error}`);
+      console.error(`Error setting item in secure storagee: ${error}`);
       throw error;
     }
   }
