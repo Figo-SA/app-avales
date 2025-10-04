@@ -2,7 +2,17 @@ import { httpClient } from "@/core/api/http-client";
 import { logger } from "@/core/logger";
 
 import { toast } from "@backpackapp-io/react-native-toast";
-import { User } from "../interface/user";
+export interface WrapperResponse<T> {
+  status: string;
+  message: string;
+  meta: {
+    requestId: string;
+    timestamp: string;
+    apiVersion: string;
+    durationMs: number;
+  };
+  data: T;
+}
 
 export interface AuthResponse {
   id: number;
@@ -14,27 +24,24 @@ export interface AuthResponse {
   token: string;
 }
 
+// Función que acepta la respuesta completa del backend
 const returnUserToken = (
-  data: AuthResponse
-): {
-  user: User;
-  token: string;
-} => {
-  const { token, ...user } = data;
-
-  return {
-    user,
-    token,
-  };
+  response: WrapperResponse<AuthResponse>
+): { user: Omit<AuthResponse, "token">; token: string } => {
+  const { token, ...user } = response.data; // extraemos data del wrapper
+  return { user, token };
 };
 
 export const authLogin = async (email: string, password: string) => {
   email = email.trim().toLowerCase();
   try {
-    const { data } = await httpClient.post<AuthResponse>("/auth/login", {
-      email,
-      password,
-    });
+    const { data } = await httpClient.post<WrapperResponse<AuthResponse>>(
+      "/auth/login",
+      {
+        email,
+        password,
+      }
+    );
 
     return returnUserToken(data);
   } catch (error: any) {
@@ -53,7 +60,9 @@ export const authLogin = async (email: string, password: string) => {
 
 export const authCheckStatus = async () => {
   try {
-    const { data } = await httpClient.get<AuthResponse>("/auth/check-status");
+    const { data } = await httpClient.get<WrapperResponse<AuthResponse>>(
+      "/auth/check-status"
+    );
     logger.info("Check status successful", data);
     return returnUserToken(data);
   } catch (error: any) {
