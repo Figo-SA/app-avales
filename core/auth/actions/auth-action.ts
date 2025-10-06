@@ -42,6 +42,7 @@ export const authLogin = async (email: string, password: string) => {
         password,
       }
     );
+    logger.info("Login successful", data);
 
     return returnUserToken(data);
   } catch (error: any) {
