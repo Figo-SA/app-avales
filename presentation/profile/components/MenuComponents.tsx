@@ -57,10 +57,7 @@ interface MenuSectionProps {
   children: React.ReactNode;
 }
 
-export const MenuSection: React.FC<MenuSectionProps> = ({
-  title,
-  children,
-}) => {
+export const MenuSection = ({ title, children }: MenuSectionProps) => {
   const theme = useTheme();
   const styles = createStyles(theme);
 
@@ -90,18 +87,9 @@ const createStyles = (theme: any) =>
     menuContainer: {
       borderRadius: 16,
       backgroundColor: theme.colors.surface,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
     },
     menuContent: {
       borderRadius: 16,
-      overflow: "hidden",
-      elevation: 2,
     },
     menuOption: {
       flexDirection: "row",

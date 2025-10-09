@@ -1,11 +1,12 @@
 import { Evento } from "@/core/eventos/interfaces/evento";
 import { ThemedText } from "@/presentation/theme/components/ThemedText";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
+import BottomSheet from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
-import React, { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { FlatList, RefreshControl } from "react-native";
 import { EventoCard } from "./EventoCard";
-
+import { EventoDetail } from "./EventoDetail";
 interface EventoListProps {
   eventos: Evento[];
   onEndReached?: () => void;
@@ -18,6 +19,15 @@ export const EventoList = ({
   onEndReached,
   onEndReachedThreshold = 0.5,
 }: EventoListProps) => {
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const [eventoSeleccionado, setEventoSeleccionado] = useState<Evento | null>(
+    null
+  );
+  const openBottomSheet = useCallback((evento: Evento) => {
+    setEventoSeleccionado(evento);
+    bottomSheetRef.current?.expand();
+  }, []);
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   const queryClient = useQueryClient();
 
@@ -45,18 +55,34 @@ export const EventoList = ({
   );
 
   return (
-    <FlatList
-      data={eventos}
-      keyExtractor={(item) => item.codigoItem.toString()}
-      renderItem={({ item }) => <EventoCard evento={item} />}
-      onEndReached={onEndReached}
-      onEndReachedThreshold={onEndReachedThreshold}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-      refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={onPullToRefresh} />
-      }
-      ListEmptyComponent={renderEmptyComponent}
-    />
+    <>
+      <FlatList
+        data={eventos}
+        keyExtractor={(item) => item.codigoItem.toString()}
+        renderItem={({ item }) => (
+          <EventoCard evento={item} onPress={() => openBottomSheet(item)} />
+        )}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={onEndReachedThreshold}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onPullToRefresh}
+          />
+        }
+        ListEmptyComponent={renderEmptyComponent}
+      />
+
+      <EventoDetail
+        ref={bottomSheetRef}
+        evento={eventoSeleccionado}
+        onDocumentUploaded={(file) => {
+          console.log("Documento subido:", file.name);
+          // Aquí puedes agregar la lógica para enviar el archivo al servidor
+        }}
+      />
+    </>
   );
 };

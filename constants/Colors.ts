@@ -6,7 +6,7 @@ export const Colors = {
     background: "#FFFFFF",
     // Surface gris para las cards
     surface: "#F5F5F7",
-    surfaceVariant: "#E8E8EA",
+    surfaceVariant: "#C7C7CC",
 
     customBrand: "#004679",
     accent: "#0099FF",

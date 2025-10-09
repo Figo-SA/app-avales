@@ -1,5 +1,4 @@
 import { Evento } from "@/core/eventos/interfaces/evento";
-import { logger } from "@/core/logger";
 import { ThemedText } from "@/presentation/theme/components/ThemedText";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import React from "react";
@@ -15,12 +14,17 @@ const formatDate = (dateString: string) => {
   });
 };
 
-export const EventoCard = ({ evento }: { evento: Evento }) => {
+export const EventoCard = ({
+  evento,
+  onPress,
+}: {
+  evento: Evento;
+  onPress?: () => void;
+}) => {
   const theme = useTheme();
 
   const handlePress = () => {
-    // Navegar a detalle del evento - por ahora solo log
-    logger.info("Ver detalle del evento:", evento.codigoItem);
+    if (onPress) onPress();
   };
 
   const totalAtletas =
