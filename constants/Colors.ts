@@ -2,8 +2,11 @@ export const Colors = {
   light: {
     primary: "#004679",
     primaryContainer: "#E0F2FF",
+    secondaryContainer: "#E6F3FF",
+
     secondary: "#0066CC",
-    background: "#FFFFFF",
+    background: "#F0F6FB",
+
     // Surface gris para las cards
     surface: "#F5F5F7",
     surfaceVariant: "#C7C7CC",
@@ -23,6 +26,7 @@ export const Colors = {
   dark: {
     primary: "#4A9EE7",
     primaryContainer: "#1E3A5F",
+    secondaryContainer: "#1E3A5F",
     secondary: "#7BB3F0",
     background: "#0A0F1C",
     // Surface gris oscuro para las cards

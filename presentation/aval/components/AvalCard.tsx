@@ -1,141 +1,194 @@
 import { getStatusConfig } from "@/core/avales/helpers/statusHelper";
 import { Aval } from "@/core/avales/interfaces/aval";
 import { router } from "expo-router";
-import React, { Fragment } from "react";
+import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Card, Chip, Text, useTheme } from "react-native-paper";
+import { Card, Chip, Icon, Surface, Text, useTheme } from "react-native-paper";
 
 export const AvalCard = ({ aval }: { aval: Aval }) => {
   const statusConfig = getStatusConfig(aval.status);
   const theme = useTheme();
+
   const handlePress = () => {
     router.push(`/(avales-app)/aval/${aval.id}`);
   };
+
+  const totalDeportistas = aval.deportistas.length;
+  const totalEntrenadores =
+    aval.numeroEntrenadoresHombres + aval.numeroEntrenadoresMujeres;
 
   return (
     <Pressable onPress={handlePress}>
       <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
         <Card.Content>
+          {/* Header con Título y Estado */}
           <View style={styles.cardHeader}>
             <View style={styles.titleContainer}>
               <Text
-                variant="titleLarge"
+                variant="titleMedium"
                 style={[styles.title, { color: theme.colors.onSurface }]}
+                numberOfLines={2}
               >
-                {aval.title}
+                {aval.evento}
               </Text>
-              <Text
-                variant="bodyLarge"
-                style={[
-                  styles.amount,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
-              >
-                ${aval.amount}
-              </Text>
+              <View style={styles.infoRow}>
+                <Icon
+                  source="ion:basketball"
+                  size={14}
+                  color={theme.colors.primary}
+                />
+                <Text
+                  variant="bodySmall"
+                  style={[
+                    styles.deporte,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
+                >
+                  {aval.deporte}
+                </Text>
+              </View>
             </View>
-            <View style={styles.statusContainer}>
-              <Chip
-                icon={statusConfig.icon}
-                textStyle={{ fontSize: 12 }}
-                style={{
+
+            <Chip
+              icon={statusConfig.icon}
+              textStyle={{ fontSize: 11, fontWeight: "600" }}
+              style={[
+                styles.statusChip,
+                {
                   backgroundColor: `${statusConfig.color}15`,
                   borderColor: statusConfig.color,
-                  borderWidth: 1,
-                  minWidth: 100,
-                  justifyContent: "center",
-                }}
-                compact={true}
-              >
-                {statusConfig.label}
-              </Chip>
+                },
+              ]}
+              compact
+            >
+              {statusConfig.label}
+            </Chip>
+          </View>
+
+          {/* Información del Evento */}
+          <View style={styles.eventInfo}>
+            <View style={styles.eventInfoItem}>
+              <Icon
+                source="ion:calendar"
+                size={16}
+                color={theme.colors.primary}
+              />
               <Text
                 variant="bodySmall"
-                style={[styles.date, { color: theme.colors.onSurfaceVariant }]}
+                style={{ color: theme.colors.onSurfaceVariant, marginLeft: 6 }}
               >
-                {new Date(aval.createdAt).toLocaleDateString("es-ES", {
+                {new Date(aval.fechaInicio).toLocaleDateString("es-ES", {
+                  day: "2-digit",
+                  month: "short",
+                })}{" "}
+                -{" "}
+                {new Date(aval.fechaFin).toLocaleDateString("es-ES", {
                   day: "2-digit",
                   month: "short",
                   year: "numeric",
                 })}
               </Text>
             </View>
+
+            <View style={styles.eventInfoItem}>
+              <Icon
+                source="ion:location"
+                size={16}
+                color={theme.colors.primary}
+              />
+              <Text
+                variant="bodySmall"
+                style={{ color: theme.colors.onSurfaceVariant, marginLeft: 6 }}
+              >
+                {aval.provincia}
+              </Text>
+            </View>
           </View>
 
-          <Text
-            variant="bodyMedium"
-            style={[
-              styles.description,
-              { color: theme.colors.onSurfaceVariant },
-            ]}
-          >
-            {aval.description}
-          </Text>
+          {/* Alcance y Tipo */}
+          <View style={styles.tagsContainer}>
+            <Surface
+              style={[
+                styles.tag,
+                { backgroundColor: theme.colors.primaryContainer },
+              ]}
+              elevation={0}
+            >
+              <Text
+                variant="labelSmall"
+                style={{
+                  color: theme.colors.onPrimaryContainer,
+                  fontWeight: "600",
+                }}
+              >
+                {aval.alcance}
+              </Text>
+            </Surface>
+            <Surface
+              style={[
+                styles.tag,
+                { backgroundColor: theme.colors.secondaryContainer },
+              ]}
+              elevation={0}
+            >
+              <Text
+                variant="labelSmall"
+                style={{
+                  color: theme.colors.onSecondaryContainer,
+                  fontWeight: "600",
+                }}
+              >
+                {aval.tipoEvento}
+              </Text>
+            </Surface>
+          </View>
 
-          <View style={styles.stepsContainer}>
-            <View style={styles.stepsRow}>
-              {[1, 2, 3].map((step) => (
-                <Fragment key={step}>
-                  {step > 1 && (
-                    <View
-                      style={[
-                        styles.stepLine,
-                        {
-                          backgroundColor:
-                            step <= statusConfig.step
-                              ? statusConfig.color
-                              : theme.colors.surfaceVariant,
-                        },
-                      ]}
-                    />
-                  )}
-                  <View style={styles.stepItem}>
-                    <View
-                      style={[
-                        styles.stepCircle,
-                        {
-                          backgroundColor:
-                            step <= statusConfig.step
-                              ? statusConfig.color
-                              : theme.colors.surfaceVariant,
-                        },
-                        step <= statusConfig.step && styles.stepActive,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.stepNumber,
-                          {
-                            color:
-                              step <= statusConfig.step
-                                ? theme.colors.onPrimary
-                                : theme.colors.onSurfaceVariant,
-                          },
-                        ]}
-                      >
-                        {step}
-                      </Text>
-                    </View>
-                    <Text
-                      style={[
-                        styles.stepLabel,
-                        { color: theme.colors.onSurfaceVariant },
-                      ]}
-                    >
-                      {step === 1
-                        ? "Enviado"
-                        : step === 2
-                        ? "En revisión"
-                        : step === 3 && aval.status === "approved"
-                        ? "Aceptado"
-                        : step === 3 && aval.status === "rejected"
-                        ? "Rechazado"
-                        : "Finalizado"}
-                    </Text>
-                  </View>
-                </Fragment>
-              ))}
+          {/* Estadísticas de Deportistas y Entrenadores */}
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Icon
+                source="ion:people"
+                size={18}
+                color={theme.colors.primary}
+              />
+              <Text
+                variant="bodySmall"
+                style={{ color: theme.colors.onSurfaceVariant, marginLeft: 4 }}
+              >
+                {totalDeportistas}{" "}
+                {totalDeportistas === 1 ? "Deportista" : "Deportistas"}
+              </Text>
             </View>
+
+            <View style={styles.statItem}>
+              <Icon
+                source="ion:school"
+                size={18}
+                color={theme.colors.secondary}
+              />
+              <Text
+                variant="bodySmall"
+                style={{ color: theme.colors.onSurfaceVariant, marginLeft: 4 }}
+              >
+                {totalEntrenadores}{" "}
+                {totalEntrenadores === 1 ? "Entrenador" : "Entrenadores"}
+              </Text>
+            </View>
+          </View>
+
+          {/* Footer con Fecha de Solicitud */}
+          <View style={styles.footer}>
+            <Text
+              variant="bodySmall"
+              style={{ color: theme.colors.onSurfaceVariant }}
+            >
+              Solicitado el{" "}
+              {new Date(aval.fechaSolicitud).toLocaleDateString("es-ES", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+              })}
+            </Text>
           </View>
         </Card.Content>
       </Card>
@@ -145,8 +198,8 @@ export const AvalCard = ({ aval }: { aval: Aval }) => {
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 16,
-    borderRadius: 12,
+    marginBottom: 12,
+    borderRadius: 16,
     elevation: 2,
   },
   cardHeader: {
@@ -160,59 +213,66 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   title: {
-    fontWeight: "bold",
-    marginBottom: 4,
-    fontSize: 18,
-  },
-  amount: {
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  statusContainer: {
-    alignItems: "flex-end",
-  },
-  date: {
-    marginTop: 4,
-    fontSize: 11,
-  },
-  description: {
-    marginBottom: 12,
+    fontWeight: "700",
+    marginBottom: 6,
     lineHeight: 20,
   },
-  stepsContainer: {
-    marginTop: 12,
-  },
-  stepsRow: {
+  infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: 4,
   },
-  stepItem: {
+  deporte: {
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  statusChip: {
+    borderWidth: 1,
+  },
+  eventInfo: {
+    flexDirection: "row",
+    gap: 16,
+    marginBottom: 12,
+    flexWrap: "wrap",
+  },
+  eventInfoItem: {
+    flexDirection: "row",
     alignItems: "center",
-    flex: 1,
   },
-  stepCircle: {
-    width: 24,
-    height: 24,
+  tagsContainer: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+  },
+  tag: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 12,
-    justifyContent: "center",
+  },
+  statsContainer: {
+    flexDirection: "row",
+    gap: 20,
+    marginBottom: 12,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.08)",
+  },
+  statItem: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 4,
   },
-  stepActive: {
-    elevation: 2,
+  footer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 4,
   },
-  stepNumber: {
-    fontSize: 12,
-    fontWeight: "bold",
+  approvedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  stepLabel: {
-    fontSize: 10,
-    textAlign: "center",
-  },
-  stepLine: {
-    height: 2,
-    flex: 0.3,
-    marginHorizontal: 4,
+  rejectedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 });

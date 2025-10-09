@@ -1,12 +1,14 @@
 import { getStatusConfig } from "@/core/avales/helpers/statusHelper";
 import { Aval } from "@/core/avales/interfaces/aval";
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import {
   Button,
   Card,
   Chip,
   Divider,
+  Icon,
+  Surface,
   Text,
   useTheme,
 } from "react-native-paper";
@@ -15,267 +17,474 @@ interface AvalDetailProps {
   aval: Aval;
 }
 
+const InfoRow = ({ icon, label, value, theme }: any) => (
+  <View style={styles.infoRow}>
+    <Icon source={icon} size={20} color={theme.colors.primary} />
+    <View style={styles.infoContent}>
+      <Text
+        variant="bodySmall"
+        style={{ color: theme.colors.onSurfaceVariant }}
+      >
+        {label}
+      </Text>
+      <Text
+        variant="bodyMedium"
+        style={{ color: theme.colors.onSurface, fontWeight: "600" }}
+      >
+        {value}
+      </Text>
+    </View>
+  </View>
+);
+
 export const AvalDetail = ({ aval }: AvalDetailProps) => {
   const theme = useTheme();
   const statusConfig = getStatusConfig(aval.status);
+
+  const totalDeportistas = aval.deportistas.length;
+  const totalEntrenadores =
+    aval.numeroEntrenadoresHombres + aval.numeroEntrenadoresMujeres;
+
+  const handleDownloadDocument = () => {
+    if (aval.documentoUrl) {
+      Linking.openURL(aval.documentoUrl);
+    }
+  };
 
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
       contentContainerStyle={{ padding: 16 }}
     >
+      {/* Header Card */}
       <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
         <Card.Content>
-          {/* Título como protagonista */}
-          <Text
-            variant="headlineMedium"
-            style={[styles.title, { color: theme.colors.onSurface }]}
-          >
-            {aval.title}
-          </Text>
-
-          <Divider style={{ marginVertical: 16 }} />
-
           <View style={styles.header}>
-            <View style={styles.infoContainer}>
+            <View style={{ flex: 1 }}>
               <Text
-                variant="bodyMedium"
-                style={[
-                  styles.amountLabel,
-                  { color: theme.colors.onSurfaceVariant },
-                ]}
+                variant="headlineSmall"
+                style={[styles.title, { color: theme.colors.onSurface }]}
               >
-                Monto solicitado
+                {aval.evento}
               </Text>
-              <Text
-                variant="titleLarge"
-                style={[styles.amount, { color: theme.colors.onSurface }]}
-              >
-                ${aval.amount}
-              </Text>
-              <Text
-                variant="bodyMedium"
-                style={[styles.date, { color: theme.colors.onSurfaceVariant }]}
-              >
-                Creado el{" "}
-                {new Date(aval.createdAt).toLocaleDateString("es-ES", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </Text>
+              <View style={styles.headerBadges}>
+                <Surface
+                  style={[
+                    styles.badge,
+                    { backgroundColor: theme.colors.primaryContainer },
+                  ]}
+                  elevation={0}
+                >
+                  <Icon
+                    source="ion:basketball"
+                    size={14}
+                    color={theme.colors.onPrimaryContainer}
+                  />
+                  <Text
+                    variant="labelSmall"
+                    style={{
+                      color: theme.colors.onPrimaryContainer,
+                      marginLeft: 4,
+                    }}
+                  >
+                    {aval.deporte}
+                  </Text>
+                </Surface>
+                <Surface
+                  style={[
+                    styles.badge,
+                    { backgroundColor: theme.colors.secondaryContainer },
+                  ]}
+                  elevation={0}
+                >
+                  <Text
+                    variant="labelSmall"
+                    style={{ color: theme.colors.onSecondaryContainer }}
+                  >
+                    {aval.alcance}
+                  </Text>
+                </Surface>
+              </View>
             </View>
-
             <Chip
               icon={statusConfig.icon}
-              style={{
-                backgroundColor: `${statusConfig.color}15`,
-                borderColor: statusConfig.color,
-                borderWidth: 1,
-              }}
-              textStyle={{ color: statusConfig.color }}
+              style={[
+                styles.statusChip,
+                {
+                  backgroundColor: `${statusConfig.color}15`,
+                  borderColor: statusConfig.color,
+                },
+              ]}
+              textStyle={{ color: statusConfig.color, fontWeight: "600" }}
             >
               {statusConfig.label}
             </Chip>
           </View>
-
-          <Divider style={{ marginVertical: 16 }} />
-
-          <Text
-            variant="bodyMedium"
-            style={[
-              styles.descriptionLabel,
-              { color: theme.colors.onSurfaceVariant },
-            ]}
-          >
-            Descripción
-          </Text>
-          <Text
-            variant="bodyLarge"
-            style={[styles.description, { color: theme.colors.onSurface }]}
-          >
-            {aval.description}
-          </Text>
         </Card.Content>
       </Card>
 
-      {/* Progress Steps */}
+      {/* Información del Evento */}
       <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
         <Card.Content>
           <Text
             variant="titleMedium"
-            style={[{ marginBottom: 16, color: theme.colors.onSurface }]}
+            style={{
+              color: theme.colors.onSurface,
+              marginBottom: 16,
+              fontWeight: "700",
+            }}
           >
-            Estado del proceso
+            Información del Evento
           </Text>
 
-          <View style={styles.stepsContainer}>
-            <View style={styles.stepsRow}>
-              {/* Paso 1: Enviado */}
-              <View style={styles.stepItem}>
-                <View
+          <InfoRow
+            icon="ion:calendar"
+            label="Fechas del evento"
+            value={`${new Date(aval.fechaInicio).toLocaleDateString(
+              "es-ES"
+            )} - ${new Date(aval.fechaFin).toLocaleDateString("es-ES")}`}
+            theme={theme}
+          />
+
+          <InfoRow
+            icon="ion:location"
+            label="Provincia"
+            value={aval.provincia}
+            theme={theme}
+          />
+
+          <InfoRow
+            icon="ion:flag"
+            label="Tipo de Evento"
+            value={aval.tipoEvento}
+            theme={theme}
+          />
+
+          <InfoRow
+            icon="ion:ribbon"
+            label="Categoría"
+            value={aval.categoria}
+            theme={theme}
+          />
+
+          <InfoRow
+            icon="ion:trophy"
+            label="Tipo de Participación"
+            value={aval.tipoParticipacion}
+            theme={theme}
+          />
+        </Card.Content>
+      </Card>
+
+      {/* Deportistas y Entrenadores */}
+      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+        <Card.Content>
+          <Text
+            variant="titleMedium"
+            style={{
+              color: theme.colors.onSurface,
+              marginBottom: 12,
+              fontWeight: "700",
+            }}
+          >
+            Participantes
+          </Text>
+
+          {/* Estadísticas minimalistas */}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Icon
+                source="ion:people"
+                size={20}
+                color={theme.colors.primary}
+              />
+              <Text
+                variant="bodyMedium"
+                style={{
+                  color: theme.colors.onSurface,
+                  marginLeft: 8,
+                  fontWeight: "600",
+                }}
+              >
+                {totalDeportistas}{" "}
+                {totalDeportistas === 1 ? "Deportista" : "Deportistas"}
+              </Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <Icon
+                source="ion:school"
+                size={20}
+                color={theme.colors.secondary}
+              />
+              <Text
+                variant="bodyMedium"
+                style={{
+                  color: theme.colors.onSurface,
+                  marginLeft: 8,
+                  fontWeight: "600",
+                }}
+              >
+                {totalEntrenadores}{" "}
+                {totalEntrenadores === 1 ? "Entrenador" : "Entrenadores"}
+              </Text>
+            </View>
+          </View>
+
+          {/* Lista de Deportistas */}
+          {aval.deportistas.length > 0 && (
+            <>
+              <Divider style={{ marginVertical: 16 }} />
+              <Text
+                variant="titleSmall"
+                style={{
+                  color: theme.colors.onSurface,
+                  marginBottom: 12,
+                  fontWeight: "600",
+                }}
+              >
+                Lista de Deportistas
+              </Text>
+              {aval.deportistas.map((deportista, index) => (
+                <Surface
+                  key={deportista.id}
                   style={[
-                    styles.stepCircle,
-                    {
-                      backgroundColor:
-                        statusConfig.step >= 1
-                          ? statusConfig.color
-                          : theme.colors.surfaceVariant,
-                    },
+                    styles.deportistaCard,
+                    { backgroundColor: theme.colors.surfaceVariant },
                   ]}
+                  elevation={0}
                 >
-                  <Text
-                    style={[
-                      styles.stepNumber,
-                      {
-                        color:
-                          statusConfig.step >= 1
-                            ? theme.colors.onPrimary
-                            : theme.colors.onSurfaceVariant,
-                      },
-                    ]}
-                  >
-                    1
-                  </Text>
-                </View>
+                  <View style={styles.deportistaInfo}>
+                    <View
+                      style={[
+                        styles.deportistaAvatar,
+                        { backgroundColor: theme.colors.primary },
+                      ]}
+                    >
+                      <Text
+                        variant="bodyLarge"
+                        style={{
+                          color: theme.colors.onPrimary,
+                          fontWeight: "700",
+                        }}
+                      >
+                        {deportista.nombre.charAt(0)}
+                        {deportista.apellido.charAt(0)}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        variant="bodyMedium"
+                        style={{
+                          color: theme.colors.onSurface,
+                          fontWeight: "600",
+                        }}
+                      >
+                        {deportista.nombre} {deportista.apellido}
+                      </Text>
+                      <Text
+                        variant="bodySmall"
+                        style={{ color: theme.colors.onSurfaceVariant }}
+                      >
+                        CI: {deportista.cedula} •{" "}
+                        {deportista.sexo === "M" ? "Masculino" : "Femenino"}
+                      </Text>
+                      <Text
+                        variant="bodySmall"
+                        style={{ color: theme.colors.onSurfaceVariant }}
+                      >
+                        {deportista.categoria}
+                      </Text>
+                    </View>
+                  </View>
+                </Surface>
+              ))}
+            </>
+          )}
+        </Card.Content>
+      </Card>
+
+      {/* Documento */}
+      {aval.documentoUrl && (
+        <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+          <Card.Content>
+            <Text
+              variant="titleMedium"
+              style={{
+                color: theme.colors.onSurface,
+                marginBottom: 12,
+                fontWeight: "700",
+              }}
+            >
+              Documento
+            </Text>
+            <Surface
+              style={[
+                styles.documentCard,
+                { backgroundColor: theme.colors.surfaceVariant },
+              ]}
+              elevation={0}
+            >
+              <Icon
+                source="ion:document-text"
+                size={40}
+                color={theme.colors.primary}
+              />
+              <View style={{ flex: 1, marginLeft: 16 }}>
                 <Text
-                  style={[
-                    styles.stepLabel,
-                    { color: theme.colors.onSurfaceVariant },
-                  ]}
+                  variant="bodyMedium"
+                  style={{ color: theme.colors.onSurface, fontWeight: "600" }}
                 >
-                  Enviado
+                  {aval.documentoNombre || "Solicitud de Aval.pdf"}
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.onSurfaceVariant }}
+                >
+                  Documento adjunto
                 </Text>
               </View>
+              <Button
+                mode="contained-tonal"
+                onPress={handleDownloadDocument}
+                icon="ion:download"
+                compact
+              >
+                Descargar
+              </Button>
+            </Surface>
+          </Card.Content>
+        </Card>
+      )}
 
+      {/* Fechas y Estado */}
+      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+        <Card.Content>
+          <Text
+            variant="titleMedium"
+            style={{
+              color: theme.colors.onSurface,
+              marginBottom: 16,
+              fontWeight: "700",
+            }}
+          >
+            Historial
+          </Text>
+
+          <View style={styles.timelineItem}>
+            <View
+              style={[
+                styles.timelineDot,
+                { backgroundColor: theme.colors.primary },
+              ]}
+            />
+            <View style={styles.timelineContent}>
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.onSurface, fontWeight: "600" }}
+              >
+                Solicitud enviada
+              </Text>
+              <Text
+                variant="bodySmall"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                {new Date(aval.fechaSolicitud).toLocaleDateString("es-ES", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
+            </View>
+          </View>
+
+          {aval.fechaAprobacion && (
+            <View style={styles.timelineItem}>
               <View
                 style={[
-                  styles.stepLine,
-                  {
-                    backgroundColor:
-                      statusConfig.step >= 2
-                        ? statusConfig.color
-                        : theme.colors.surfaceVariant,
-                  },
+                  styles.timelineDot,
+                  { backgroundColor: theme.colors.primary },
                 ]}
               />
-
-              {/* Paso 2: En revisión */}
-              <View style={styles.stepItem}>
-                <View
-                  style={[
-                    styles.stepCircle,
-                    {
-                      backgroundColor:
-                        statusConfig.step >= 2
-                          ? statusConfig.color
-                          : theme.colors.surfaceVariant,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.stepNumber,
-                      {
-                        color:
-                          statusConfig.step >= 2
-                            ? theme.colors.onPrimary
-                            : theme.colors.onSurfaceVariant,
-                      },
-                    ]}
-                  >
-                    2
-                  </Text>
-                </View>
+              <View style={styles.timelineContent}>
                 <Text
-                  style={[
-                    styles.stepLabel,
-                    { color: theme.colors.onSurfaceVariant },
-                  ]}
+                  variant="bodyMedium"
+                  style={{ color: theme.colors.onSurface, fontWeight: "600" }}
                 >
-                  En revisión
+                  Aval aprobado
                 </Text>
-              </View>
-
-              <View
-                style={[
-                  styles.stepLine,
-                  {
-                    backgroundColor:
-                      statusConfig.step >= 3
-                        ? statusConfig.color
-                        : theme.colors.surfaceVariant,
-                  },
-                ]}
-              />
-
-              {/* Paso 3: Estado final */}
-              <View style={styles.stepItem}>
-                <View
-                  style={[
-                    styles.stepCircle,
-                    {
-                      backgroundColor:
-                        statusConfig.step >= 3
-                          ? statusConfig.color
-                          : theme.colors.surfaceVariant,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.stepNumber,
-                      {
-                        color:
-                          statusConfig.step >= 3
-                            ? theme.colors.onPrimary
-                            : theme.colors.onSurfaceVariant,
-                      },
-                    ]}
-                  >
-                    3
-                  </Text>
-                </View>
                 <Text
-                  style={[
-                    styles.stepLabel,
-                    { color: theme.colors.onSurfaceVariant },
-                  ]}
+                  variant="bodySmall"
+                  style={{ color: theme.colors.onSurfaceVariant }}
                 >
-                  {aval.status === "approved"
-                    ? "Aceptado"
-                    : aval.status === "rejected"
-                    ? "Rechazado"
-                    : "Finalizado"}
+                  {new Date(aval.fechaAprobacion).toLocaleDateString("es-ES", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </Text>
               </View>
             </View>
-          </View>
+          )}
+
+          {aval.fechaRechazo && aval.motivoRechazo && (
+            <View style={styles.timelineItem}>
+              <View
+                style={[
+                  styles.timelineDot,
+                  { backgroundColor: theme.colors.error },
+                ]}
+              />
+              <View style={styles.timelineContent}>
+                <Text
+                  variant="bodyMedium"
+                  style={{ color: theme.colors.error, fontWeight: "600" }}
+                >
+                  Aval rechazado
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.onSurfaceVariant }}
+                >
+                  {new Date(aval.fechaRechazo).toLocaleDateString("es-ES", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.error, marginTop: 4 }}
+                >
+                  Motivo: {aval.motivoRechazo}
+                </Text>
+              </View>
+            </View>
+          )}
         </Card.Content>
       </Card>
 
       {/* Actions */}
-      <View style={styles.actionsContainer}>
-        <Button
-          mode="outlined"
-          onPress={() => {
-            // Acción de compartir
-          }}
-          style={styles.actionButton}
-        >
-          Compartir
-        </Button>
-
-        <Button
-          mode="contained"
-          onPress={() => {
-            // Acción principal
-          }}
-          style={styles.actionButton}
-        >
-          Descargar PDF
-        </Button>
-      </View>
+      {aval.status === "approved" && (
+        <View style={styles.actionsContainer}>
+          {aval.documentoUrl && (
+            <Button
+              mode="contained"
+              onPress={handleDownloadDocument}
+              icon="ion:download"
+              style={styles.actionButton}
+            >
+              Descargar PDF
+            </Button>
+          )}
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -283,85 +492,93 @@ export const AvalDetail = ({ aval }: AvalDetailProps) => {
 const styles = StyleSheet.create({
   card: {
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     elevation: 2,
   },
   title: {
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 4,
+    fontWeight: "700",
+    marginBottom: 8,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
-  infoContainer: {
-    flex: 1,
-    marginRight: 12,
+  headerBadges: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 8,
   },
-  amountLabel: {
-    fontSize: 12,
-    fontWeight: "500",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  amount: {
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  date: {
-    fontSize: 13,
-  },
-  descriptionLabel: {
-    fontSize: 12,
-    fontWeight: "500",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  description: {
-    lineHeight: 24,
-  },
-  stepsContainer: {
-    marginTop: 12,
-  },
-  stepsRow: {
+  badge: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  stepItem: {
-    alignItems: "center",
+  statusChip: {
+    borderWidth: 1,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 16,
+    gap: 12,
+  },
+  infoContent: {
     flex: 1,
   },
-  stepCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: "center",
+  statsRow: {
+    flexDirection: "row",
+    gap: 24,
+    marginBottom: 16,
+  },
+  statItem: {
+    flexDirection: "row",
     alignItems: "center",
+  },
+  deportistaCard: {
+    padding: 12,
+    borderRadius: 12,
     marginBottom: 8,
   },
-  stepNumber: {
-    fontSize: 16,
-    fontWeight: "bold",
+  deportistaInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
-  stepLabel: {
-    fontSize: 12,
-    textAlign: "center",
-    fontWeight: "500",
+  deportistaAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  stepLine: {
-    height: 3,
-    flex: 0.4,
-    marginHorizontal: 8,
+  documentCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+  },
+  timelineItem: {
+    flexDirection: "row",
+    marginBottom: 16,
+  },
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 4,
+    marginRight: 12,
+  },
+  timelineContent: {
+    flex: 1,
   },
   actionsContainer: {
     flexDirection: "row",
     gap: 12,
     marginTop: 8,
+    marginBottom: 16,
   },
   actionButton: {
     flex: 1,

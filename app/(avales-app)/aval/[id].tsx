@@ -62,7 +62,7 @@ export default function AvalDetailScreen() {
     <>
       <Stack.Screen
         options={{
-          title: avalQuery.data.title,
+          title: avalQuery.data.evento,
           headerStyle: {
             backgroundColor: theme.colors.primary,
           },

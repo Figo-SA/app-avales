@@ -52,8 +52,7 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
         <BottomSheet
           ref={ref}
           index={-1}
-          snapPoints={["40%"]}
-          enablePanDownToClose
+          snapPoints={["10%"]}
           onChange={handleSheetChanges}
           backgroundStyle={styles.bottomSheetBackground}
           handleIndicatorStyle={styles.handleIndicator}
