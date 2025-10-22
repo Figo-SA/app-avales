@@ -12,8 +12,43 @@ export default function AvalesTab() {
   const { selectedStatus, setSelectedStatus, counts, filteredAvales } =
     useAvalFilters(avales);
 
-  // Mostrar skeleton durante la carga inicial
   const isInitialLoading = avalesQuery.isLoading && avales.length === 0;
+
+  // Mensajes del EmptyState según el filtro seleccionado
+  const getEmptyStateProps = () => {
+    switch (selectedStatus) {
+      case "sent":
+        return {
+          icon: "ion:send-outline",
+          title: "No hay avales enviados",
+          description: "Aún no has enviado ningún aval",
+        };
+      case "pending":
+        return {
+          icon: "ion:time-outline",
+          title: "No hay avales en revisión",
+          description: "No tienes avales pendientes de revisión en este momento",
+        };
+      case "approved":
+        return {
+          icon: "ion:checkmark-circle-outline",
+          title: "No hay avales aceptados",
+          description: "Aún no tienes avales aceptados",
+        };
+      case "rejected":
+        return {
+          icon: "ion:close-circle-outline",
+          title: "No hay avales rechazados",
+          description: "No tienes avales rechazados",
+        };
+      default:
+        return {
+          icon: "ion:document-text-outline",
+          title: "No hay avales",
+          description: "Aún no tienes avales registrados. Crea tu primer aval presionando el botón +",
+        };
+    }
+  };
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -28,6 +63,8 @@ export default function AvalesTab() {
       ) : (
         <AvalList
           avales={filteredAvales}
+          emptyStateProps={getEmptyStateProps()}
+          filterKey={selectedStatus}
           onEndReached={() => {
             if (selectedStatus === "all") {
               loadNextPage();

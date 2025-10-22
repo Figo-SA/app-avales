@@ -15,6 +15,7 @@ export interface Evento {
   numeroEntrenadoresMujeres: number;
   numeroAtletasHombres: number;
   numeroAtletasMujeres: number;
+  solicitado?: boolean; // Indica si el evento ya fue solicitado por el usuario
 }
 
 export interface EventoFilters {

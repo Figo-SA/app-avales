@@ -11,12 +11,20 @@ interface EventoListProps {
   onEndReached?: () => void;
   onEndReachedThreshold?: number;
   onRefresh?: () => Promise<void>;
+  emptyStateProps?: {
+    icon?: string;
+    title: string;
+    description?: string;
+  };
+  filterKey?: string; // Key única para forzar re-render del FlatList cuando cambia el filtro
 }
 
 export const EventoList = ({
   eventos,
   onEndReached,
   onEndReachedThreshold = 0.5,
+  emptyStateProps,
+  filterKey = "default",
 }: EventoListProps) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [eventoSeleccionado, setEventoSeleccionado] = useState<Evento | null>(
@@ -44,15 +52,19 @@ export const EventoList = ({
 
   const renderEmptyComponent = () => (
     <EmptyState
-      icon="ion:calendar-outline"
-      title="No hay eventos"
-      description="No se encontraron eventos disponibles en este momento"
+      icon={emptyStateProps?.icon || "ion:calendar-outline"}
+      title={emptyStateProps?.title || "No hay eventos"}
+      description={
+        emptyStateProps?.description ||
+        "No se encontraron eventos disponibles en este momento"
+      }
     />
   );
 
   return (
     <>
       <FlatList
+        key={filterKey} // Fuerza reset del FlatList cuando cambia el filtro
         data={eventos}
         keyExtractor={(item) => item.codigoItem.toString()}
         renderItem={({ item }) => (
@@ -61,7 +73,11 @@ export const EventoList = ({
         onEndReached={onEndReached}
         onEndReachedThreshold={onEndReachedThreshold}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={eventos.length === 0 ? { flex: 1 } : { padding: 16, paddingBottom: 100 }}
+        contentContainerStyle={
+          eventos.length === 0
+            ? { flex: 1, justifyContent: "center" }
+            : { padding: 16, paddingBottom: 100 }
+        }
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}

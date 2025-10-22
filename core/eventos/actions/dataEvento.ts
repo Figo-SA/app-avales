@@ -18,6 +18,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 3,
     numeroAtletasHombres: 150,
     numeroAtletasMujeres: 100,
+    solicitado: false,
   },
   {
     codigoItem: 2,
@@ -36,6 +37,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 200,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 3,
@@ -54,6 +56,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 80,
     numeroAtletasMujeres: 60,
+    solicitado: false,
   },
   {
     codigoItem: 4,
@@ -72,6 +75,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 5,
     numeroAtletasHombres: 0,
     numeroAtletasMujeres: 120,
+    solicitado: false,
   },
   {
     codigoItem: 5,
@@ -90,6 +94,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 4,
     numeroAtletasHombres: 60,
     numeroAtletasMujeres: 70,
+    solicitado: false,
   },
   {
     codigoItem: 6,
@@ -108,6 +113,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 6,
     numeroAtletasHombres: 0,
     numeroAtletasMujeres: 110,
+    solicitado: false,
   },
   {
     codigoItem: 7,
@@ -126,6 +132,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 40,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 8,
@@ -144,6 +151,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 150,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 9,
@@ -162,6 +170,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 30,
     numeroAtletasMujeres: 25,
+    solicitado: false,
   },
   {
     codigoItem: 10,
@@ -180,6 +189,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 120,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 11,
@@ -198,6 +208,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 5,
     numeroAtletasHombres: 0,
     numeroAtletasMujeres: 50,
+    solicitado: false,
   },
   {
     codigoItem: 12,
@@ -216,6 +227,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 3,
     numeroAtletasHombres: 60,
     numeroAtletasMujeres: 55,
+    solicitado: false,
   },
   {
     codigoItem: 13,
@@ -234,6 +246,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 20,
     numeroAtletasMujeres: 18,
+    solicitado: false,
   },
   {
     codigoItem: 14,
@@ -252,6 +265,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 4,
     numeroAtletasHombres: 0,
     numeroAtletasMujeres: 40,
+    solicitado: false,
   },
   {
     codigoItem: 15,
@@ -270,6 +284,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 35,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 16,
@@ -288,6 +303,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 3,
     numeroAtletasHombres: 0,
     numeroAtletasMujeres: 60,
+    solicitado: false,
   },
   {
     codigoItem: 17,
@@ -306,6 +322,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 25,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 18,
@@ -324,6 +341,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 50,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 19,
@@ -342,6 +360,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 15,
     numeroAtletasMujeres: 12,
+    solicitado: false,
   },
   {
     codigoItem: 20,
@@ -360,6 +379,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 70,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 21,
@@ -378,6 +398,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 3,
     numeroAtletasHombres: 0,
     numeroAtletasMujeres: 30,
+    solicitado: false,
   },
   {
     codigoItem: 22,
@@ -396,6 +417,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 60,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 23,
@@ -414,6 +436,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 20,
     numeroAtletasMujeres: 15,
+    solicitado: false,
   },
   {
     codigoItem: 24,
@@ -432,6 +455,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 30,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 25,
@@ -450,6 +474,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 10,
     numeroAtletasMujeres: 8,
+    solicitado: false,
   },
   {
     codigoItem: 26,
@@ -468,6 +493,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 16,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 27,
@@ -486,6 +512,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 12,
     numeroAtletasMujeres: 10,
+    solicitado: false,
   },
   {
     codigoItem: 28,
@@ -504,6 +531,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 20,
     numeroAtletasMujeres: 18,
+    solicitado: false,
   },
   {
     codigoItem: 29,
@@ -522,6 +550,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 15,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 30,
@@ -540,6 +569,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 0,
     numeroAtletasMujeres: 22,
+    solicitado: false,
   },
   {
     codigoItem: 31,
@@ -558,6 +588,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 8,
     numeroAtletasMujeres: 7,
+    solicitado: false,
   },
   {
     codigoItem: 32,
@@ -576,6 +607,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 15,
     numeroAtletasMujeres: 15,
+    solicitado: false,
   },
   {
     codigoItem: 33,
@@ -594,6 +626,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 18,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 34,
@@ -612,6 +645,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 20,
     numeroAtletasMujeres: 20,
+    solicitado: false,
   },
   {
     codigoItem: 35,
@@ -630,6 +664,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 10,
     numeroAtletasMujeres: 12,
+    solicitado: false,
   },
   {
     codigoItem: 36,
@@ -648,6 +683,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 3,
     numeroAtletasHombres: 0,
     numeroAtletasMujeres: 22,
+    solicitado: false,
   },
   {
     codigoItem: 37,
@@ -666,6 +702,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 8,
     numeroAtletasMujeres: 7,
+    solicitado: false,
   },
   {
     codigoItem: 38,
@@ -684,6 +721,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 18,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 39,
@@ -702,6 +740,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 0,
     numeroAtletasMujeres: 14,
+    solicitado: false,
   },
   {
     codigoItem: 40,
@@ -720,6 +759,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 16,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 41,
@@ -738,6 +778,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 10,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 42,
@@ -756,6 +797,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 8,
     numeroAtletasMujeres: 8,
+    solicitado: false,
   },
   {
     codigoItem: 43,
@@ -774,6 +816,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 8,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 44,
@@ -792,6 +835,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 2,
     numeroAtletasHombres: 0,
     numeroAtletasMujeres: 16,
+    solicitado: false,
   },
   {
     codigoItem: 45,
@@ -810,6 +854,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 6,
     numeroAtletasMujeres: 5,
+    solicitado: false,
   },
   {
     codigoItem: 46,
@@ -828,6 +873,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 10,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 47,
@@ -846,6 +892,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 0,
     numeroAtletasMujeres: 6,
+    solicitado: false,
   },
   {
     codigoItem: 48,
@@ -864,6 +911,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 6,
     numeroAtletasMujeres: 6,
+    solicitado: false,
   },
   {
     codigoItem: 49,
@@ -882,6 +930,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 5,
     numeroAtletasMujeres: 4,
+    solicitado: false,
   },
   {
     codigoItem: 50,
@@ -900,6 +949,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 8,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 51,
@@ -918,6 +968,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 3,
     numeroAtletasMujeres: 2,
+    solicitado: false,
   },
   {
     codigoItem: 52,
@@ -936,6 +987,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 4,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 53,
@@ -954,6 +1006,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 2,
     numeroAtletasMujeres: 2,
+    solicitado: false,
   },
   {
     codigoItem: 54,
@@ -972,6 +1025,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 3,
     numeroAtletasMujeres: 3,
+    solicitado: false,
   },
   {
     codigoItem: 55,
@@ -990,6 +1044,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 4,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 56,
@@ -1008,6 +1063,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 4,
     numeroAtletasMujeres: 4,
+    solicitado: false,
   },
   {
     codigoItem: 57,
@@ -1026,6 +1082,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 2,
     numeroAtletasMujeres: 2,
+    solicitado: false,
   },
   {
     codigoItem: 58,
@@ -1043,7 +1100,9 @@ export const eventos: Evento[] = [
     numeroEntrenadoresHombres: 1,
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 8,
+
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 59,
@@ -1062,6 +1121,7 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 0,
     numeroAtletasHombres: 2,
     numeroAtletasMujeres: 0,
+    solicitado: false,
   },
   {
     codigoItem: 60,
@@ -1080,5 +1140,6 @@ export const eventos: Evento[] = [
     numeroEntrenadoresMujeres: 1,
     numeroAtletasHombres: 3,
     numeroAtletasMujeres: 3,
+    solicitado: false,
   },
 ];
