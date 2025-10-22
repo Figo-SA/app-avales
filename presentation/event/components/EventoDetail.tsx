@@ -3,6 +3,7 @@ import { ThemeButton } from "@/presentation/theme/components/ThemedButton";
 import { toast } from "@backpackapp-io/react-native-toast";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import * as DocumentPicker from "expo-document-picker";
+import { router } from "expo-router";
 import React, { forwardRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Divider, Icon, Surface, Text, useTheme } from "react-native-paper";
@@ -147,7 +148,10 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
           )}
 
           {evento.estado === "solicitado" && (
-            <Surface style={[styles.statusBanner, styles.statusSolicitado]} elevation={0}>
+            <Surface
+              style={[styles.statusBanner, styles.statusSolicitado]}
+              elevation={0}
+            >
               <Icon source="ion:time" size={18} color="#FF9800" />
               <Text variant="bodyMedium" style={styles.statusBannerText}>
                 Solicitud en revisión
@@ -157,7 +161,10 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
 
           {evento.estado === "rechazado" && (
             <View style={styles.section}>
-              <Surface style={[styles.statusBanner, styles.statusRechazado]} elevation={0}>
+              <Surface
+                style={[styles.statusBanner, styles.statusRechazado]}
+                elevation={0}
+              >
                 <Icon source="ion:close-circle" size={18} color="#F44336" />
                 <View style={styles.statusBannerContent}>
                   <Text variant="bodyMedium" style={styles.statusBannerText}>
@@ -207,7 +214,10 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
 
           {evento.estado === "aceptado" && (
             <View style={styles.section}>
-              <Surface style={[styles.statusBanner, styles.statusAceptado]} elevation={0}>
+              <Surface
+                style={[styles.statusBanner, styles.statusAceptado]}
+                elevation={0}
+              >
                 <Icon source="ion:checkmark-circle" size={18} color="#4CAF50" />
                 <Text variant="bodyMedium" style={styles.statusBannerText}>
                   Solicitud aceptada
@@ -218,12 +228,17 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
                 mode="contained"
                 icon="ion:people"
                 onPress={() => {
-                  // Navegar a gestionar participantes
-                  const { router } = require("expo-router");
-                  router.push({
-                    pathname: "/participants",
-                    params: { evento: JSON.stringify(evento) },
-                  });
+                  // Cerrar bottom sheet primero (mejor UX)
+                  if (ref && typeof ref !== "function" && ref.current) {
+                    ref.current.close();
+                  }
+                  // Navegar después de un pequeño delay para que se vea la animación
+                  setTimeout(() => {
+                    router.push({
+                      pathname: "/participants",
+                      params: { evento: JSON.stringify(evento) },
+                    });
+                  }, 200);
                 }}
                 style={styles.gestionarButton}
               >
