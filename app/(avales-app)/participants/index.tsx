@@ -5,15 +5,19 @@ import { useParticipantes } from "@/presentation/participants/hooks/useParticipa
 import { ThemeButton } from "@/presentation/theme/components/ThemedButton";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Icon, Surface, Text, useTheme } from "react-native-paper";
-
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 export default function ParticipantsScreen() {
   const params = useLocalSearchParams();
   const evento: Evento | null = params.evento
     ? JSON.parse(params.evento as string)
     : null;
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
 
   if (!evento) {
@@ -32,7 +36,13 @@ export default function ParticipantsScreen() {
   } = useParticipantes(evento);
 
   return (
-    <>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: theme.colors.background,
+      }}
+      edges={["bottom", "left", "right"]}
+    >
       <Stack.Screen
         options={{
           title: evento.evento,
@@ -43,7 +53,13 @@ export default function ParticipantsScreen() {
           headerBackTitle: "Volver",
         }}
       />
-      <ScrollView style={styles.container}>
+
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={
+          Platform.OS === "ios" ? { paddingBottom: insets.bottom } : {}
+        }
+      >
         <View style={styles.header}>
           <Text variant="headlineSmall" style={styles.title}>
             Gestionar Participantes
@@ -141,8 +157,6 @@ export default function ParticipantsScreen() {
           </ThemeButton>
         </View>
 
-        <View style={styles.bottomPadding} />
-
         {/* Modal para agregar participante */}
         {modalState.visible &&
           modalState.tipo &&
@@ -185,7 +199,7 @@ export default function ParticipantsScreen() {
             );
           })()}
       </ScrollView>
-    </>
+    </SafeAreaView>
   );
 }
 
@@ -233,12 +247,8 @@ const createStyles = (theme: any) =>
       flexDirection: "row",
       gap: 12,
       paddingHorizontal: 20,
-      paddingTop: 16,
     },
     button: {
       flex: 1,
-    },
-    bottomPadding: {
-      height: 40,
     },
   });
