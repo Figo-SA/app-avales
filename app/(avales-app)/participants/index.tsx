@@ -133,7 +133,6 @@ export default function ParticipantsScreen() {
             mode="contained"
             disabled={!todoCompleto}
             onPress={() => {
-              console.log("Guardar participantes:", participantes);
               router.back();
             }}
             style={styles.button}

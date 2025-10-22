@@ -129,8 +129,6 @@ export const deleteParticipante = async (id: string): Promise<void> => {
   try {
     // TODO: Implementar llamada al API
     // await apiClient.delete(`/participantes/${id}`);
-    
-    console.log("Participante eliminado:", id);
   } catch (error) {
     console.error("Error al eliminar participante:", error);
     throw error;
@@ -147,8 +145,6 @@ export const saveParticipantes = async (
   try {
     // TODO: Implementar llamada al API
     // await apiClient.post(`/eventos/${eventoId}/participantes`, participantes);
-    
-    console.log("Participantes guardados para evento:", eventoId, participantes);
   } catch (error) {
     console.error("Error al guardar participantes:", error);
     throw error;
