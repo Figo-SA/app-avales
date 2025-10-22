@@ -25,10 +25,22 @@ export default function EventTab() {
         };
       case "solicitados":
         return {
-          icon: "ion:checkmark-done-circle-outline",
+          icon: "ion:time-outline",
           title: "No hay eventos solicitados",
           description:
             "Aún no has solicitado ningún evento. Busca eventos disponibles y solicita uno.",
+        };
+      case "rechazados":
+        return {
+          icon: "ion:close-circle-outline",
+          title: "No hay eventos rechazados",
+          description: "No tienes eventos rechazados. Puedes revisar el motivo y volver a solicitar.",
+        };
+      case "aceptados":
+        return {
+          icon: "ion:checkmark-circle-outline",
+          title: "No hay eventos aceptados",
+          description: "Aún no tienes eventos aceptados",
         };
       default:
         return {

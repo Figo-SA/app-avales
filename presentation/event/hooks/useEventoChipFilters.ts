@@ -1,7 +1,7 @@
 import { Evento } from "@/core/eventos/interfaces/evento";
 import { useMemo, useState } from "react";
 
-export type EventoFilterStatus = "all" | "disponibles" | "solicitados";
+export type EventoFilterStatus = "all" | "disponibles" | "solicitados" | "rechazados" | "aceptados";
 
 export const useEventoChipFilters = (eventos: Evento[]) => {
   const [selectedStatus, setSelectedStatus] = useState<EventoFilterStatus>("all");
@@ -9,8 +9,10 @@ export const useEventoChipFilters = (eventos: Evento[]) => {
   const counts = useMemo(() => {
     return {
       all: eventos.length,
-      disponibles: eventos.filter((e) => !e.solicitado).length,
-      solicitados: eventos.filter((e) => e.solicitado === true).length,
+      disponibles: eventos.filter((e) => e.estado === "disponible").length,
+      solicitados: eventos.filter((e) => e.estado === "solicitado").length,
+      rechazados: eventos.filter((e) => e.estado === "rechazado").length,
+      aceptados: eventos.filter((e) => e.estado === "aceptado").length,
     };
   }, [eventos]);
 
@@ -19,13 +21,13 @@ export const useEventoChipFilters = (eventos: Evento[]) => {
     if (selectedStatus === "all") {
       return eventos;
     }
-    if (selectedStatus === "disponibles") {
-      return eventos.filter((evento) => !evento.solicitado);
-    }
-    if (selectedStatus === "solicitados") {
-      return eventos.filter((evento) => evento.solicitado === true);
-    }
-    return eventos;
+    return eventos.filter((evento) => {
+      if (selectedStatus === "disponibles") return evento.estado === "disponible";
+      if (selectedStatus === "solicitados") return evento.estado === "solicitado";
+      if (selectedStatus === "rechazados") return evento.estado === "rechazado";
+      if (selectedStatus === "aceptados") return evento.estado === "aceptado";
+      return true;
+    });
   }, [eventos, selectedStatus]);
 
   return {

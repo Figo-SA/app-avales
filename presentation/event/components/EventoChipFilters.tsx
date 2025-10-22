@@ -9,6 +9,8 @@ interface EventoChipFiltersProps {
     all: number;
     disponibles: number;
     solicitados: number;
+    rechazados: number;
+    aceptados: number;
   };
 }
 
@@ -22,6 +24,8 @@ export const EventoChipFilters = ({
       { value: "all", label: "Todos", count: counts.all },
       { value: "disponibles", label: "Disponibles", count: counts.disponibles, color: "#4CAF50" },
       { value: "solicitados", label: "Solicitados", count: counts.solicitados, color: "#FF9800" },
+      { value: "rechazados", label: "Rechazados", count: counts.rechazados, color: "#F44336" },
+      { value: "aceptados", label: "Aceptados", count: counts.aceptados, color: "#2196F3" },
     ],
     [counts]
   );

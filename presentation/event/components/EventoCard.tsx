@@ -32,6 +32,48 @@ export const EventoCard = ({
   const totalEntrenadores =
     evento.numeroEntrenadoresHombres + evento.numeroEntrenadoresMujeres;
 
+  // Configuración de badge según estado
+  const getEstadoConfig = () => {
+    switch (evento.estado) {
+      case "disponible":
+        return {
+          label: "Disponible",
+          color: "#4CAF50",
+          bgColor: "#4CAF5015",
+          icon: "ion:checkmark-circle",
+        };
+      case "solicitado":
+        return {
+          label: "En Revisión",
+          color: "#FF9800",
+          bgColor: "#FF980015",
+          icon: "ion:time",
+        };
+      case "rechazado":
+        return {
+          label: "Rechazado",
+          color: "#F44336",
+          bgColor: "#F4433615",
+          icon: "ion:close-circle",
+        };
+      case "aceptado":
+        return {
+          label: "Aceptado",
+          color: "#2196F3",
+          bgColor: "#2196F315",
+          icon: "ion:checkmark-done",
+        };
+      default:
+        return {
+          label: "Disponible",
+          color: "#4CAF50",
+          bgColor: "#4CAF5015",
+          icon: "ion:checkmark-circle",
+        };
+    }
+  };
+
+  const estadoConfig = getEstadoConfig();
   const styles = createStyles(theme);
 
   return (
@@ -41,10 +83,26 @@ export const EventoCard = ({
           <ThemedText style={styles.title} numberOfLines={2}>
             {evento.evento}
           </ThemedText>
-          <View style={styles.badge}>
-            <ThemedText style={styles.badgeText}>
-              {evento.tipoEvento}
-            </ThemedText>
+          <View style={styles.badgeContainer}>
+            <View style={styles.badge}>
+              <ThemedText style={styles.badgeText}>
+                {evento.tipoEvento}
+              </ThemedText>
+            </View>
+            <View
+              style={[
+                styles.estadoBadge,
+                {
+                  backgroundColor: estadoConfig.bgColor,
+                  borderColor: estadoConfig.color,
+                },
+              ]}
+            >
+              <Icon source={estadoConfig.icon} size={12} color={estadoConfig.color} />
+              <ThemedText style={[styles.estadoText, { color: estadoConfig.color }]}>
+                {estadoConfig.label}
+              </ThemedText>
+            </View>
           </View>
         </View>
 
@@ -126,6 +184,10 @@ const createStyles = (theme: any) =>
       marginRight: 12,
       lineHeight: 22,
     },
+    badgeContainer: {
+      alignItems: "flex-end",
+      gap: 6,
+    },
     badge: {
       backgroundColor: theme.colors.primaryContainer,
       paddingHorizontal: 8,
@@ -136,6 +198,20 @@ const createStyles = (theme: any) =>
       fontSize: 10,
       fontWeight: "600",
       color: theme.colors.onPrimaryContainer,
+      textTransform: "uppercase",
+    },
+    estadoBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+      gap: 4,
+      borderWidth: 1,
+    },
+    estadoText: {
+      fontSize: 10,
+      fontWeight: "600",
       textTransform: "uppercase",
     },
     content: {

@@ -1,3 +1,5 @@
+export type EventoEstado = "disponible" | "solicitado" | "rechazado" | "aceptado";
+
 export interface Evento {
   codigoItem: number;
   tipoParticipacion: string;
@@ -15,7 +17,8 @@ export interface Evento {
   numeroEntrenadoresMujeres: number;
   numeroAtletasHombres: number;
   numeroAtletasMujeres: number;
-  solicitado?: boolean; // Indica si el evento ya fue solicitado por el usuario
+  estado: EventoEstado; // Estado del evento para el usuario actual
+  motivoRechazo?: string; // Solo presente cuando estado === "rechazado"
 }
 
 export interface EventoFilters {

@@ -92,57 +92,145 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
 
           <Divider style={styles.divider} />
 
-          {/* Solicitud de Aval - Subir Documento */}
-          <View style={styles.section}>
-            <View style={styles.uploadHeader}>
-              <Icon
-                source="ion:document-attach"
-                size={24}
-                color={theme.colors.primary}
-              />
-              <Text variant="titleMedium" style={styles.uploadTitle}>
-                Solicitar Aval
+          {/* Solicitud de Aval - Sección dinámica según estado */}
+          {evento.estado === "disponible" && (
+            <View style={styles.section}>
+              <View style={styles.uploadHeader}>
+                <Icon
+                  source="ion:document-attach"
+                  size={24}
+                  color={theme.colors.primary}
+                />
+                <Text variant="titleMedium" style={styles.uploadTitle}>
+                  Solicitar Aval
+                </Text>
+              </View>
+              <Text variant="bodySmall" style={styles.sectionDescription}>
+                Sube tu documento de solicitud en formato PDF para poder crear
+                el aval
               </Text>
+
+              {uploadedFile && (
+                <Surface style={styles.fileCard} elevation={1}>
+                  <Icon
+                    source="ion:document-text"
+                    size={24}
+                    color={theme.colors.primary}
+                  />
+                  <View style={styles.fileInfo}>
+                    <Text variant="bodyMedium" style={styles.fileName}>
+                      {uploadedFile.name}
+                    </Text>
+                    <Text variant="bodySmall" style={styles.fileSize}>
+                      {(uploadedFile.size! / 1024).toFixed(2)} KB
+                    </Text>
+                  </View>
+                  <Icon
+                    source="ion:checkmark-circle"
+                    size={24}
+                    color={theme.colors.primary}
+                  />
+                </Surface>
+              )}
+
+              <ThemeButton
+                mode="contained"
+                icon="ion:cloud-upload"
+                onPress={handlePickDocument}
+                style={styles.uploadButton}
+              >
+                {uploadedFile
+                  ? "Cambiar Documento"
+                  : "Subir Documento de Solicitud"}
+              </ThemeButton>
             </View>
-            <Text variant="bodySmall" style={styles.sectionDescription}>
-              Sube tu documento de solicitud en formato PDF para poder crear el
-              aval
-            </Text>
+          )}
 
-            {uploadedFile && (
-              <Surface style={styles.fileCard} elevation={1}>
-                <Icon
-                  source="ion:document-text"
-                  size={24}
-                  color={theme.colors.primary}
-                />
-                <View style={styles.fileInfo}>
-                  <Text variant="bodyMedium" style={styles.fileName}>
-                    {uploadedFile.name}
+          {evento.estado === "solicitado" && (
+            <Surface style={[styles.statusBanner, styles.statusSolicitado]} elevation={0}>
+              <Icon source="ion:time" size={18} color="#FF9800" />
+              <Text variant="bodyMedium" style={styles.statusBannerText}>
+                Solicitud en revisión
+              </Text>
+            </Surface>
+          )}
+
+          {evento.estado === "rechazado" && (
+            <View style={styles.section}>
+              <Surface style={[styles.statusBanner, styles.statusRechazado]} elevation={0}>
+                <Icon source="ion:close-circle" size={18} color="#F44336" />
+                <View style={styles.statusBannerContent}>
+                  <Text variant="bodyMedium" style={styles.statusBannerText}>
+                    Solicitud rechazada
                   </Text>
-                  <Text variant="bodySmall" style={styles.fileSize}>
-                    {(uploadedFile.size! / 1024).toFixed(2)} KB
-                  </Text>
+                  {evento.motivoRechazo && (
+                    <Text variant="bodySmall" style={styles.motivoTextCompact}>
+                      {evento.motivoRechazo}
+                    </Text>
+                  )}
                 </View>
-                <Icon
-                  source="ion:checkmark-circle"
-                  size={24}
-                  color={theme.colors.primary}
-                />
               </Surface>
-            )}
 
-            <ThemeButton
-              mode="contained"
-              icon="ion:cloud-upload"
-              onPress={handlePickDocument}
-              style={styles.uploadButton}
-            >
-              {uploadedFile
-                ? "Cambiar Documento"
-                : "Subir Documento de Solicitud"}
-            </ThemeButton>
-          </View>
+              {uploadedFile && (
+                <Surface style={styles.fileCard} elevation={1}>
+                  <Icon
+                    source="ion:document-text"
+                    size={24}
+                    color={theme.colors.primary}
+                  />
+                  <View style={styles.fileInfo}>
+                    <Text variant="bodyMedium" style={styles.fileName}>
+                      {uploadedFile.name}
+                    </Text>
+                    <Text variant="bodySmall" style={styles.fileSize}>
+                      {(uploadedFile.size! / 1024).toFixed(2)} KB
+                    </Text>
+                  </View>
+                  <Icon
+                    source="ion:checkmark-circle"
+                    size={24}
+                    color={theme.colors.primary}
+                  />
+                </Surface>
+              )}
+
+              <ThemeButton
+                mode="contained"
+                icon="ion:cloud-upload"
+                onPress={handlePickDocument}
+                style={styles.uploadButton}
+              >
+                {uploadedFile ? "Cambiar Documento" : "Subir Nuevo Documento"}
+              </ThemeButton>
+            </View>
+          )}
+
+          {evento.estado === "aceptado" && (
+            <View style={styles.section}>
+              <Surface style={[styles.statusBanner, styles.statusAceptado]} elevation={0}>
+                <Icon source="ion:checkmark-circle" size={18} color="#4CAF50" />
+                <Text variant="bodyMedium" style={styles.statusBannerText}>
+                  Solicitud aceptada
+                </Text>
+              </Surface>
+
+              <ThemeButton
+                mode="contained"
+                icon="ion:people"
+                onPress={() => {
+                  // Navegar a gestionar participantes
+                  const { router } = require("expo-router");
+                  router.push({
+                    pathname: "/participants",
+                    params: { evento: JSON.stringify(evento) },
+                  });
+                }}
+                style={styles.gestionarButton}
+              >
+                Gestionar Participantes
+              </ThemeButton>
+            </View>
+          )}
 
           <Divider style={styles.divider} />
 
@@ -405,6 +493,43 @@ const createStyles = (theme: any) =>
     },
     uploadButton: {
       marginTop: 8,
+    },
+    gestionarButton: {
+      marginTop: 16,
+    },
+    statusBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      padding: 12,
+      borderRadius: 8,
+      marginBottom: 16,
+      borderLeftWidth: 3,
+    },
+    statusSolicitado: {
+      backgroundColor: "#FF980008",
+      borderLeftColor: "#FF9800",
+    },
+    statusRechazado: {
+      backgroundColor: "#F4433608",
+      borderLeftColor: "#F44336",
+    },
+    statusAceptado: {
+      backgroundColor: "#4CAF5008",
+      borderLeftColor: "#4CAF50",
+    },
+    statusBannerContent: {
+      flex: 1,
+      gap: 4,
+    },
+    statusBannerText: {
+      fontWeight: "600",
+      color: theme.colors.onSurface,
+    },
+    motivoTextCompact: {
+      color: theme.colors.onSurfaceVariant,
+      marginTop: 2,
+      fontStyle: "italic",
     },
     emptyText: {
       textAlign: "center",
