@@ -1,9 +1,10 @@
 import { Evento } from "@/core/eventos/interfaces/evento";
 import { ThemeButton } from "@/presentation/theme/components/ThemedButton";
+import { toast } from "@backpackapp-io/react-native-toast";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import * as DocumentPicker from "expo-document-picker";
 import React, { forwardRef, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Divider, Icon, Surface, Text, useTheme } from "react-native-paper";
 
 interface EventoDetailProps {
@@ -29,13 +30,13 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
           const file = result.assets[0];
           setUploadedFile(file);
           onDocumentUploaded?.(file);
-          Alert.alert(
-            "Documento cargado",
-            `${file.name} (${(file.size! / 1024).toFixed(2)} KB)`
+          toast.success(
+            "Documento cargado " +
+              `${file.name} (${(file.size! / 1024).toFixed(2)} KB)`
           );
         }
       } catch (error) {
-        Alert.alert("Error", "No se pudo cargar el documento");
+        toast.error("Error" + "No se pudo cargar el documento");
         console.error("Error picking document:", error);
       }
     };
@@ -52,7 +53,7 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
         <BottomSheet
           ref={ref}
           index={-1}
-          snapPoints={["10%"]}
+          snapPoints={["20%"]}
           onChange={handleSheetChanges}
           backgroundStyle={styles.bottomSheetBackground}
           handleIndicatorStyle={styles.handleIndicator}
@@ -271,7 +272,7 @@ const InfoRow: React.FC<InfoRowProps> = ({ icon, label, value }) => {
 const createStyles = (theme: any) =>
   StyleSheet.create({
     bottomSheetBackground: {
-      backgroundColor: theme.colors.surface,
+      backgroundColor: theme.colors.background,
     },
     handleIndicator: {
       backgroundColor: theme.colors.outline,

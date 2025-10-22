@@ -1,4 +1,5 @@
 import { Aval } from "@/core/avales/interfaces/aval";
+import { EmptyState } from "@/presentation/theme/components/EmptyState";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { FlatList, RefreshControl } from "react-native";
@@ -30,6 +31,14 @@ export const AvalList = ({
     setIsRefreshing(false);
   };
 
+  const renderEmptyComponent = () => (
+    <EmptyState
+      icon="ion:document-text-outline"
+      title="No hay avales"
+      description="Aún no tienes avales registrados. Crea tu primer aval presionando el botón +"
+    />
+  );
+
   return (
     <FlatList
       data={avales}
@@ -38,10 +47,11 @@ export const AvalList = ({
       onEndReached={onEndReached}
       onEndReachedThreshold={onEndReachedThreshold}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ padding: 16 }}
+      contentContainerStyle={avales.length === 0 ? { flex: 1 } : { padding: 16 }}
       refreshControl={
         <RefreshControl refreshing={isRefreshing} onRefresh={onPullToRefresh} />
       }
+      ListEmptyComponent={renderEmptyComponent}
     />
   );
 };

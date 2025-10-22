@@ -1,6 +1,5 @@
 import { Evento } from "@/core/eventos/interfaces/evento";
-import { ThemedText } from "@/presentation/theme/components/ThemedText";
-import { ThemedView } from "@/presentation/theme/components/ThemedView";
+import { EmptyState } from "@/presentation/theme/components/EmptyState";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useRef, useState } from "react";
@@ -25,7 +24,7 @@ export const EventoList = ({
   );
   const openBottomSheet = useCallback((evento: Evento) => {
     setEventoSeleccionado(evento);
-    bottomSheetRef.current?.expand();
+    bottomSheetRef.current?.snapToIndex(0);
   }, []);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -44,14 +43,11 @@ export const EventoList = ({
   };
 
   const renderEmptyComponent = () => (
-    <ThemedView className="flex-1 justify-center items-center p-8">
-      <ThemedText className="text-gray-500 text-center text-lg">
-        No se encontraron eventos
-      </ThemedText>
-      <ThemedText className="text-gray-400 text-center mt-2">
-        Prueba ajustando los filtros de búsqueda
-      </ThemedText>
-    </ThemedView>
+    <EmptyState
+      icon="ion:calendar-outline"
+      title="No hay eventos"
+      description="No se encontraron eventos disponibles en este momento"
+    />
   );
 
   return (
@@ -65,7 +61,7 @@ export const EventoList = ({
         onEndReached={onEndReached}
         onEndReachedThreshold={onEndReachedThreshold}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        contentContainerStyle={eventos.length === 0 ? { flex: 1 } : { padding: 16, paddingBottom: 100 }}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
