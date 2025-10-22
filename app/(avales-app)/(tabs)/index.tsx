@@ -1,5 +1,6 @@
 import { AvalFilters } from "@/presentation/aval/components/AvalFilters";
 import { AvalList } from "@/presentation/aval/components/AvalList";
+import { AvalListSkeleton } from "@/presentation/aval/components/AvalCardSkeleton";
 import { useAvalFilters } from "@/presentation/aval/hooks/useAvalFilters";
 import { useAvales } from "@/presentation/aval/hooks/useAvales";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
@@ -11,6 +12,9 @@ export default function AvalesTab() {
   const { selectedStatus, setSelectedStatus, counts, filteredAvales } =
     useAvalFilters(avales);
 
+  // Mostrar skeleton durante la carga inicial
+  const isInitialLoading = avalesQuery.isLoading && avales.length === 0;
+
   return (
     <ThemedView style={{ flex: 1 }}>
       <AvalFilters
@@ -19,14 +23,18 @@ export default function AvalesTab() {
         counts={counts}
       />
 
-      <AvalList
-        avales={filteredAvales}
-        onEndReached={() => {
-          if (selectedStatus === "all") {
-            loadNextPage();
-          }
-        }}
-      />
+      {isInitialLoading ? (
+        <AvalListSkeleton count={5} />
+      ) : (
+        <AvalList
+          avales={filteredAvales}
+          onEndReached={() => {
+            if (selectedStatus === "all") {
+              loadNextPage();
+            }
+          }}
+        />
+      )}
     </ThemedView>
   );
 }
