@@ -4,10 +4,14 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 export const useEventos = () => {
   const eventosQuery = useInfiniteQuery({
     queryKey: ["eventos", "infinite"],
-    queryFn: ({ pageParam }) => getEventos(10, pageParam * 10),
+    queryFn: ({ pageParam }) => getEventos(pageParam, 10),
     staleTime: 1000 * 60 * 60,
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages) => allPages.length,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      // Si la página actual devolvió menos de 10 elementos, no hay más páginas
+      if (lastPage.length < 10) return undefined;
+      return allPages.length + 1;
+    },
   });
   return {
     eventosQuery,

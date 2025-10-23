@@ -4,6 +4,7 @@ import { LogoutSection } from "@/presentation/profile/components/LogoutSection";
 import { ProfileHeader } from "@/presentation/profile/components/ProfileHeader";
 import { SupportSection } from "@/presentation/profile/components/SupportSection";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
+import { router } from "expo-router";
 import { Alert, StyleSheet } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { useTheme } from "react-native-paper";
@@ -32,7 +33,7 @@ export default function ProfileTab() {
   };
 
   const handleEditProfile = () => {
-    Alert.alert("Próximamente", "Funcionalidad de edición en desarrollo");
+    router.push("/(avales-app)/profile");
   };
 
   const handleChangePassword = () => {

@@ -1,23 +1,52 @@
-export type EventoEstado = "disponible" | "solicitado" | "rechazado" | "aceptado";
+export type EventoEstado =
+  | "disponible"
+  | "solicitado"
+  | "rechazado"
+  | "aceptado";
+
+export interface Disciplina {
+  id: number;
+  nombre: string;
+  createdAt: string;
+  updatedAt: string;
+  deleted: boolean;
+}
+
+export interface Categoria {
+  id: number;
+  nombre: string;
+  createdAt: string;
+  updatedAt: string;
+  deleted: boolean;
+}
 
 export interface Evento {
-  codigoItem: number;
+  id: number;
+  codigo: string;
   tipoParticipacion: string;
   tipoEvento: string;
-  evento: string;
-  sexo: string;
-  deporte: string;
+  nombre: string;
+  lugar: string;
+  genero: string;
+  disciplinaId: number;
+  categoriaId: number;
   provincia: string;
+  ciudad: string;
   pais: string;
   alcance: string;
   fechaInicio: string;
   fechaFin: string;
-  categoria: string;
-  numeroEntrenadoresHombres: number;
-  numeroEntrenadoresMujeres: number;
-  numeroAtletasHombres: number;
-  numeroAtletasMujeres: number;
-  estado: EventoEstado; // Estado del evento para el usuario actual
+  numEntrenadoresHombres: number;
+  numEntrenadoresMujeres: number;
+  numAtletasHombres: number;
+  numAtletasMujeres: number;
+  createdAt: string;
+  updatedAt: string;
+  deleted: boolean;
+  disciplina: Disciplina;
+  categoria: Categoria;
+  // Campos locales/UI
+  estado?: EventoEstado; // Estado del evento para el usuario actual
   motivoRechazo?: string; // Solo presente cuando estado === "rechazado"
 }
 
@@ -28,6 +57,20 @@ export interface EventoFilters {
   alcance?: string;
   fechaDesde?: string;
   fechaHasta?: string;
+}
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  lastPage: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface EventosPaginatedResponse {
+  items: Evento[];
+  pagination: PaginationMeta;
 }
 
 export interface EventoListResponse {

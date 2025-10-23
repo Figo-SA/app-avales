@@ -34,7 +34,8 @@ export default function EventTab() {
         return {
           icon: "ion:close-circle-outline",
           title: "No hay eventos rechazados",
-          description: "No tienes eventos rechazados. Puedes revisar el motivo y volver a solicitar.",
+          description:
+            "No tienes eventos rechazados. Puedes revisar el motivo y volver a solicitar.",
         };
       case "aceptados":
         return {

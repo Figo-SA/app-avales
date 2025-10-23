@@ -66,7 +66,7 @@ export const EventoList = ({
       <FlatList
         key={filterKey} // Fuerza reset del FlatList cuando cambia el filtro
         data={eventos}
-        keyExtractor={(item) => item.codigoItem.toString()}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <EventoCard evento={item} onPress={() => openBottomSheet(item)} />
         )}

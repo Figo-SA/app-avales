@@ -1,4 +1,5 @@
 import { Evento } from "@/core/eventos/interfaces/evento";
+import { formatDateLong } from "@/helpers/date.helper";
 import { ThemeButton } from "@/presentation/theme/components/ThemedButton";
 import { toast } from "@backpackapp-io/react-native-toast";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
@@ -19,6 +20,9 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
     const [uploadedFile, setUploadedFile] =
       useState<DocumentPicker.DocumentPickerAsset | null>(null);
     const styles = createStyles(theme);
+    
+    // Estado por defecto si no viene del backend
+    const estadoEvento = evento?.estado || "disponible";
 
     const handlePickDocument = async () => {
       try {
@@ -82,7 +86,7 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
           {/* Header */}
           <View style={styles.header}>
             <Text variant="headlineSmall" style={styles.title}>
-              {evento.evento}
+              {evento.nombre}
             </Text>
             <Surface style={styles.badge} elevation={1}>
               <Text variant="labelSmall" style={styles.badgeText}>
@@ -94,7 +98,7 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
           <Divider style={styles.divider} />
 
           {/* Solicitud de Aval - Sección dinámica según estado */}
-          {evento.estado === "disponible" && (
+          {estadoEvento === "disponible" && (
             <View style={styles.section}>
               <View style={styles.uploadHeader}>
                 <Icon
@@ -147,7 +151,7 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
             </View>
           )}
 
-          {evento.estado === "solicitado" && (
+          {estadoEvento === "solicitado" && (
             <Surface
               style={[styles.statusBanner, styles.statusSolicitado]}
               elevation={0}
@@ -159,7 +163,7 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
             </Surface>
           )}
 
-          {evento.estado === "rechazado" && (
+          {estadoEvento === "rechazado" && (
             <View style={styles.section}>
               <Surface
                 style={[styles.statusBanner, styles.statusRechazado]}
@@ -212,7 +216,7 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
             </View>
           )}
 
-          {evento.estado === "aceptado" && (
+          {estadoEvento === "aceptado" && (
             <View style={styles.section}>
               <Surface
                 style={[styles.statusBanner, styles.statusAceptado]}
@@ -258,12 +262,12 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
             <InfoRow
               icon="ion:calendar"
               label="Fecha Inicio"
-              value={evento.fechaInicio}
+              value={formatDateLong(evento.fechaInicio)}
             />
             <InfoRow
               icon="ion:calendar-outline"
               label="Fecha Fin"
-              value={evento.fechaFin}
+              value={formatDateLong(evento.fechaFin)}
             />
             <InfoRow
               icon="ion:location"
@@ -273,7 +277,7 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
             <InfoRow
               icon="ion:basketball"
               label="Deporte"
-              value={evento.deporte}
+              value={evento.disciplina.nombre}
             />
           </View>
 
@@ -314,7 +318,7 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
                   Deportistas
                 </Text>
                 <Text variant="titleLarge" style={styles.statValue}>
-                  {evento.numeroAtletasHombres + evento.numeroAtletasMujeres}
+                  {evento.numAtletasHombres + evento.numAtletasMujeres}
                 </Text>
               </Surface>
               <Surface style={styles.statCard} elevation={1}>
@@ -327,8 +331,8 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
                   Entrenadores
                 </Text>
                 <Text variant="titleLarge" style={styles.statValue}>
-                  {evento.numeroEntrenadoresHombres +
-                    evento.numeroEntrenadoresMujeres}
+                  {evento.numEntrenadoresHombres +
+                    evento.numEntrenadoresMujeres}
                 </Text>
               </Surface>
             </View>
