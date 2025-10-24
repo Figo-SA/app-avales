@@ -45,7 +45,7 @@ export default function ParticipantsScreen() {
     >
       <Stack.Screen
         options={{
-          title: evento.evento,
+          title: evento.nombre,
           headerStyle: {
             backgroundColor: theme.colors.primary,
           },
@@ -65,7 +65,7 @@ export default function ParticipantsScreen() {
             Gestionar Participantes
           </Text>
           <Text variant="bodyMedium" style={styles.subtitle}>
-            {evento.evento}
+            {evento.nombre}
           </Text>
         </View>
 
@@ -89,7 +89,7 @@ export default function ParticipantsScreen() {
 
         <Divider style={styles.divider} />
 
-        {evento.numeroEntrenadoresHombres > 0 && (
+        {evento.numEntrenadoresHombres > 0 && (
           <CategoriaSection
             titulo="Entrenadores Hombres"
             icono="fa:user-tie"
@@ -101,7 +101,7 @@ export default function ParticipantsScreen() {
           />
         )}
 
-        {evento.numeroEntrenadoresMujeres > 0 && (
+        {evento.numEntrenadoresMujeres > 0 && (
           <CategoriaSection
             titulo="Entrenadoras Mujeres"
             icono="fa:user-tie"
@@ -113,7 +113,7 @@ export default function ParticipantsScreen() {
           />
         )}
 
-        {evento.numeroAtletasHombres > 0 && (
+        {evento.numAtletasHombres > 0 && (
           <CategoriaSection
             titulo="Atletas Hombres"
             icono="ion:person"
@@ -125,7 +125,7 @@ export default function ParticipantsScreen() {
           />
         )}
 
-        {evento.numeroAtletasMujeres > 0 && (
+        {evento.numAtletasMujeres > 0 && (
           <CategoriaSection
             titulo="Atletas Mujeres"
             icono="ion:person"
@@ -168,19 +168,19 @@ export default function ParticipantsScreen() {
             let participantesYaAgregados: any[] = [];
 
             if (tipo === "entrenador" && sexo === "masculino") {
-              cantidadRequerida = evento.numeroEntrenadoresHombres;
+              cantidadRequerida = evento.numEntrenadoresHombres;
               cantidadActual = participantes.entrenadoresHombres.length;
               participantesYaAgregados = participantes.entrenadoresHombres;
             } else if (tipo === "entrenador" && sexo === "femenino") {
-              cantidadRequerida = evento.numeroEntrenadoresMujeres;
+              cantidadRequerida = evento.numEntrenadoresMujeres;
               cantidadActual = participantes.entrenadoresMujeres.length;
               participantesYaAgregados = participantes.entrenadoresMujeres;
             } else if (tipo === "atleta" && sexo === "masculino") {
-              cantidadRequerida = evento.numeroAtletasHombres;
+              cantidadRequerida = evento.numAtletasHombres;
               cantidadActual = participantes.atletasHombres.length;
               participantesYaAgregados = participantes.atletasHombres;
             } else if (tipo === "atleta" && sexo === "femenino") {
-              cantidadRequerida = evento.numeroAtletasMujeres;
+              cantidadRequerida = evento.numAtletasMujeres;
               cantidadActual = participantes.atletasMujeres.length;
               participantesYaAgregados = participantes.atletasMujeres;
             }

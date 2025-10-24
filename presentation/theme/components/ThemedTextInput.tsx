@@ -7,6 +7,9 @@ interface Props extends TextInputProps {
   type?: "text" | "password" | "numeric" | "email";
   errorMessage?: string;
   multiline?: boolean;
+  value?: string;
+  onChangeText?: (text: string) => void;
+  onBlur?: () => void;
 }
 
 const ThemedTextInput = ({
@@ -14,6 +17,9 @@ const ThemedTextInput = ({
   type,
   errorMessage,
   multiline,
+  value,
+  onChangeText,
+  onBlur,
   ...rest
 }: Props) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -25,6 +31,9 @@ const ThemedTextInput = ({
     <View style={{ marginBottom: 8 }}>
       <TextInput
         {...rest}
+        value={value} // ✅ explícitamente controlado
+        onChangeText={onChangeText} // ✅ conexión directa con react-hook-form
+        onBlur={onBlur} // ✅ permite validación onBlur
         mode="outlined"
         error={hasError}
         secureTextEntry={isPassword && !showPassword}

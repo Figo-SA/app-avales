@@ -138,7 +138,7 @@ const LoginScreen = () => {
 
             {/* Forgot Password Link */}
             <ThemedView style={styles.forgotPasswordContainer}>
-              <ThemedLink href="/auth/register">
+              <ThemedLink href="/auth/forgot-password">
                 ¿Olvidaste tu contraseña?
               </ThemedLink>
             </ThemedView>

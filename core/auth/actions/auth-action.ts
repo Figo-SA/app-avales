@@ -1,5 +1,7 @@
 import { API_ENDPOINTS } from "@/core/api";
 import { httpClient } from "@/core/api/http-client";
+import { User } from "@/core/auth/interface/user";
+import { handleApiError } from "@/helpers/error-handler";
 import { logger } from "@/core/logger";
 import { toast } from "@backpackapp-io/react-native-toast";
 
@@ -8,15 +10,17 @@ export interface AuthResponse {
   email: string;
   nombre: string;
   apellido: string;
-  cedula: string;
+  cedula?: string;
   roles: string[];
   token: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Función helper para separar user y token
 const returnUserToken = (
   authData: AuthResponse
-): { user: Omit<AuthResponse, "token">; token: string } => {
+): { user: User; token: string } => {
   const { token, ...user } = authData;
   return { user, token };
 };
@@ -35,15 +39,8 @@ export const authLogin = async (email: string, password: string) => {
 
     return returnUserToken(data);
   } catch (error: any) {
-    logger.error("Login failed", error);
-
-    const errorMessage =
-      error?.response?.data?.err ||
-      error?.response?.data?.message ||
-      "Error de conexión. Intenta nuevamente.";
-
+    const errorMessage = handleApiError(error, "authLogin");
     toast.error(errorMessage);
-
     throw new Error(errorMessage);
   }
 };

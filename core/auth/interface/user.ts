@@ -3,6 +3,8 @@ export interface User {
   email: string;
   nombre: string;
   apellido: string;
-  cedula: string;
+  cedula?: string;
   roles: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }

@@ -9,10 +9,10 @@ export const useEventoChipFilters = (eventos: Evento[]) => {
   const counts = useMemo(() => {
     return {
       all: eventos.length,
-      disponibles: eventos.filter((e) => e.estado === "disponible").length,
-      solicitados: eventos.filter((e) => e.estado === "solicitado").length,
-      rechazados: eventos.filter((e) => e.estado === "rechazado").length,
-      aceptados: eventos.filter((e) => e.estado === "aceptado").length,
+      disponibles: eventos.filter((e) => (e.estado || "disponible") === "disponible").length,
+      solicitados: eventos.filter((e) => (e.estado || "disponible") === "solicitado").length,
+      rechazados: eventos.filter((e) => (e.estado || "disponible") === "rechazado").length,
+      aceptados: eventos.filter((e) => (e.estado || "disponible") === "aceptado").length,
     };
   }, [eventos]);
 
@@ -22,10 +22,11 @@ export const useEventoChipFilters = (eventos: Evento[]) => {
       return eventos;
     }
     return eventos.filter((evento) => {
-      if (selectedStatus === "disponibles") return evento.estado === "disponible";
-      if (selectedStatus === "solicitados") return evento.estado === "solicitado";
-      if (selectedStatus === "rechazados") return evento.estado === "rechazado";
-      if (selectedStatus === "aceptados") return evento.estado === "aceptado";
+      const estado = evento.estado || "disponible";
+      if (selectedStatus === "disponibles") return estado === "disponible";
+      if (selectedStatus === "solicitados") return estado === "solicitado";
+      if (selectedStatus === "rechazados") return estado === "rechazado";
+      if (selectedStatus === "aceptados") return estado === "aceptado";
       return true;
     });
   }, [eventos, selectedStatus]);

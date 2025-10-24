@@ -12,8 +12,8 @@ interface ProfileHeaderProps {
 export const ProfileHeader = ({ user, onEditProfile }: ProfileHeaderProps) => {
   const theme = useTheme();
 
-  const getInitials = (nombre: string, apellido: string) => {
-    return `${nombre?.[0] || ""}${apellido?.[0] || ""}`.toUpperCase();
+  const getInitials = (nombres: string, apellidos: string) => {
+    return `${nombres?.[0] || ""}${apellidos?.[0] || ""}`.toUpperCase();
   };
 
   const styles = createStyles(theme);
@@ -40,9 +40,11 @@ export const ProfileHeader = ({ user, onEditProfile }: ProfileHeaderProps) => {
             <Text variant="bodyMedium" style={styles.userEmail}>
               {user?.email}
             </Text>
-            <Text variant="bodySmall" style={styles.userCedula}>
-              C.I: {user?.cedula}
-            </Text>
+            {user?.cedula && (
+              <Text variant="bodySmall" style={styles.userCedula}>
+                C.I: {user.cedula}
+              </Text>
+            )}
             <View style={styles.rolesContainer}>
               {user?.roles?.map((role, index) => (
                 <View key={index} style={styles.roleChip}>

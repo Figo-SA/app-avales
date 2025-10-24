@@ -10,32 +10,35 @@ export const API_URL =
     : process.env.EXPO_PUBLIC_API_URL_ANDROID;
 
 export const API_CONFIG = {
-  baseURL: API_URL || 'https://api.figo.com',
+  baseURL: API_URL || "https://api.figo.com",
   timeout: 10000,
   retryAttempts: 3,
 } as const;
 
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    REFRESH: '/auth/refresh',
-    LOGOUT: '/auth/logout',
-    CHECK_STATUS: '/auth/check-status',
+    LOGIN: "/auth/login",
+    REGISTER: "/auth/register",
+    REFRESH: "/auth/refresh",
+    LOGOUT: "/auth/logout",
+    CHECK_STATUS: "/auth/check-status",
+    FORGOT_PASSWORD: "/auth/forgot-password",
+    RESET_PASSWORD: "/auth/reset-password",
+    CHANGE_PASSWORD: "/auth/change-password",
   },
   AVALES: {
-    LIST: '/avales',
-    CREATE: '/avales',
+    LIST: "/avales",
+    CREATE: "/avales",
     UPDATE: (id: string) => `/avales/${id}`,
     DELETE: (id: string) => `/avales/${id}`,
     GET_BY_ID: (id: string) => `/avales/${id}`,
   },
   EVENTOS: {
-    LIST: '/eventos',
-    GET_BY_ID: (id: number) => `/eventos/${id}`,
+    LIST: "/events/paginated",
+    GET_BY_ID: (id: number) => `/events/${id}`,
   },
   USER: {
-    PROFILE: '/user/profile',
-    UPDATE_PROFILE: '/user/profile',
+    PROFILE: "/users/profile",
+    UPDATE_PROFILE: "/users/profile",
   },
 } as const;
