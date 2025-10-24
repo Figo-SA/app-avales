@@ -1,10 +1,13 @@
 import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
 import { AccountSettings } from "@/presentation/profile/components/AccountSettings";
+import { ChangePasswordBottomSheet } from "@/presentation/profile/components/ChangePasswordBottomSheet";
 import { LogoutSection } from "@/presentation/profile/components/LogoutSection";
 import { ProfileHeader } from "@/presentation/profile/components/ProfileHeader";
 import { SupportSection } from "@/presentation/profile/components/SupportSection";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
+import BottomSheet from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
+import { useRef } from "react";
 import { Alert, StyleSheet } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { useTheme } from "react-native-paper";
@@ -12,6 +15,7 @@ import { useTheme } from "react-native-paper";
 export default function ProfileTab() {
   const { user, logout } = useAuthStore();
   const theme = useTheme();
+  const changePasswordBottomSheetRef = useRef<BottomSheet>(null);
 
   if (!user) {
     return null;
@@ -37,10 +41,7 @@ export default function ProfileTab() {
   };
 
   const handleChangePassword = () => {
-    Alert.alert(
-      "Próximamente",
-      "Funcionalidad de cambio de contraseña en desarrollo"
-    );
+    changePasswordBottomSheetRef.current?.snapToIndex(0);
   };
 
   const handleSupport = () => {
@@ -79,6 +80,8 @@ export default function ProfileTab() {
 
         <LogoutSection onLogout={handleLogout} />
       </ScrollView>
+
+      <ChangePasswordBottomSheet ref={changePasswordBottomSheetRef} />
     </ThemedView>
   );
 }

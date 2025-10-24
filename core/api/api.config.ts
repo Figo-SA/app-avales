@@ -24,6 +24,7 @@ export const API_ENDPOINTS = {
     CHECK_STATUS: "/auth/check-status",
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",
+    CHANGE_PASSWORD: "/auth/change-password",
   },
   AVALES: {
     LIST: "/avales",

@@ -15,10 +15,10 @@ import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import { toast } from "@backpackapp-io/react-native-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router, Stack } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { useTheme } from "react-native-paper";
+import { Animated, ScrollView, StyleSheet, View } from "react-native";
+import { Icon, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Step = "email" | "reset";
@@ -28,6 +28,18 @@ export default function ForgotPasswordScreen() {
   const [currentStep, setCurrentStep] = useState<Step>("email");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState("");
+
+  // Animación de la línea de progreso
+  const lineProgress = useRef(new Animated.Value(0)).current;
+
+  // Animar línea cuando cambia el paso
+  useEffect(() => {
+    Animated.timing(lineProgress, {
+      toValue: currentStep === "reset" ? 1 : 0,
+      duration: 600,
+      useNativeDriver: false,
+    }).start();
+  }, [currentStep]);
 
   const {
     control: emailControl,
@@ -122,12 +134,37 @@ export default function ForgotPasswordScreen() {
                 style={[
                   styles.dot,
                   currentStep === "email" && styles.dotActive,
+                  currentStep === "reset" && styles.dotCompleted,
                 ]}
-              />
-              <ThemedText style={styles.stepLabel}>Email</ThemedText>
+              >
+                {currentStep === "reset" && (
+                  <Icon source="checkmark-outline" size={18} color="#FFFFFF" />
+                )}
+              </View>
+              <ThemedText
+                style={[
+                  styles.stepLabel,
+                  currentStep === "reset" && styles.stepLabelCompleted,
+                ]}
+              >
+                Email
+              </ThemedText>
             </View>
 
-            <View style={styles.stepLine} />
+            <View style={styles.stepLineContainer}>
+              <View style={styles.stepLine} />
+              <Animated.View
+                style={[
+                  styles.stepLineProgress,
+                  {
+                    width: lineProgress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ["0%", "100%"],
+                    }),
+                  },
+                ]}
+              />
+            </View>
 
             <View style={styles.stepDot}>
               <View
@@ -316,6 +353,8 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     backgroundColor: "#E0E0E0",
+    justifyContent: "center",
+    alignItems: "center",
   },
   dotActive: {
     backgroundColor: "#03A9F4",
@@ -323,17 +362,35 @@ const styles = StyleSheet.create({
   dotCompleted: {
     backgroundColor: "#4CAF50",
   },
-  stepLine: {
+  stepLineContainer: {
     flex: 1,
     height: 4,
-    backgroundColor: "#E0E0E0",
     marginHorizontal: 10,
-    borderRadius: 2,
     marginBottom: 20,
+    position: "relative",
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  stepLine: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#E0E0E0",
+    borderRadius: 2,
+  },
+  stepLineProgress: {
+    position: "absolute",
+    height: "100%",
+    backgroundColor: "#4CAF50",
+    borderRadius: 2,
   },
   stepLabel: {
     fontSize: 12,
     fontWeight: "600",
+  },
+  stepLabelCompleted: {
+    color: "#4CAF50",
+    fontWeight: "700",
   },
   stepContainer: {
     gap: 16,
