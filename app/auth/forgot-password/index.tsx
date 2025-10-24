@@ -1,15 +1,12 @@
 import {
   forgotPassword,
   resetPassword,
-  validateRecoveryCode,
 } from "@/core/auth/actions/password-recovery-actions";
 import {
   ForgotPasswordFormData,
   forgotPasswordSchema,
   ResetPasswordFormData,
   resetPasswordSchema,
-  ValidateCodeFormData,
-  validateCodeSchema,
 } from "@/core/auth/schemas/password-recovery-schemas";
 import { ThemeButton } from "@/presentation/theme/components/ThemedButton";
 import { ThemedText } from "@/presentation/theme/components/ThemedText";
@@ -24,16 +21,14 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type Step = "email" | "code" | "password";
+type Step = "email" | "reset";
 
 export default function ForgotPasswordScreen() {
   const theme = useTheme();
   const [currentStep, setCurrentStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [email, setEmail] = useState("");
 
-  // Formulario para email
   const {
     control: emailControl,
     handleSubmit: handleEmailSubmit,
@@ -44,23 +39,12 @@ export default function ForgotPasswordScreen() {
     mode: "onSubmit",
   });
 
-  // Formulario para código
-  const {
-    control: codeControl,
-    handleSubmit: handleCodeSubmit,
-    formState: { errors: codeErrors },
-    reset: resetCodeForm,
-  } = useForm<ValidateCodeFormData>({
-    resolver: zodResolver(validateCodeSchema),
-    defaultValues: { code: "" },
-    mode: "onSubmit",
-  });
-
-  // Formulario para nueva contraseña
   const {
     control: passwordControl,
     handleSubmit: handlePasswordSubmit,
+
     formState: { errors: passwordErrors },
+
     reset: resetPasswordForm,
   } = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
@@ -72,20 +56,22 @@ export default function ForgotPasswordScreen() {
     mode: "onSubmit",
   });
 
-  // Paso 1: Enviar código al email
   const onSubmitEmail = async (data: ForgotPasswordFormData) => {
     try {
       setIsSubmitting(true);
       const response = await forgotPassword(data.email);
       setEmail(data.email);
 
-      // Resetear formulario del código antes de cambiar de paso
-      resetCodeForm({ code: "" });
+      resetPasswordForm({
+        code: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
 
       toast.success(
         response.message || "Se ha enviado un código a tu correo electrónico"
       );
-      setCurrentStep("code");
+      setCurrentStep("reset");
     } catch (error: any) {
       toast.error(error.message || "Error al enviar el código");
     } finally {
@@ -93,43 +79,13 @@ export default function ForgotPasswordScreen() {
     }
   };
 
-  // Paso 2: Validar código
-  const onSubmitCode = async (data: ValidateCodeFormData) => {
+  const onSubmitReset = async (data: ResetPasswordFormData) => {
     try {
       setIsSubmitting(true);
-      const response = await validateRecoveryCode(email, data.code);
-
-      if (response.valid) {
-        setCode(data.code);
-
-        // Resetear formulario de contraseña antes de cambiar de paso
-        resetPasswordForm({
-          code: "",
-          newPassword: "",
-          confirmPassword: "",
-        });
-
-        toast.success("Código validado correctamente");
-        setCurrentStep("password");
-      } else {
-        toast.error("Código inválido. Verifica e intenta nuevamente");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Error al validar el código");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Paso 3: Cambiar contraseña
-  const onSubmitPassword = async (data: ResetPasswordFormData) => {
-    try {
-      setIsSubmitting(true);
-      const response = await resetPassword(email, code, data.newPassword);
+      const response = await resetPassword(email, data.code, data.newPassword);
 
       toast.success(response.message || "Contraseña cambiada exitosamente");
 
-      // Redirigir al login después de 1 segundo
       setTimeout(() => {
         router.replace("/auth/login");
       }, 1000);
@@ -140,259 +96,196 @@ export default function ForgotPasswordScreen() {
     }
   };
 
-  // Renderizar paso actual
-  const renderStep = () => {
-    switch (currentStep) {
-      case "email":
-        return (
-          <View style={styles.stepContainer}>
-            <ThemedText type="title" style={styles.title}>
-              Recuperar Contraseña
-            </ThemedText>
-            <ThemedText style={styles.description}>
-              Ingresa tu correo electrónico y te enviaremos un código de 6
-              dígitos para recuperar tu contraseña.
-            </ThemedText>
-
-            <Controller
-              control={emailControl}
-              name="email"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <ThemedTextInput
-                  label="Correo Electrónico *"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  errorMessage={emailErrors.email?.message}
-                  type="email"
-                  autoCapitalize="none"
-                  disabled={isSubmitting}
-                  icon="ion:mail-outline"
-                />
-              )}
-            />
-
-            <ThemeButton
-              mode="contained"
-              onPress={handleEmailSubmit(onSubmitEmail)}
-              loading={isSubmitting}
-              disabled={isSubmitting}
-              style={styles.button}
-            >
-              Enviar Código
-            </ThemeButton>
-
-            <ThemeButton
-              mode="text"
-              onPress={() => router.back()}
-              disabled={isSubmitting}
-            >
-              Volver al Login
-            </ThemeButton>
-          </View>
-        );
-
-      case "code":
-        return (
-          <View style={styles.stepContainer}>
-            <ThemedText type="title" style={styles.title}>
-              Verificar Código
-            </ThemedText>
-            <ThemedText style={styles.description}>
-              Hemos enviado un código de 6 dígitos a{" "}
-              <ThemedText style={styles.emailText}>{email}</ThemedText>
-            </ThemedText>
-
-            <Controller
-              control={codeControl}
-              name="code"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <ThemedTextInput
-                  label="Código de 6 Dígitos *"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  errorMessage={codeErrors.code?.message}
-                  type="numeric"
-                  maxLength={6}
-                  editable={!isSubmitting}
-                  icon="ion:key-outline"
-                />
-              )}
-            />
-
-            <ThemeButton
-              mode="contained"
-              onPress={handleCodeSubmit(onSubmitCode)}
-              loading={isSubmitting}
-              disabled={isSubmitting}
-              style={styles.button}
-            >
-              Validar Código
-            </ThemeButton>
-
-            <ThemeButton
-              mode="text"
-              onPress={() => {
-                resetCodeForm({ code: "" });
-                setCurrentStep("email");
-              }}
-              disabled={isSubmitting}
-            >
-              Cambiar Email
-            </ThemeButton>
-
-            <ThemeButton
-              mode="text"
-              onPress={() => {
-                resetCodeForm({ code: "" });
-                handleEmailSubmit(onSubmitEmail)();
-              }}
-              disabled={isSubmitting}
-            >
-              Reenviar Código
-            </ThemeButton>
-          </View>
-        );
-
-      case "password":
-        return (
-          <View style={styles.stepContainer}>
-            <ThemedText style={styles.title}>Nueva Contraseña</ThemedText>
-            <ThemedText style={styles.description}>
-              Ingresa tu nueva contraseña. Debe tener al menos 8 caracteres, con
-              mayúsculas, minúsculas y números.
-            </ThemedText>
-
-            <Controller
-              control={passwordControl}
-              name="newPassword"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <ThemedTextInput
-                  label="Nueva Contraseña *"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  errorMessage={passwordErrors.newPassword?.message}
-                  type="password"
-                  disabled={isSubmitting}
-                  icon="ion:lock-closed-outline"
-                />
-              )}
-            />
-
-            <Controller
-              control={passwordControl}
-              name="confirmPassword"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <ThemedTextInput
-                  label="Confirmar Contraseña *"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  errorMessage={passwordErrors.confirmPassword?.message}
-                  type="password"
-                  disabled={isSubmitting}
-                  icon="ion:lock-closed-outline"
-                />
-              )}
-            />
-
-            <ThemeButton
-              mode="contained"
-              onPress={handlePasswordSubmit(onSubmitPassword)}
-              loading={isSubmitting}
-              disabled={isSubmitting}
-              style={styles.button}
-            >
-              Cambiar Contraseña
-            </ThemeButton>
-
-            <ThemeButton
-              mode="text"
-              onPress={() => {
-                resetPasswordForm({
-                  code: "",
-                  newPassword: "",
-                  confirmPassword: "",
-                });
-                setCurrentStep("code");
-              }}
-              disabled={isSubmitting}
-            >
-              Volver
-            </ThemeButton>
-          </View>
-        );
-    }
-  };
-
   return (
-    <>
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <Stack.Screen
-          options={{
-            title: "Recuperar Contraseña",
-            headerStyle: {
-              backgroundColor: theme.colors.primary,
-            },
-            headerTintColor: theme.colors.onPrimary,
-            headerBackTitle: "Volver",
-          }}
-        />
+    <SafeAreaView style={[styles.container]}>
+      <Stack.Screen
+        options={{
+          title: "Recuperar Contraseña",
+          headerStyle: {
+            backgroundColor: theme.colors.primary,
+          },
+          headerTintColor: theme.colors.onPrimary,
+          headerBackTitle: "Volver",
+        }}
+      />
 
-        <ThemedView style={styles.container}>
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Indicador de pasos */}
-            <View style={styles.stepsIndicator}>
-              <View style={styles.stepDot}>
-                <View
-                  style={[
-                    styles.dot,
-                    currentStep === "email" && styles.dotActive,
-                  ]}
-                />
-                <ThemedText style={styles.stepLabel}>Email</ThemedText>
-              </View>
-
-              <View style={styles.stepLine} />
-
-              <View style={styles.stepDot}>
-                <View
-                  style={[
-                    styles.dot,
-                    currentStep === "code" && styles.dotActive,
-                    currentStep === "password" && styles.dotCompleted,
-                  ]}
-                />
-                <ThemedText style={styles.stepLabel}>Código</ThemedText>
-              </View>
-
-              <View style={styles.stepLine} />
-
-              <View style={styles.stepDot}>
-                <View
-                  style={[
-                    styles.dot,
-                    currentStep === "password" && styles.dotActive,
-                  ]}
-                />
-                <ThemedText style={styles.stepLabel}>Contraseña</ThemedText>
-              </View>
+      <ThemedView style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Indicador de pasos */}
+          <View style={styles.stepsIndicator}>
+            <View style={styles.stepDot}>
+              <View
+                style={[
+                  styles.dot,
+                  currentStep === "email" && styles.dotActive,
+                ]}
+              />
+              <ThemedText style={styles.stepLabel}>Email</ThemedText>
             </View>
 
-            {renderStep()}
-          </ScrollView>
-        </ThemedView>
-      </SafeAreaView>
-    </>
+            <View style={styles.stepLine} />
+
+            <View style={styles.stepDot}>
+              <View
+                style={[
+                  styles.dot,
+                  currentStep === "reset" && styles.dotActive,
+                ]}
+              />
+              <ThemedText style={styles.stepLabel}>Restablecer</ThemedText>
+            </View>
+          </View>
+          {currentStep === "email" && (
+            <View style={styles.stepContainer}>
+              <ThemedText type="title" style={styles.title}>
+                Recuperar Contraseña
+              </ThemedText>
+              <ThemedText style={styles.description}>
+                Ingresa tu correo electrónico y te enviaremos un código de 6
+                dígitos para recuperar tu contraseña.
+              </ThemedText>
+
+              <Controller
+                control={emailControl}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <ThemedTextInput
+                    label="Correo Electrónico *"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    errorMessage={emailErrors.email?.message}
+                    type="email"
+                    autoCapitalize="none"
+                    disabled={isSubmitting}
+                    icon="ion:mail-outline"
+                  />
+                )}
+              />
+
+              <ThemeButton
+                mode="contained"
+                onPress={handleEmailSubmit(onSubmitEmail)}
+                loading={isSubmitting}
+                disabled={isSubmitting}
+                style={styles.button}
+              >
+                Enviar Código
+              </ThemeButton>
+
+              <ThemeButton
+                mode="text"
+                onPress={() => router.back()}
+                disabled={isSubmitting}
+              >
+                Volver al Login
+              </ThemeButton>
+            </View>
+          )}
+          {currentStep === "reset" && (
+            <View style={styles.stepContainer}>
+              <ThemedText type="title" style={styles.title}>
+                Restablecer Contraseña
+              </ThemedText>
+              <ThemedText style={styles.description}>
+                Hemos enviado un código de 6 dígitos a{" "}
+                <ThemedText style={styles.emailText}>{email}</ThemedText>.
+                Ingrésalo junto con tu nueva contraseña.
+              </ThemedText>
+
+              <Controller
+                control={passwordControl}
+                name="code"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <ThemedTextInput
+                    label="Código de 6 Dígitos *"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    errorMessage={passwordErrors.code?.message}
+                    type="numeric"
+                    maxLength={6}
+                    editable={!isSubmitting}
+                    icon="ion:key-outline"
+                  />
+                )}
+              />
+
+              <Controller
+                control={passwordControl}
+                name="newPassword"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <ThemedTextInput
+                    label="Nueva Contraseña *"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    errorMessage={passwordErrors.newPassword?.message}
+                    type="password"
+                    disabled={isSubmitting}
+                    icon="ion:lock-closed-outline"
+                  />
+                )}
+              />
+
+              <Controller
+                control={passwordControl}
+                name="confirmPassword"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <ThemedTextInput
+                    label="Confirmar Contraseña *"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    errorMessage={passwordErrors.confirmPassword?.message}
+                    type="password"
+                    disabled={isSubmitting}
+                    icon="ion:lock-closed-outline"
+                  />
+                )}
+              />
+
+              <ThemeButton
+                mode="contained"
+                onPress={handlePasswordSubmit(onSubmitReset)}
+                loading={isSubmitting}
+                disabled={isSubmitting}
+                style={styles.button}
+              >
+                Restablecer Contraseña
+              </ThemeButton>
+
+              <ThemeButton
+                mode="text"
+                onPress={() => {
+                  resetPasswordForm({
+                    code: "",
+                    newPassword: "",
+                    confirmPassword: "",
+                  });
+                  setCurrentStep("email");
+                }}
+                disabled={isSubmitting}
+              >
+                Cambiar Email
+              </ThemeButton>
+
+              <ThemeButton
+                mode="text"
+                onPress={handleEmailSubmit(onSubmitEmail)}
+                disabled={isSubmitting}
+              >
+                Reenviar Código
+              </ThemeButton>
+            </View>
+          )}
+        </ScrollView>
+      </ThemedView>
+    </SafeAreaView>
   );
 }
 
@@ -400,9 +293,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
+
   content: {
     flexGrow: 1,
     padding: 24,
