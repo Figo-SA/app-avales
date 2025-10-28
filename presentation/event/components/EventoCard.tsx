@@ -5,6 +5,7 @@ import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Icon, useTheme } from "react-native-paper";
+import { EventoStepper } from "./EventoStepper";
 
 export const EventoCard = ({
   evento,
@@ -19,14 +20,13 @@ export const EventoCard = ({
     if (onPress) onPress();
   };
 
-  const totalAtletas = evento.numAtletasHombres + evento.numAtletasMujeres;
-  const totalEntrenadores =
-    evento.numEntrenadoresHombres + evento.numEntrenadoresMujeres;
+  // Normalizar estado del backend (MAYÚSCULAS) a minúsculas
+  const estadoEvento = (evento.estado?.toLowerCase() || "disponible") as 
+    | "disponible"
+    | "solicitado"
+    | "rechazado"
+    | "aceptado";
 
-  // El estado por defecto es "disponible" si no viene del backend
-  const estadoEvento = evento.estado || "disponible";
-
-  // Configuración de badge según estado
   const getEstadoConfig = () => {
     switch (estadoEvento) {
       case "disponible":
@@ -89,7 +89,7 @@ export const EventoCard = ({
             <View style={styles.statusBadge}>
               <Icon
                 source={estadoConfig.icon}
-                size={20}
+                size={16}
                 color={estadoConfig.color}
               />
             </View>
@@ -100,72 +100,44 @@ export const EventoCard = ({
             {evento.nombre}
           </ThemedText>
 
-          {/* Info principal en grid */}
-          <View style={styles.infoGrid}>
-            <View style={styles.infoRow}>
-              <Icon
-                source="ion:basketball"
-                size={16}
-                color={theme.colors.primary}
-              />
-              <ThemedText style={styles.infoText} numberOfLines={1}>
-                {evento.disciplina.nombre}
-              </ThemedText>
-            </View>
-            <View style={styles.infoRow}>
-              <Icon
-                source="ion:location"
-                size={16}
-                color={theme.colors.primary}
-              />
-              <ThemedText style={styles.infoText} numberOfLines={1}>
-                {evento.provincia}
-              </ThemedText>
-            </View>
+          {/* Disciplina */}
+          <View style={styles.disciplinaContainer}>
+            <Icon
+              source="ion:basketball"
+              size={14}
+              color={theme.colors.primary}
+            />
+            <ThemedText style={styles.disciplinaText} numberOfLines={1}>
+              {evento.disciplina.nombre}
+            </ThemedText>
           </View>
 
           {/* Fechas */}
           <View style={styles.dateContainer}>
             <Icon
               source="ion:calendar-outline"
-              size={14}
+              size={12}
               color={theme.colors.onSurfaceVariant}
             />
             <ThemedText style={styles.dateText}>
-              {formatDateShort(evento.fechaInicio)} - {formatDateShort(evento.fechaFin)}
+              {formatDateShort(evento.fechaInicio)} -{" "}
+              {formatDateShort(evento.fechaFin)}
             </ThemedText>
           </View>
 
-          {/* Footer con stats */}
-          <View style={styles.footer}>
-            <View style={styles.footerLeft}>
-              <View style={styles.miniStat}>
-                <Icon
-                  source="ion:people"
-                  size={14}
-                  color={theme.colors.secondary}
-                />
-                <ThemedText style={styles.miniStatText}>
-                  {totalAtletas}
-                </ThemedText>
-              </View>
-              <View style={styles.miniStat}>
-                <Icon
-                  source="ion:person"
-                  size={14}
-                  color={theme.colors.secondary}
-                />
-                <ThemedText style={styles.miniStatText}>
-                  {totalEntrenadores}
-                </ThemedText>
-              </View>
-            </View>
-            <View style={styles.alcanceBadge}>
-              <ThemedText style={styles.alcanceText}>
-                {evento.alcance}
+          {/* Stepper de progreso - Solo si ya hay proceso iniciado */}
+          {estadoEvento !== "disponible" && (
+            <EventoStepper estado={estadoEvento} />
+          )}
+
+          {/* CTA para eventos disponibles */}
+          {estadoEvento === "disponible" && (
+            <View style={styles.ctaContainer}>
+              <ThemedText style={styles.ctaText}>
+                📤 Toca para solicitar este evento
               </ThemedText>
             </View>
-          </View>
+          )}
         </View>
       </ThemedView>
     </Pressable>
@@ -175,29 +147,29 @@ export const EventoCard = ({
 const createStyles = (theme: any) =>
   StyleSheet.create({
     pressable: {
-      marginBottom: 14,
+      marginBottom: 10,
     },
     card: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
       flexDirection: "row",
       shadowColor: "#000",
       shadowOffset: {
         width: 0,
-        height: 4,
+        height: 2,
       },
-      shadowOpacity: 0.12,
-      shadowRadius: 8,
-      elevation: 4,
+      shadowOpacity: 0.08,
+      shadowRadius: 4,
+      elevation: 2,
     },
     statusBar: {
       width: 5,
     },
     cardContent: {
       flex: 1,
-      padding: 16,
-      gap: 12,
+      padding: 12,
+      gap: 10,
     },
     header: {
       flexDirection: "row",
@@ -206,88 +178,66 @@ const createStyles = (theme: any) =>
     },
     tipoTag: {
       backgroundColor: theme.colors.primaryContainer,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 3,
+      borderRadius: 12,
     },
     tipoText: {
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: "700",
       color: theme.colors.primary,
       textTransform: "uppercase",
-      letterSpacing: 0.5,
+      letterSpacing: 0.3,
     },
     statusBadge: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
       justifyContent: "center",
       alignItems: "center",
     },
     title: {
-      fontSize: 17,
-      fontWeight: "800",
+      fontSize: 15,
+      fontWeight: "700",
       color: theme.colors.onSurface,
-      lineHeight: 24,
-      letterSpacing: -0.3,
+      lineHeight: 20,
+      letterSpacing: -0.2,
     },
-    infoGrid: {
-      gap: 8,
-    },
-    infoRow: {
+    disciplinaContainer: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      gap: 6,
     },
-    infoText: {
-      fontSize: 13,
+    disciplinaText: {
+      fontSize: 12,
       color: theme.colors.onSurface,
       fontWeight: "600",
-      flex: 1,
     },
     dateContainer: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
-      paddingTop: 4,
+      gap: 5,
+      paddingTop: 6,
+      paddingBottom: 2,
       borderTopWidth: 1,
       borderTopColor: theme.colors.outlineVariant,
     },
     dateText: {
-      fontSize: 12,
+      fontSize: 11,
       color: theme.colors.onSurfaceVariant,
       fontWeight: "500",
     },
-    footer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    footerLeft: {
-      flexDirection: "row",
-      gap: 16,
-    },
-    miniStat: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-    },
-    miniStatText: {
-      fontSize: 13,
-      fontWeight: "700",
-      color: theme.colors.onSurface,
-    },
-    alcanceBadge: {
-      backgroundColor: theme.colors.secondaryContainer,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
+    ctaContainer: {
+      backgroundColor: theme.colors.primaryContainer,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
       borderRadius: 8,
+      alignItems: "center",
     },
-    alcanceText: {
-      fontSize: 11,
+    ctaText: {
+      fontSize: 12,
+      color: theme.colors.primary,
       fontWeight: "600",
-      color: theme.colors.secondary,
-      textTransform: "uppercase",
-      letterSpacing: 0.3,
+      textAlign: "center",
     },
   });

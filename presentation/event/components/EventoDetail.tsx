@@ -21,8 +21,12 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
       useState<DocumentPicker.DocumentPickerAsset | null>(null);
     const styles = createStyles(theme);
     
-    // Estado por defecto si no viene del backend
-    const estadoEvento = evento?.estado || "disponible";
+    // Normalizar estado del backend (MAYÚSCULAS) a minúsculas
+    const estadoEvento = (evento?.estado?.toLowerCase() || "disponible") as
+      | "disponible"
+      | "solicitado"
+      | "rechazado"
+      | "aceptado";
 
     const handlePickDocument = async () => {
       try {

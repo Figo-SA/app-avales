@@ -25,20 +25,6 @@ export default function TabLayout() {
         }}
       >
         <Tabs.Screen
-          name="index"
-          options={{
-            title: "Avales",
-            headerTitle: "Mis Avales",
-            tabBarIcon: ({ color, focused }) => (
-              <MaterialIcons
-                size={focused ? 28 : 24}
-                name="description"
-                color={color}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
           name="event"
           options={{
             title: "Eventos",
@@ -47,6 +33,21 @@ export default function TabLayout() {
               <Ionicons
                 size={focused ? 26 : 22}
                 name="calendar"
+                color={color}
+              />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Avales",
+            headerTitle: "Mis Avales",
+            tabBarIcon: ({ color, focused }) => (
+              <MaterialIcons
+                size={focused ? 28 : 24}
+                name="description"
                 color={color}
               />
             ),

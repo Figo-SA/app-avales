@@ -2,7 +2,11 @@ export type EventoEstado =
   | "disponible"
   | "solicitado"
   | "rechazado"
-  | "aceptado";
+  | "aceptado"
+  | "DISPONIBLE"
+  | "SOLICITADO"
+  | "RECHAZADO"
+  | "ACEPTADO";
 
 export interface Disciplina {
   id: number;
@@ -71,6 +75,12 @@ export interface PaginationMeta {
 export interface EventosPaginatedResponse {
   items: Evento[];
   pagination: PaginationMeta;
+  counts?: {
+    disponibles: number;
+    solicitados: number;
+    rechazados: number;
+    aceptados: number;
+  };
 }
 
 export interface EventoListResponse {

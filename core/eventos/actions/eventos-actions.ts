@@ -3,7 +3,12 @@ import { httpClient } from "@/core/api/http-client";
 import { handleApiError } from "@/helpers/error-handler";
 import { Evento, EventosPaginatedResponse } from "../interfaces/evento";
 
-export const getEventos = async (page = 1, limit = 10): Promise<Evento[]> => {
+export const getEventos = async (
+  page = 1,
+  limit = 10,
+  estado?: string,
+  search?: string
+): Promise<EventosPaginatedResponse> => {
   try {
     const response = await httpClient.get<EventosPaginatedResponse>(
       API_ENDPOINTS.EVENTOS.LIST,
@@ -11,12 +16,13 @@ export const getEventos = async (page = 1, limit = 10): Promise<Evento[]> => {
         params: {
           page,
           limit,
+          ...(estado && estado !== "all" ? { estado: estado.toUpperCase() } : {}),
+          ...(search && search.trim() !== "" ? { search: search.trim() } : {}),
         },
       }
     );
-    // La respuesta viene con { items: [...], pagination: {...} }
-    // Retornamos solo el array de items
-    return response.data.items;
+    // Retornamos la respuesta completa (items, pagination, counts)
+    return response.data;
   } catch (error) {
     const errorMessage = handleApiError(error, "getEventos");
     throw new Error(errorMessage);

@@ -1,21 +1,42 @@
 import { EventoListSkeleton } from "@/presentation/event/components/EventoCardSkeleton";
 import { EventoChipFilters } from "@/presentation/event/components/EventoChipFilters";
 import { EventoList } from "@/presentation/event/components/EventoList";
+import { EventoSearchBar } from "@/presentation/event/components/EventoSearchBar";
 import { useEventoChipFilters } from "@/presentation/event/hooks/useEventoChipFilters";
 import { useEventos } from "@/presentation/event/hooks/useEventos";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
+import { useState } from "react";
 
 export default function EventTab() {
-  const { eventosQuery, loadNextPage } = useEventos();
+  // Estado local para el buscador
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const eventos = eventosQuery.data?.pages.flat() || [];
-  const { selectedStatus, setSelectedStatus, counts, filteredEventos } =
-    useEventoChipFilters(eventos);
+  // Primero obtenemos el filtro seleccionado
+  const { selectedStatus, setSelectedStatus, estadoFilter } = useEventoChipFilters();
+  
+  // Luego usamos ese filtro y búsqueda para cargar eventos del backend
+  const { eventosQuery, loadNextPage, counts } = useEventos({ 
+    estado: estadoFilter,
+    search: searchQuery 
+  });
+
+  // Aplanamos todas las páginas en un solo array
+  // Cada page ahora es { items: [], pagination: {}, counts: {} }
+  const eventos = eventosQuery.data?.pages.flatMap(page => page.items) || [];
 
   const isInitialLoading = eventosQuery.isLoading && eventos.length === 0;
 
-  // Mensajes del EmptyState según el filtro seleccionado
+  // Mensajes del EmptyState según el filtro seleccionado y búsqueda
   const getEmptyStateProps = () => {
+    // Si hay búsqueda activa, mostrar mensaje de búsqueda
+    if (searchQuery.trim() !== "") {
+      return {
+        icon: "ion:search-outline",
+        title: "No se encontraron resultados",
+        description: `No hay eventos que coincidan con "${searchQuery}"`,
+      };
+    }
+
     switch (selectedStatus) {
       case "disponibles":
         return {
@@ -54,24 +75,40 @@ export default function EventTab() {
 
   return (
     <ThemedView style={{ flex: 1 }}>
+      {/* Buscador */}
+      <EventoSearchBar
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        placeholder="Buscar eventos por nombre, código, lugar..."
+      />
+
+      {/* Filtros por estado */}
       <EventoChipFilters
         selectedStatus={selectedStatus}
         onStatusChange={setSelectedStatus}
-        counts={counts}
+        counts={{
+          all: (counts?.disponibles || 0) + (counts?.solicitados || 0) + (counts?.rechazados || 0) + (counts?.aceptados || 0),
+          disponibles: counts?.disponibles || 0,
+          solicitados: counts?.solicitados || 0,
+          rechazados: counts?.rechazados || 0,
+          aceptados: counts?.aceptados || 0,
+        }}
       />
 
       {isInitialLoading ? (
         <EventoListSkeleton count={5} />
       ) : (
         <EventoList
-          eventos={filteredEventos}
+          eventos={eventos}
           emptyStateProps={getEmptyStateProps()}
-          filterKey={selectedStatus}
+          filterKey={`${selectedStatus}-${searchQuery}`}
           onEndReached={() => {
-            if (selectedStatus === "all") {
+            if (eventosQuery.hasNextPage && !eventosQuery.isFetchingNextPage) {
               loadNextPage();
             }
           }}
+          onEndReachedThreshold={0.5}
+          isLoadingMore={eventosQuery.isFetchingNextPage}
         />
       )}
     </ThemedView>

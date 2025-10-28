@@ -3,9 +3,11 @@ import { EmptyState } from "@/presentation/theme/components/EmptyState";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useRef, useState } from "react";
-import { FlatList, RefreshControl } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
+import { useTheme } from "react-native-paper";
 import { EventoCard } from "./EventoCard";
 import { EventoDetail } from "./EventoDetail";
+
 interface EventoListProps {
   eventos: Evento[];
   onEndReached?: () => void;
@@ -16,7 +18,8 @@ interface EventoListProps {
     title: string;
     description?: string;
   };
-  filterKey?: string; // Key única para forzar re-render del FlatList cuando cambia el filtro
+  filterKey?: string;
+  isLoadingMore?: boolean;
 }
 
 export const EventoList = ({
@@ -25,6 +28,7 @@ export const EventoList = ({
   onEndReachedThreshold = 0.5,
   emptyStateProps,
   filterKey = "default",
+  isLoadingMore = false,
 }: EventoListProps) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [eventoSeleccionado, setEventoSeleccionado] = useState<Evento | null>(
@@ -37,6 +41,7 @@ export const EventoList = ({
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const queryClient = useQueryClient();
+  const theme = useTheme();
 
   const onPullToRefresh = async () => {
     setIsRefreshing(true);
@@ -85,6 +90,13 @@ export const EventoList = ({
           />
         }
         ListEmptyComponent={renderEmptyComponent}
+        ListFooterComponent={
+          isLoadingMore ? (
+            <View style={{ padding: 20, alignItems: "center" }}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+            </View>
+          ) : null
+        }
       />
 
       <EventoDetail

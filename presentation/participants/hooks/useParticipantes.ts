@@ -30,36 +30,36 @@ export const useParticipantes = (evento: Evento) => {
   const progreso = {
     entrenadoresHombres: {
       actual: participantes.entrenadoresHombres.length,
-      requerido: evento.numeroEntrenadoresHombres,
+      requerido: evento.numEntrenadoresHombres,
       porcentaje:
-        evento.numeroEntrenadoresHombres > 0
+        evento.numEntrenadoresHombres > 0
           ? participantes.entrenadoresHombres.length /
-            evento.numeroEntrenadoresHombres
+            evento.numEntrenadoresHombres
           : 1,
     },
     entrenadoresMujeres: {
       actual: participantes.entrenadoresMujeres.length,
-      requerido: evento.numeroEntrenadoresMujeres,
+      requerido: evento.numEntrenadoresMujeres,
       porcentaje:
-        evento.numeroEntrenadoresMujeres > 0
+        evento.numEntrenadoresMujeres > 0
           ? participantes.entrenadoresMujeres.length /
-            evento.numeroEntrenadoresMujeres
+            evento.numEntrenadoresMujeres
           : 1,
     },
     atletasHombres: {
       actual: participantes.atletasHombres.length,
-      requerido: evento.numeroAtletasHombres,
+      requerido: evento.numAtletasHombres,
       porcentaje:
-        evento.numeroAtletasHombres > 0
-          ? participantes.atletasHombres.length / evento.numeroAtletasHombres
+        evento.numAtletasHombres > 0
+          ? participantes.atletasHombres.length / evento.numAtletasHombres
           : 1,
     },
     atletasMujeres: {
       actual: participantes.atletasMujeres.length,
-      requerido: evento.numeroAtletasMujeres,
+      requerido: evento.numAtletasMujeres,
       porcentaje:
-        evento.numeroAtletasMujeres > 0
-          ? participantes.atletasMujeres.length / evento.numeroAtletasMujeres
+        evento.numAtletasMujeres > 0
+          ? participantes.atletasMujeres.length / evento.numAtletasMujeres
           : 1,
     },
   };
