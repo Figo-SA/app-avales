@@ -36,9 +36,11 @@ export const API_ENDPOINTS = {
   EVENTOS: {
     LIST: "/events/paginated",
     GET_BY_ID: (id: number) => `/events/${id}`,
+    UPLOAD_FILE: (id: number) => `/events/${id}/upload-file`,
   },
   USER: {
     PROFILE: "/users/profile",
     UPDATE_PROFILE: "/users/profile",
+    UPDATE_PUSH_TOKEN: "/users/me/push-token",
   },
 } as const;

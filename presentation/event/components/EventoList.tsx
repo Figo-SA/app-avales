@@ -102,10 +102,6 @@ export const EventoList = ({
       <EventoDetail
         ref={bottomSheetRef}
         evento={eventoSeleccionado}
-        onDocumentUploaded={(file) => {
-          console.log("Documento subido:", file.name);
-          // Aquí puedes agregar la lógica para enviar el archivo al servidor
-        }}
       />
     </>
   );

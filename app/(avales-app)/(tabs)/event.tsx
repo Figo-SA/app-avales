@@ -8,27 +8,21 @@ import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import { useState } from "react";
 
 export default function EventTab() {
-  // Estado local para el buscador
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Primero obtenemos el filtro seleccionado
-  const { selectedStatus, setSelectedStatus, estadoFilter } = useEventoChipFilters();
-  
-  // Luego usamos ese filtro y búsqueda para cargar eventos del backend
-  const { eventosQuery, loadNextPage, counts } = useEventos({ 
+  const { selectedStatus, setSelectedStatus, estadoFilter } =
+    useEventoChipFilters();
+
+  const { eventosQuery, loadNextPage, counts } = useEventos({
     estado: estadoFilter,
-    search: searchQuery 
+    search: searchQuery,
   });
 
-  // Aplanamos todas las páginas en un solo array
-  // Cada page ahora es { items: [], pagination: {}, counts: {} }
-  const eventos = eventosQuery.data?.pages.flatMap(page => page.items) || [];
+  const eventos = eventosQuery.data?.pages.flatMap((page) => page.items) || [];
 
   const isInitialLoading = eventosQuery.isLoading && eventos.length === 0;
 
-  // Mensajes del EmptyState según el filtro seleccionado y búsqueda
   const getEmptyStateProps = () => {
-    // Si hay búsqueda activa, mostrar mensaje de búsqueda
     if (searchQuery.trim() !== "") {
       return {
         icon: "ion:search-outline",
@@ -87,7 +81,11 @@ export default function EventTab() {
         selectedStatus={selectedStatus}
         onStatusChange={setSelectedStatus}
         counts={{
-          all: (counts?.disponibles || 0) + (counts?.solicitados || 0) + (counts?.rechazados || 0) + (counts?.aceptados || 0),
+          all:
+            (counts?.disponibles || 0) +
+            (counts?.solicitados || 0) +
+            (counts?.rechazados || 0) +
+            (counts?.aceptados || 0),
           disponibles: counts?.disponibles || 0,
           solicitados: counts?.solicitados || 0,
           rechazados: counts?.rechazados || 0,

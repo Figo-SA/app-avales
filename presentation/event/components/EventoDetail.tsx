@@ -1,12 +1,14 @@
 import { Evento } from "@/core/eventos/interfaces/evento";
+import { uploadEventoFile } from "@/core/eventos/actions/eventos-actions";
 import { formatDateLong } from "@/helpers/date.helper";
 import { ThemeButton } from "@/presentation/theme/components/ThemedButton";
 import { toast } from "@backpackapp-io/react-native-toast";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as DocumentPicker from "expo-document-picker";
 import { router } from "expo-router";
 import React, { forwardRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { Divider, Icon, Surface, Text, useTheme } from "react-native-paper";
 
 interface EventoDetailProps {
@@ -17,6 +19,7 @@ interface EventoDetailProps {
 export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
   ({ evento, onDocumentUploaded }, ref) => {
     const theme = useTheme();
+    const queryClient = useQueryClient();
     const [uploadedFile, setUploadedFile] =
       useState<DocumentPicker.DocumentPickerAsset | null>(null);
     const styles = createStyles(theme);
@@ -28,25 +31,82 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
       | "rechazado"
       | "aceptado";
 
+    // Mutation para subir archivo
+    const uploadMutation = useMutation({
+      mutationFn: async (file: {
+        uri: string;
+        name: string;
+        type: string;
+      }) => {
+        if (!evento) {
+          throw new Error("No hay evento seleccionado");
+        }
+        return uploadEventoFile(evento.id, file);
+      },
+      onSuccess: (data, variables) => {
+        // Invalidar queries de eventos para refrescar la lista
+        queryClient.invalidateQueries({ queryKey: ["eventos", "infinite"] });
+        
+        // Guardar archivo localmente
+        setUploadedFile({
+          uri: variables.uri,
+          name: variables.name,
+          mimeType: variables.type,
+          size: 0,
+        } as DocumentPicker.DocumentPickerAsset);
+        
+        // Callback opcional
+        onDocumentUploaded?.({
+          uri: variables.uri,
+          name: variables.name,
+          mimeType: variables.type,
+          size: 0,
+        } as DocumentPicker.DocumentPickerAsset);
+        
+        toast.success(`Documento subido: ${variables.name}`);
+        
+        // Cerrar bottom sheet después de un delay
+        setTimeout(() => {
+          if (ref && typeof ref !== "function" && ref.current) {
+            ref.current.close();
+          }
+        }, 1500);
+      },
+      onError: (error: Error) => {
+        console.error("Error uploading document:", error);
+        toast.error(error.message || "No se pudo subir el documento");
+      },
+    });
+
     const handlePickDocument = async () => {
+      if (!evento) {
+        toast.error("Error: No hay evento seleccionado");
+        return;
+      }
+
       try {
+        // Seleccionar documento
         const result = await DocumentPicker.getDocumentAsync({
           type: "application/pdf",
           copyToCacheDirectory: true,
         });
 
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-          const file = result.assets[0];
-          setUploadedFile(file);
-          onDocumentUploaded?.(file);
-          toast.success(
-            "Documento cargado " +
-              `${file.name} (${(file.size! / 1024).toFixed(2)} KB)`
-          );
+        if (result.canceled || !result.assets || result.assets.length === 0) {
+          return;
         }
+
+        const file = result.assets[0];
+        
+        // Subir usando mutation
+        toast("Subiendo documento...", { duration: 1000 });
+        uploadMutation.mutate({
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType || "application/pdf",
+        });
       } catch (error) {
-        toast.error("Error" + "No se pudo cargar el documento");
         console.error("Error picking document:", error);
+        toast.error("No se pudo seleccionar el documento");
       }
     };
 
@@ -144,11 +204,15 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
 
               <ThemeButton
                 mode="contained"
-                icon="ion:cloud-upload"
+                icon={uploadMutation.isPending ? undefined : "ion:cloud-upload"}
                 onPress={handlePickDocument}
+                disabled={uploadMutation.isPending}
+                loading={uploadMutation.isPending}
                 style={styles.uploadButton}
               >
-                {uploadedFile
+                {uploadMutation.isPending
+                  ? "Subiendo..."
+                  : uploadedFile
                   ? "Cambiar Documento"
                   : "Subir Documento de Solicitud"}
               </ThemeButton>
@@ -211,11 +275,17 @@ export const EventoDetail = forwardRef<BottomSheet, EventoDetailProps>(
 
               <ThemeButton
                 mode="contained"
-                icon="ion:cloud-upload"
+                icon={uploadMutation.isPending ? undefined : "ion:cloud-upload"}
                 onPress={handlePickDocument}
+                disabled={uploadMutation.isPending}
+                loading={uploadMutation.isPending}
                 style={styles.uploadButton}
               >
-                {uploadedFile ? "Cambiar Documento" : "Subir Nuevo Documento"}
+                {uploadMutation.isPending
+                  ? "Subiendo..."
+                  : uploadedFile
+                  ? "Cambiar Documento"
+                  : "Subir Nuevo Documento"}
               </ThemeButton>
             </View>
           )}

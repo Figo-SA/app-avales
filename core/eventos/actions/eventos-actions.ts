@@ -16,7 +16,9 @@ export const getEventos = async (
         params: {
           page,
           limit,
-          ...(estado && estado !== "all" ? { estado: estado.toUpperCase() } : {}),
+          ...(estado && estado !== "all"
+            ? { estado: estado.toUpperCase() }
+            : {}),
           ...(search && search.trim() !== "" ? { search: search.trim() } : {}),
         },
       }
@@ -37,6 +39,41 @@ export const getEventoById = async (id: number): Promise<Evento | null> => {
     return response.data;
   } catch (error) {
     const errorMessage = handleApiError(error, "getEventoById");
+    throw new Error(errorMessage);
+  }
+};
+
+export const uploadEventoFile = async (
+  eventoId: number,
+  file: {
+    uri: string;
+    name: string;
+    type: string;
+  }
+): Promise<{ message: string; fileUrl?: string }> => {
+  try {
+    const formData = new FormData();
+
+    // Agregar el archivo al FormData
+    formData.append("archivo", {
+      uri: file.uri,
+      name: file.name,
+      type: file.type,
+    } as any);
+
+    const response = await httpClient.patch(
+      API_ENDPOINTS.EVENTOS.UPLOAD_FILE(eventoId),
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    const errorMessage = handleApiError(error, "uploadEventoFile");
     throw new Error(errorMessage);
   }
 };
