@@ -6,9 +6,10 @@ import { ActivityIndicator, View } from "react-native";
 
 const CheckAuthenticationLayout = () => {
   const { status, checkStatus } = useAuthStore();
-  
+
   // Inicializar notificaciones push solo cuando está autenticado
-  const { expoPushToken, isRegistering, permissionStatus } = usePushNotifications();
+  const { expoPushToken, isRegistering, permissionStatus } =
+    usePushNotifications();
 
   useEffect(() => {
     checkStatus();
