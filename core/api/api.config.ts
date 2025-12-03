@@ -37,6 +37,13 @@ export const API_ENDPOINTS = {
     LIST: "/events/paginated",
     GET_BY_ID: (id: number) => `/events/${id}`,
     UPLOAD_FILE: (id: number) => `/events/${id}/upload-file`,
+    CREATE_AVAL: (id: number) => `/events/${id}/aval`,
+    UPLOAD_AVAL_ARCHIVO: (id: number) => `/events/${id}/aval/archivo`,
+  },
+  DEPORTISTAS: {
+    LIST: "/deportistas",
+    ENTRENADORES: "/deportistas/entrenadores",
+    GET_BY_ID: (id: string) => `/deportistas/${id}`,
   },
   USER: {
     PROFILE: "/users/profile",

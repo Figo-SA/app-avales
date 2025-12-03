@@ -21,7 +21,7 @@ export const EventoCard = ({
   };
 
   // Normalizar estado del backend (MAYÚSCULAS) a minúsculas
-  const estadoEvento = (evento.estado?.toLowerCase() || "disponible") as 
+  const estadoEvento = (evento.estado?.toLowerCase() || "disponible") as
     | "disponible"
     | "solicitado"
     | "rechazado"
@@ -133,8 +133,13 @@ export const EventoCard = ({
           {/* CTA para eventos disponibles */}
           {estadoEvento === "disponible" && (
             <View style={styles.ctaContainer}>
+              <Icon
+                source="ion:arrow-forward-circle"
+                size={16}
+                color={theme.colors.primary}
+              />
               <ThemedText style={styles.ctaText}>
-                📤 Toca para solicitar este evento
+                Toca para solicitar aval
               </ThemedText>
             </View>
           )}
@@ -232,12 +237,14 @@ const createStyles = (theme: any) =>
       paddingHorizontal: 12,
       paddingVertical: 8,
       borderRadius: 8,
+      flexDirection: "row",
       alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
     },
     ctaText: {
       fontSize: 12,
       color: theme.colors.primary,
       fontWeight: "600",
-      textAlign: "center",
     },
   });

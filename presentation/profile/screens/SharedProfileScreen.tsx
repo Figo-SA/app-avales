@@ -8,11 +8,14 @@ import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
 import { useRef } from "react";
-import { Alert, StyleSheet } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { Alert, ScrollView, StyleSheet } from "react-native";
 import { useTheme } from "react-native-paper";
 
-export default function ProfileTab() {
+interface SharedProfileScreenProps {
+  baseRoute: string; // e.g., "/(entrenador)", "/(admin)"
+}
+
+export const SharedProfileScreen = ({ baseRoute }: SharedProfileScreenProps) => {
   const { user, logout } = useAuthStore();
   const theme = useTheme();
   const changePasswordBottomSheetRef = useRef<BottomSheet>(null);
@@ -37,7 +40,8 @@ export default function ProfileTab() {
   };
 
   const handleEditProfile = () => {
-    router.push("/(avales-app)/profile");
+    // @ts-ignore
+    router.push(`${baseRoute}/profile`);
   };
 
   const handleChangePassword = () => {
@@ -57,7 +61,6 @@ export default function ProfileTab() {
       "AvalesApp v1.0.0\nDesarrollado para la gestión eficiente de avales deportivos."
     );
   };
-  const dynamicStyles = createDynamicStyles(theme);
 
   return (
     <ThemedView
@@ -67,7 +70,7 @@ export default function ProfileTab() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scrollContent,
-          dynamicStyles.scrollContent,
+          { backgroundColor: theme.colors.background },
         ]}
         bounces={true}
         alwaysBounceVertical={false}
@@ -84,7 +87,7 @@ export default function ProfileTab() {
       <ChangePasswordBottomSheet ref={changePasswordBottomSheetRef} />
     </ThemedView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -94,10 +97,3 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
 });
-
-const createDynamicStyles = (theme: any) =>
-  StyleSheet.create({
-    scrollContent: {
-      backgroundColor: theme.colors.background,
-    },
-  });

@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 const CheckAuthenticationLayout = () => {
-  const { status, checkStatus } = useAuthStore();
+  const { status, checkStatus, user } = useAuthStore();
 
   // Inicializar notificaciones push solo cuando está autenticado
   const { expoPushToken, isRegistering, permissionStatus } =
@@ -38,8 +38,13 @@ const CheckAuthenticationLayout = () => {
   }
 
   if (status === "unauthenticated") {
-    // Guardar la ruta del usuario
     return <Redirect href="/auth/login" />;
+  }
+
+  console.log("✅ Usuario autenticado con roles:", user?.roles);
+
+  if (user?.roles?.[0] !== "ENTRENADOR") {
+    return <Redirect href="/" />;
   }
 
   return (

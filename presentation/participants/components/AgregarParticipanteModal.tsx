@@ -71,8 +71,13 @@ export const AgregarParticipanteModal: React.FC<
     try {
       const resultados = await searchParticipantes(tipo, sexo, searchQuery);
       
+      // Eliminar duplicados que puedan venir del backend
+      const uniqueResultados = resultados.filter((participante, index, self) =>
+        index === self.findIndex((p) => p.id === participante.id)
+      );
+
       // Filtrar los que ya están agregados
-      const resultadosFiltrados = resultados.filter(
+      const resultadosFiltrados = uniqueResultados.filter(
         (p) => !idsYaAgregados.includes(p.id)
       );
       

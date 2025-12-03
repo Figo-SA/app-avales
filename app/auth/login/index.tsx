@@ -11,11 +11,11 @@ import { router } from "expo-router";
 import { useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    useWindowDimensions,
 } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 import { useTheme } from "react-native-paper";
@@ -46,7 +46,7 @@ const LoginScreen = () => {
   const onSubmit = async (data: LoginFormData) => {
     const wasSuccessful = await login(data.email, data.password);
     if (wasSuccessful) {
-      router.replace("/(avales-app)/(tabs)");
+      router.replace("/");
       return;
     }
   };

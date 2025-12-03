@@ -2,11 +2,17 @@ import { Evento } from "@/core/eventos/interfaces/evento";
 import { EmptyState } from "@/presentation/theme/components/EmptyState";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useQueryClient } from "@tanstack/react-query";
-import React, { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
+import { router } from "expo-router";
+import React, { useRef, useState } from "react";
+import {
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    View,
+} from "react-native";
 import { useTheme } from "react-native-paper";
 import { EventoCard } from "./EventoCard";
-import { EventoDetail } from "./EventoDetail";
+import { EventoRechazoBottomSheet } from "./EventoRechazoBottomSheet";
 
 interface EventoListProps {
   eventos: Evento[];
@@ -30,18 +36,40 @@ export const EventoList = ({
   filterKey = "default",
   isLoadingMore = false,
 }: EventoListProps) => {
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const [eventoSeleccionado, setEventoSeleccionado] = useState<Evento | null>(
-    null
-  );
-  const openBottomSheet = useCallback((evento: Evento) => {
-    setEventoSeleccionado(evento);
-    bottomSheetRef.current?.snapToIndex(0);
-  }, []);
-
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [eventoRechazado, setEventoRechazado] = useState<Evento | null>(null);
+  const rechazoSheetRef = useRef<BottomSheet>(null);
   const queryClient = useQueryClient();
   const theme = useTheme();
+
+  const handleEventoPress = (evento: Evento) => {
+    const estadoEvento = evento.estado?.toLowerCase() || "disponible";
+
+    // Rechazado: Mostrar bottom sheet con motivo
+    if (estadoEvento === "rechazado") {
+      setEventoRechazado(evento);
+      rechazoSheetRef.current?.expand();
+      return;
+    }
+
+    // Solicitado: Navegar a pantalla de resumen
+    if (estadoEvento === "solicitado") {
+      router.push(`/(entrenador)/evento/${evento.id}`);
+      return;
+    }
+
+    // Disponible: Navegar a solicitud
+    if (estadoEvento === "disponible") {
+      router.push(`/(entrenador)/solicitud/${evento.id}`);
+      return;
+    }
+
+    // Aceptado: Navegar a resumen también
+    if (estadoEvento === "aceptado") {
+      router.push(`/(entrenador)/evento/${evento.id}`);
+      return;
+    }
+  };
 
   const onPullToRefresh = async () => {
     setIsRefreshing(true);
@@ -73,7 +101,7 @@ export const EventoList = ({
         data={eventos}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <EventoCard evento={item} onPress={() => openBottomSheet(item)} />
+          <EventoCard evento={item} onPress={() => handleEventoPress(item)} />
         )}
         onEndReached={onEndReached}
         onEndReachedThreshold={onEndReachedThreshold}
@@ -99,9 +127,9 @@ export const EventoList = ({
         }
       />
 
-      <EventoDetail
-        ref={bottomSheetRef}
-        evento={eventoSeleccionado}
+      <EventoRechazoBottomSheet
+        ref={rechazoSheetRef}
+        evento={eventoRechazado}
       />
     </>
   );

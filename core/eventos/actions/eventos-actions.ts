@@ -17,12 +17,42 @@ export const getEventos = async (
           page,
           limit,
           ...(estado && estado !== "all"
-            ? { estado: estado.toUpperCase() }
+            ? {
+                estado: estado
+                  .toUpperCase()
+                  .replace("DISPONIBLES", "DISPONIBLE")
+                  .replace("SOLICITADOS", "SOLICITADO")
+                  .replace("RECHAZADOS", "RECHAZADO")
+                  .replace("ACEPTADOS", "ACEPTADO"),
+              }
             : {}),
           ...(search && search.trim() !== "" ? { search: search.trim() } : {}),
         },
       }
     );
+    console.log("✅ Eventos obtenidos:", response.data);
+    
+    // Si la respuesta es un array (backend actual), lo adaptamos a la estructura paginada
+    if (Array.isArray(response.data)) {
+      return {
+        items: response.data,
+        pagination: {
+          total: response.data.length,
+          page: page,
+          limit: limit,
+          lastPage: 1,
+          hasNext: false,
+          hasPrev: false,
+        },
+        counts: {
+          disponibles: 0,
+          solicitados: 0,
+          rechazados: 0,
+          aceptados: 0,
+        }
+      };
+    }
+
     // Retornamos la respuesta completa (items, pagination, counts)
     return response.data;
   } catch (error) {

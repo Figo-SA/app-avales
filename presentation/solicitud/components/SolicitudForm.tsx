@@ -1,0 +1,872 @@
+import { Participante } from "@/core/participants/interfaces/participante";
+import type { SolicitudData } from "@/core/solicitud/actions/solicitud-actions";
+import { useEventos } from "@/presentation/event/hooks/useEvento";
+import { AgregarParticipanteModal } from "@/presentation/participants/components/AgregarParticipanteModal";
+import { DateTimeInput } from "@/presentation/solicitud/components/DateTimeInput";
+import { TransporteSelector } from "@/presentation/solicitud/components/TransporteSelector";
+import { useSolicitud } from "@/presentation/solicitud/hooks/useSolicitud";
+import { useSolicitudMutation } from "@/presentation/solicitud/hooks/useSolicitudMutation";
+import { ThemedText } from "@/presentation/theme/components/ThemedText";
+import { ThemedView } from "@/presentation/theme/components/ThemedView";
+import { toast } from "@backpackapp-io/react-native-toast";
+import * as DocumentPicker from "expo-document-picker";
+import { router } from "expo-router";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+  ActivityIndicator,
+  Button,
+  Chip,
+  Icon,
+  ProgressBar,
+  Surface,
+  Text,
+  TextInput,
+  useTheme,
+} from "react-native-paper";
+
+interface SolicitudFormProps {
+  eventoId: string;
+}
+
+export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
+  const theme = useTheme();
+  const { eventoQuery } = useEventos(eventoId);
+  const evento = eventoQuery.data;
+  const solicitudMutation = useSolicitudMutation();
+
+  const [documento, setDocumento] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
+
+  const [modalState, setModalState] = useState<{
+    visible: boolean;
+    tipo: "atleta" | "entrenador" | null;
+    sexo: "masculino" | "femenino" | null;
+  }>({
+    visible: false,
+    tipo: null,
+    sexo: null,
+  });
+
+  const [deportistasSeleccionados, setDeportistasSeleccionados] = useState<
+    Participante[]
+  >([]);
+  const [entrenadoresSeleccionados, setEntrenadoresSeleccionados] = useState<
+    Participante[]
+  >([]);
+
+  // Usar el hook personalizado para toda la lógica del formulario
+  const {
+    step,
+    totalSteps,
+    formData,
+    errors,
+    control,
+    handleNext,
+    handleBack,
+    updateFormData,
+    updateArrayItem,
+    addArrayItem,
+    canContinue,
+  } = useSolicitud(eventoId);
+
+  const abrirModal = (
+    tipo: "atleta" | "entrenador",
+    sexo: "masculino" | "femenino"
+  ) => {
+    setModalState({ visible: true, tipo, sexo });
+  };
+
+  const cerrarModal = () => {
+    setModalState({ visible: false, tipo: null, sexo: null });
+  };
+
+  const seleccionarDocumento = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "*/*",
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        setDocumento({
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType || "application/octet-stream",
+        });
+        updateFormData("documento", file);
+      }
+    } catch (error) {
+      console.error("Error al seleccionar documento:", error);
+      toast.error("No se pudo seleccionar el documento");
+    }
+  };
+
+  const onSubmit = async () => {
+    if (!documento) {
+      toast.error("Debes seleccionar un documento");
+      return;
+    }
+
+    if (!formData.fechaSalida || !formData.fechaRetorno) {
+      toast.error("Las fechas son requeridas");
+      return;
+    }
+
+    try {
+      // Transformar los datos al formato de la API
+      const solicitudData: SolicitudData = {
+        fechaHoraSalida: formData.fechaSalida.toISOString(),
+        fechaHoraRetorno: formData.fechaRetorno.toISOString(),
+        transporteSalida: formData.transporteSalida,
+        transporteRetorno: formData.transporteRetorno,
+        observaciones: formData.observaciones || "",
+        objetivos: formData.objetivos
+          .filter((obj) => obj.trim())
+          .map((descripcion, index) => ({ orden: index + 1, descripcion })),
+        criterios: formData.criterios
+          .filter((crit) => crit.trim())
+          .map((descripcion, index) => ({ orden: index + 1, descripcion })),
+        rubros: [
+          // Rubros hardcodeados temporalmente
+          { rubroId: 1, cantidadDias: "5", valorUnitario: 35.0 },
+          { rubroId: 2, cantidadDias: "5", valorUnitario: 15.0 },
+        ],
+        deportistas: formData.deportistas.map((id) => ({
+          deportistaId: Number(id),
+          rol: "ATLETA",
+        })),
+        entrenadores: formData.entrenadores.map((id, index) => ({
+          entrenadorId: Number(id),
+          rol: index === 0 ? "ENTRENADOR PRINCIPAL" : "ENTRENADOR",
+          esPrincipal: index === 0,
+        })),
+      };
+
+      console.log("✅ Solicitud enviada correctamente", solicitudData);
+
+      await solicitudMutation.mutateAsync({
+        eventoId: Number(eventoId),
+        archivo: documento,
+        solicitudData,
+      });
+
+      console.log("✅ Solicitud enviada correctamente", solicitudData);
+
+      toast.success("Solicitud enviada correctamente");
+      router.back();
+    } catch (error) {
+      console.error("Error al enviar solicitud:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "No se pudo enviar la solicitud"
+      );
+    }
+  };
+
+  const agregarDeportistas = (participantes: Participante[]) => {
+    const nuevosDeportistas = [...deportistasSeleccionados, ...participantes];
+    setDeportistasSeleccionados(nuevosDeportistas);
+    // Actualizar el formulario con los IDs
+    updateFormData(
+      "deportistas",
+      nuevosDeportistas.map((p) => p.id)
+    );
+  };
+
+  const agregarEntrenadores = (participantes: Participante[]) => {
+    const nuevosEntrenadores = [...entrenadoresSeleccionados, ...participantes];
+    setEntrenadoresSeleccionados(nuevosEntrenadores);
+    // Actualizar el formulario con los IDs
+    updateFormData(
+      "entrenadores",
+      nuevosEntrenadores.map((p) => p.id)
+    );
+  };
+
+  const eliminarDeportista = (id: string) => {
+    const nuevosDeportistas = deportistasSeleccionados.filter(
+      (p) => p.id !== id
+    );
+    setDeportistasSeleccionados(nuevosDeportistas);
+    updateFormData(
+      "deportistas",
+      nuevosDeportistas.map((p) => p.id)
+    );
+  };
+
+  const eliminarEntrenador = (id: string) => {
+    const nuevosEntrenadores = entrenadoresSeleccionados.filter(
+      (p) => p.id !== id
+    );
+    setEntrenadoresSeleccionados(nuevosEntrenadores);
+    updateFormData(
+      "entrenadores",
+      nuevosEntrenadores.map((p) => p.id)
+    );
+  };
+
+  const renderStepIndicator = () => (
+    <View style={styles.stepIndicator}>
+      <View style={styles.stepHeader}>
+        <ThemedText style={styles.stepText}>
+          Paso {step} de {totalSteps}
+        </ThemedText>
+        <ThemedText style={styles.stepPercentage}>
+          {Math.round((step / totalSteps) * 100)}%
+        </ThemedText>
+      </View>
+      <ProgressBar
+        progress={step / totalSteps}
+        color={theme.colors.primary}
+        style={styles.progressBar}
+      />
+    </View>
+  );
+
+  const renderStep1 = () => (
+    <View style={styles.stepContainer}>
+      <View style={styles.stepTitleContainer}>
+        <Icon source="ion:calendar" size={24} color={theme.colors.primary} />
+        <ThemedText style={styles.stepTitle}>Fechas y Transporte</ThemedText>
+      </View>
+
+      <ThemedText style={styles.helperText}>
+        Define las fechas de salida y retorno, así como el medio de transporte
+      </ThemedText>
+
+      <DateTimeInput
+        control={control}
+        name="fechaSalida"
+        label="Fecha y Hora de Salida *"
+        placeholder="Seleccione fecha y hora"
+        icon="ion:calendar-outline"
+        mode="datetime"
+        error={errors.fechaSalida?.message}
+      />
+
+      <DateTimeInput
+        control={control}
+        name="fechaRetorno"
+        label="Fecha y Hora de Retorno *"
+        placeholder="Seleccione fecha y hora"
+        icon="ion:calendar-outline"
+        mode="datetime"
+        minimumDate={formData.fechaSalida}
+        error={errors.fechaRetorno?.message}
+      />
+
+      <TransporteSelector
+        control={control}
+        name="transporteSalida"
+        label="Transporte de Salida *"
+        placeholder="Seleccione medio de transporte"
+        icon="bus"
+        error={errors.transporteSalida?.message}
+      />
+
+      <TransporteSelector
+        control={control}
+        name="transporteRetorno"
+        label="Transporte de Retorno *"
+        placeholder="Seleccione medio de transporte"
+        icon="bus"
+        error={errors.transporteRetorno?.message}
+      />
+    </View>
+  );
+
+  const renderStep2 = () => (
+    <View style={styles.stepContainer}>
+      <View style={styles.stepTitleContainer}>
+        <Icon
+          source="ion:flag-outline"
+          size={24}
+          color={theme.colors.primary}
+        />
+        <ThemedText style={styles.stepTitle}>Objetivos del Evento</ThemedText>
+      </View>
+
+      <ThemedText style={styles.helperText}>
+        Agrega al menos 2 objetivos que esperas lograr en este evento
+      </ThemedText>
+
+      {formData.objetivos.map((objetivo, index) => (
+        <TextInput
+          key={index}
+          label={`Objetivo ${index + 1} *`}
+          mode="outlined"
+          value={objetivo}
+          onChangeText={(text) => updateArrayItem("objetivos", index, text)}
+          placeholder={`Ej: ${index === 0 ? "Obtener ..." : "Clasificar ..."}`}
+          multiline
+        />
+      ))}
+
+      <Button
+        mode="text"
+        icon="ion:add-outline"
+        onPress={() => addArrayItem("objetivos")}
+        style={styles.addButton}
+      >
+        Agregar otro objetivo
+      </Button>
+    </View>
+  );
+
+  const renderStep3 = () => (
+    <View style={styles.stepContainer}>
+      <View style={styles.stepTitleContainer}>
+        <Icon
+          source="ion:checkmark-done"
+          size={24}
+          color={theme.colors.primary}
+        />
+        <ThemedText style={styles.stepTitle}>Criterios de Selección</ThemedText>
+      </View>
+
+      <ThemedText style={styles.helperText}>
+        Define los criterios que usaste para seleccionar a los participantes
+      </ThemedText>
+
+      {formData.criterios.map((criterio, index) => (
+        <TextInput
+          key={index}
+          label={`Criterio ${index + 1} *`}
+          mode="outlined"
+          value={criterio}
+          onChangeText={(text) => updateArrayItem("criterios", index, text)}
+          placeholder={`Ej: ${
+            index === 0
+              ? "Rendimiento en entrenamientos"
+              : "Disciplina y compromiso"
+          }`}
+          multiline
+          numberOfLines={2}
+        />
+      ))}
+
+      <Button
+        mode="text"
+        icon="ion:add-outline"
+        onPress={() => addArrayItem("criterios")}
+        style={styles.addButton}
+      >
+        Agregar otro criterio
+      </Button>
+    </View>
+  );
+
+  const renderStep4 = () => {
+    if (!evento) return null;
+
+    const deportistasHombresCant = deportistasSeleccionados.filter(
+      (d) => d.sexo === "masculino"
+    ).length;
+    const deportistasMujeresCant = deportistasSeleccionados.filter(
+      (d) => d.sexo === "femenino"
+    ).length;
+    const entrenadoresHombresCant = entrenadoresSeleccionados.filter(
+      (e) => e.sexo === "masculino"
+    ).length;
+    const entrenadoresMujeresCant = entrenadoresSeleccionados.filter(
+      (e) => e.sexo === "femenino"
+    ).length;
+
+    return (
+      <View style={styles.stepContainer}>
+        <View style={styles.stepTitleContainer}>
+          <Icon source="ion:people" size={24} color={theme.colors.primary} />
+          <ThemedText style={styles.stepTitle}>Participantes</ThemedText>
+        </View>
+
+        <ThemedText style={styles.helperText}>
+          Selecciona los deportistas y entrenadores que participarán
+        </ThemedText>
+
+        {/* Sección Deportistas */}
+        <View style={styles.participantSection}>
+          <View style={styles.participantHeader}>
+            <ThemedText style={styles.participantTitle}>Deportistas</ThemedText>
+            <ThemedText style={styles.participantCount}>
+              {deportistasSeleccionados.length} seleccionados
+            </ThemedText>
+          </View>
+
+          <View style={styles.buttonGroup}>
+            {evento.numAtletasHombres > 0 && (
+              <Button
+                mode="outlined"
+                icon="ion:man-outline"
+                onPress={() => abrirModal("atleta", "masculino")}
+                style={styles.genderButton}
+                compact
+              >
+                Hombres ({deportistasHombresCant}/{evento.numAtletasHombres})
+              </Button>
+            )}
+            {evento.numAtletasMujeres > 0 && (
+              <Button
+                mode="outlined"
+                icon="ion:woman-outline"
+                onPress={() => abrirModal("atleta", "femenino")}
+                style={styles.genderButton}
+                compact
+              >
+                Mujeres ({deportistasMujeresCant}/{evento.numAtletasMujeres})
+              </Button>
+            )}
+          </View>
+
+          {deportistasSeleccionados.length > 0 && (
+            <View style={styles.chipsContainer}>
+              {deportistasSeleccionados.map((deportista) => (
+                <Chip
+                  key={deportista.id}
+                  mode="outlined"
+                  icon={
+                    deportista.sexo === "masculino"
+                      ? "ion:man-outline"
+                      : "ion:woman-outline"
+                  }
+                  onClose={() => eliminarDeportista(deportista.id)}
+                  style={styles.chip}
+                >
+                  {deportista.nombres} {deportista.apellidos}
+                </Chip>
+              ))}
+            </View>
+          )}
+
+          {errors.deportistas && (
+            <Text
+              variant="bodySmall"
+              style={[styles.errorText, { color: theme.colors.error }]}
+            >
+              {errors.deportistas.message}
+            </Text>
+          )}
+        </View>
+
+        {/* Sección Entrenadores */}
+        <View style={styles.participantSection}>
+          <View style={styles.participantHeader}>
+            <ThemedText style={styles.participantTitle}>
+              Entrenadores
+            </ThemedText>
+            <ThemedText style={styles.participantCount}>
+              {entrenadoresSeleccionados.length} seleccionados
+            </ThemedText>
+          </View>
+
+          <View style={styles.buttonGroup}>
+            {evento.numEntrenadoresHombres > 0 && (
+              <Button
+                mode="outlined"
+                icon="ion:man-outline"
+                onPress={() => abrirModal("entrenador", "masculino")}
+                style={styles.genderButton}
+                compact
+              >
+                Hombres ({entrenadoresHombresCant}/
+                {evento.numEntrenadoresHombres})
+              </Button>
+            )}
+            {evento.numEntrenadoresMujeres > 0 && (
+              <Button
+                mode="outlined"
+                icon="ion:woman-outline"
+                onPress={() => abrirModal("entrenador", "femenino")}
+                style={styles.genderButton}
+                compact
+              >
+                Mujeres ({entrenadoresMujeresCant}/
+                {evento.numEntrenadoresMujeres})
+              </Button>
+            )}
+          </View>
+
+          {entrenadoresSeleccionados.length > 0 && (
+            <View style={styles.chipsContainer}>
+              {entrenadoresSeleccionados.map((entrenador) => (
+                <Chip
+                  key={entrenador.id}
+                  mode="outlined"
+                  icon={
+                    entrenador.sexo === "masculino"
+                      ? "ion:man-outline"
+                      : "ion:woman-outline"
+                  }
+                  onClose={() => eliminarEntrenador(entrenador.id)}
+                  style={styles.chip}
+                >
+                  {entrenador.nombres} {entrenador.apellidos}
+                </Chip>
+              ))}
+            </View>
+          )}
+
+          {errors.entrenadores && (
+            <Text
+              variant="bodySmall"
+              style={[styles.errorText, { color: theme.colors.error }]}
+            >
+              {errors.entrenadores.message}
+            </Text>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const renderStep5 = () => (
+    <View style={styles.stepContainer}>
+      <View style={styles.stepTitleContainer}>
+        <Icon
+          source="ion:document-text"
+          size={24}
+          color={theme.colors.primary}
+        />
+        <ThemedText style={styles.stepTitle}>Documento Final</ThemedText>
+      </View>
+
+      <ThemedText style={styles.helperText}>
+        Sube el documento oficial de solicitud (PDF o imagen)
+      </ThemedText>
+
+      <Button
+        mode="outlined"
+        icon="ion:cloud-upload-outline"
+        onPress={seleccionarDocumento}
+        style={styles.uploadButton}
+      >
+        {documento ? "Cambiar Documento" : "Seleccionar Documento"}
+      </Button>
+
+      {documento && (
+        <Surface style={styles.documentPreview} elevation={1}>
+          <Icon source="ion:document" size={40} color={theme.colors.primary} />
+          <View style={styles.documentInfo}>
+            <ThemedText style={styles.documentName}>
+              {documento.name}
+            </ThemedText>
+            <ThemedText style={styles.documentSize}>
+              {documento.type}
+            </ThemedText>
+          </View>
+          <Icon source="ion:checkmark-circle" size={24} color="#4CAF50" />
+        </Surface>
+      )}
+
+      <TextInput
+        label="Observaciones (Opcional)"
+        mode="outlined"
+        value={formData.observaciones}
+        onChangeText={(text) => updateFormData("observaciones", text)}
+        placeholder="Agrega cualquier información adicional relevante"
+      />
+    </View>
+  );
+
+  return (
+    <GestureHandlerRootView style={styles.container}>
+      <ThemedView style={styles.container}>
+        {eventoQuery.isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text variant="bodyLarge" style={{ marginTop: 16 }}>
+              Cargando información del evento...
+            </Text>
+          </View>
+        ) : eventoQuery.isError ? (
+          <View style={styles.loadingContainer}>
+            <Icon
+              source="ion:alert-circle"
+              size={48}
+              color={theme.colors.error}
+            />
+            <Text
+              variant="bodyLarge"
+              style={{ marginTop: 16, color: theme.colors.error }}
+            >
+              Error al cargar el evento
+            </Text>
+          </View>
+        ) : (
+          <>
+            <ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {renderStepIndicator()}
+
+              {/* Renderizar paso actual */}
+              {step === 1 && renderStep1()}
+              {step === 2 && renderStep2()}
+              {step === 3 && renderStep3()}
+              {step === 4 && renderStep4()}
+              {step === 5 && renderStep5()}
+            </ScrollView>
+
+            {/* Footer con botones */}
+
+            <View style={styles.footerButtons}>
+              {step > 1 && (
+                <Button
+                  mode="outlined"
+                  onPress={handleBack}
+                  icon="ion:arrow-back-outline"
+                  style={styles.backButtonFooter}
+                >
+                  Atrás
+                </Button>
+              )}
+
+              {step < totalSteps ? (
+                <Button
+                  mode="contained"
+                  onPress={handleNext}
+                  disabled={!canContinue}
+                  icon="ion:arrow-forward-outline"
+                  contentStyle={styles.nextButtonContent}
+                  style={styles.nextButton}
+                >
+                  Continuar
+                </Button>
+              ) : (
+                <Button
+                  mode="contained"
+                  onPress={onSubmit}
+                  disabled={!documento || solicitudMutation.isPending}
+                  loading={solicitudMutation.isPending}
+                  icon="send"
+                  style={styles.nextButton}
+                >
+                  {solicitudMutation.isPending
+                    ? "Enviando..."
+                    : "Enviar Solicitud"}
+                </Button>
+              )}
+            </View>
+
+            {/* Modal para agregar participantes */}
+            {modalState.visible &&
+              modalState.tipo &&
+              modalState.sexo &&
+              evento &&
+              (() => {
+                const { tipo, sexo } = modalState;
+                const participantesYaAgregados =
+                  tipo === "atleta"
+                    ? deportistasSeleccionados.filter((p) => p.sexo === sexo)
+                    : entrenadoresSeleccionados.filter((p) => p.sexo === sexo);
+
+                // Calcular cantidad requerida según tipo y sexo
+                let cantidadRequerida = 0;
+                if (tipo === "atleta" && sexo === "masculino") {
+                  cantidadRequerida = evento.numAtletasHombres;
+                } else if (tipo === "atleta" && sexo === "femenino") {
+                  cantidadRequerida = evento.numAtletasMujeres;
+                } else if (tipo === "entrenador" && sexo === "masculino") {
+                  cantidadRequerida = evento.numEntrenadoresHombres;
+                } else if (tipo === "entrenador" && sexo === "femenino") {
+                  cantidadRequerida = evento.numEntrenadoresMujeres;
+                }
+
+                return (
+                  <AgregarParticipanteModal
+                    visible={modalState.visible}
+                    onDismiss={cerrarModal}
+                    tipo={tipo}
+                    sexo={sexo}
+                    cantidadRequerida={cantidadRequerida}
+                    cantidadActual={participantesYaAgregados.length}
+                    participantesYaAgregados={participantesYaAgregados}
+                    onAgregar={
+                      tipo === "atleta"
+                        ? agregarDeportistas
+                        : agregarEntrenadores
+                    }
+                  />
+                );
+              })()}
+          </>
+        )}
+      </ThemedView>
+    </GestureHandlerRootView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  header: {
+    paddingTop: 50,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  backButton: {
+    marginLeft: -8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 100,
+  },
+  stepIndicator: {
+    marginBottom: 24,
+  },
+  stepHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  stepText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  stepPercentage: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
+  },
+  stepContainer: {
+    gap: 16,
+  },
+  stepTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 8,
+  },
+  stepTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  helperText: {
+    fontSize: 14,
+    opacity: 0.7,
+    marginBottom: 8,
+  },
+
+  errorText: {
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 12,
+    marginBottom: 8,
+  },
+  addButton: {
+    alignSelf: "flex-start",
+  },
+  participantSection: {
+    padding: 16,
+    borderRadius: 12,
+    gap: 12,
+  },
+  participantHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  participantTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  participantCount: {
+    fontSize: 14,
+    opacity: 0.7,
+  },
+  buttonGroup: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  genderButton: {
+    flex: 1,
+  },
+  chipsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  chip: {
+    marginBottom: 4,
+  },
+  selectButton: {
+    borderRadius: 8,
+  },
+  uploadButton: {
+    borderRadius: 8,
+    paddingVertical: 8,
+  },
+  documentPreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 16,
+    borderRadius: 12,
+  },
+  documentInfo: {
+    flex: 1,
+  },
+  documentName: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  documentSize: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  footerButtons: {
+    flexDirection: "row",
+    gap: 12,
+    margin: 20,
+  },
+  backButtonFooter: {
+    flex: 1,
+    borderRadius: 8,
+  },
+  nextButton: {
+    flex: 1,
+    borderRadius: 8,
+  },
+  nextButtonContent: {
+    flexDirection: "row-reverse",
+  },
+});

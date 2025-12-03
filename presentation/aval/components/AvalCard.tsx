@@ -10,7 +10,7 @@ export const AvalCard = ({ aval }: { aval: Aval }) => {
   const theme = useTheme();
 
   const handlePress = () => {
-    router.push(`/(avales-app)/aval/${aval.id}`);
+    router.push(`/(entrenador)/aval/${aval.id}`);
   };
 
   const totalDeportistas = aval.deportistas.length;

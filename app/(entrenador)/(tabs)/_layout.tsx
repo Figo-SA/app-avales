@@ -1,4 +1,4 @@
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useTheme } from "react-native-paper";
 
@@ -27,12 +27,12 @@ export default function TabLayout() {
         <Tabs.Screen
           name="event"
           options={{
-            title: "Eventos",
-            headerTitle: "Eventos",
+            title: "Explorar",
+            headerTitle: "Explorar Eventos",
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
                 size={focused ? 26 : 22}
-                name="calendar"
+                name={focused ? "compass" : "compass-outline"}
                 color={color}
               />
             ),
@@ -42,12 +42,12 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "Avales",
-            headerTitle: "Mis Avales",
+            title: "Mis Solicitudes",
+            headerTitle: "Mis Solicitudes",
             tabBarIcon: ({ color, focused }) => (
-              <MaterialIcons
-                size={focused ? 28 : 24}
-                name="description"
+              <Ionicons
+                size={focused ? 26 : 22}
+                name={focused ? "file-tray-full" : "file-tray-full-outline"}
                 color={color}
               />
             ),

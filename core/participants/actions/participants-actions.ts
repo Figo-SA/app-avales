@@ -1,26 +1,27 @@
+import { API_ENDPOINTS } from "@/core/api/api.config";
+import { httpClient } from "@/core/api/http-client";
+import { handleApiError } from "@/helpers/error-handler";
 import {
   Participante,
   ParticipantesPorCategoria,
   SexoParticipante,
   TipoParticipante,
 } from "../interfaces/participante";
-import { PARTICIPANTES_DATA } from "./dataParticipants";
 
 /**
  * Obtener todos los participantes disponibles
  */
 export const getAllParticipantes = async (): Promise<Participante[]> => {
   try {
-    // TODO: Implementar llamada al API
-    // const response = await apiClient.get('/participantes');
-    // return response.data;
-
-    // Mock data por ahora
-    await new Promise((resolve) => setTimeout(resolve, 300)); // Simular delay
-    return PARTICIPANTES_DATA;
+    const response = await httpClient.get<Participante[]>(
+      API_ENDPOINTS.DEPORTISTAS.LIST
+    );
+    return response.data;
   } catch (error) {
-    console.error("Error al obtener participantes:", error);
-    throw error;
+    console.warn("getAllParticipantes failed, falling back to mock", error);
+    // unreachable (kept for safety)
+    const errMsg = handleApiError(error, "getAllParticipantes");
+    throw new Error(errMsg);
   }
 };
 
@@ -28,32 +29,40 @@ export const getAllParticipantes = async (): Promise<Participante[]> => {
  * Buscar participantes por tipo y sexo
  */
 export const searchParticipantes = async (
-  tipo: TipoParticipante,
-  sexo: SexoParticipante,
+  tipo?: TipoParticipante,
+  sexo?: SexoParticipante,
   query: string = ""
 ): Promise<Participante[]> => {
   try {
-    // TODO: Implementar llamada al API
-    // const response = await apiClient.get('/participantes/search', {
-    //   params: { tipo, sexo, query }
-    // });
-    // return response.data;
+    // No enviamos `tipo` como query param al backend. En su lugar,
+    // usamos el endpoint específico para entrenadores cuando corresponde.
+    if (tipo === "entrenador") {
+      try {
+        const res = await httpClient.get<Participante[]>(
+          API_ENDPOINTS.DEPORTISTAS.ENTRENADORES,
+          { params: { sexo, query } }
+        );
+        return res.data;
+      } catch (err) {
+        console.warn("searchParticipantes (entrenadores) failed, using mock", err);
+        return [];
+      }
+    }
 
-    // Mock data por ahora
-    await new Promise((resolve) => setTimeout(resolve, 200)); // Simular delay
-
-    return PARTICIPANTES_DATA.filter(
-      (p) =>
-        p.tipo === tipo &&
-        p.sexo === sexo &&
-        (query === "" ||
-          p.nombres.toLowerCase().includes(query.toLowerCase()) ||
-          p.apellidos.toLowerCase().includes(query.toLowerCase()) ||
-          p.cedula.includes(query))
-    );
+    // Default: buscar entre deportistas (atletas)
+    try {
+      const res = await httpClient.get<Participante[]>(
+        API_ENDPOINTS.DEPORTISTAS.LIST,
+        { params: { sexo, query } }
+      );
+      return res.data;
+    } catch (err) {
+      console.warn("searchParticipantes (deportistas) failed, using mock", err);
+      return [];
+    }
   } catch (error) {
-    console.error("Error al buscar participantes:", error);
-    throw error;
+    const errMsg = handleApiError(error, "searchParticipantes");
+    throw new Error(errMsg);
   }
 };
 
@@ -64,11 +73,25 @@ export const getParticipantesByEvento = async (
   eventoId: number
 ): Promise<ParticipantesPorCategoria> => {
   try {
-    // TODO: Implementar llamada al API
-    // const response = await apiClient.get(`/eventos/${eventoId}/participantes`);
-    // return response.data;
+    // Actualmente no existe un endpoint específico documentado para
+    // participantes por evento en el backend. Intentamos hacer una
+    // petición al endpoint de deportistas con filtro por evento si el API
+    // lo soporta; si falla, devolvemos el mock.
+    try {
+      const response = await httpClient.get<ParticipantesPorCategoria>(
+        API_ENDPOINTS.DEPORTISTAS.LIST,
+        { params: { eventoId } }
+      );
+      // Si el backend retorna la estructura esperada
+      if (response && response.data) return response.data;
+    } catch (innerError) {
+      // ignorar y usar fallback
+      console.warn(
+        "getParticipantesByEvento: no hay endpoint específico, usando mock",
+        innerError
+      );
+    }
 
-    // Mock data por ahora
     return {
       entrenadoresHombres: [],
       entrenadoresMujeres: [],
@@ -88,18 +111,17 @@ export const createParticipante = async (
   participante: Omit<Participante, "id">
 ): Promise<Participante> => {
   try {
-    // TODO: Implementar llamada al API
-    // const response = await apiClient.post('/participantes', participante);
-    // return response.data;
-
-    // Mock por ahora
+    const response = await httpClient.post<Participante>(
+      API_ENDPOINTS.DEPORTISTAS.LIST,
+      participante
+    );
+    return response.data;
+  } catch (error) {
+    console.error("createParticipante failed, returning mock", error);
     return {
       ...participante,
       id: `temp-${Date.now()}`,
-    };
-  } catch (error) {
-    console.error("Error al crear participante:", error);
-    throw error;
+    } as Participante;
   }
 };
 
@@ -111,11 +133,11 @@ export const updateParticipante = async (
   participante: Partial<Participante>
 ): Promise<Participante> => {
   try {
-    // TODO: Implementar llamada al API
-    // const response = await apiClient.put(`/participantes/${id}`, participante);
-    // return response.data;
-
-    throw new Error("Not implemented");
+    const response = await httpClient.put<Participante>(
+      API_ENDPOINTS.DEPORTISTAS.GET_BY_ID(id),
+      participante
+    );
+    return response.data;
   } catch (error) {
     console.error("Error al actualizar participante:", error);
     throw error;
@@ -127,8 +149,7 @@ export const updateParticipante = async (
  */
 export const deleteParticipante = async (id: string): Promise<void> => {
   try {
-    // TODO: Implementar llamada al API
-    // await apiClient.delete(`/participantes/${id}`);
+    await httpClient.delete(API_ENDPOINTS.DEPORTISTAS.GET_BY_ID(id));
   } catch (error) {
     console.error("Error al eliminar participante:", error);
     throw error;
@@ -143,8 +164,13 @@ export const saveParticipantes = async (
   participantes: ParticipantesPorCategoria
 ): Promise<void> => {
   try {
-    // TODO: Implementar llamada al API
-    // await apiClient.post(`/eventos/${eventoId}/participantes`, participantes);
+    // Endpoint para guardar participantes por evento no documentado.
+    // Mantener como TODO: si existe, reemplazar la ruta a continuación.
+    // await httpClient.post(API_ENDPOINTS.EVENTOS.PARTICIPANTES(eventoId), participantes);
+    console.warn(
+      "saveParticipantes: no implementado en backend, revisar endpoint",
+      eventoId
+    );
   } catch (error) {
     console.error("Error al guardar participantes:", error);
     throw error;

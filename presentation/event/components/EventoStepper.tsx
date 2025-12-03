@@ -149,7 +149,7 @@ export const EventoStepper = ({ estado }: EventoStepperProps) => {
         )}
         {estado === "aceptado" && (
           <ThemedText style={[styles.messageText, styles.messageSuccess]}>
-            ✅ ¡Aprobado! Ahora agrega tus jugadores
+            ✅ Solicitud aprobada
           </ThemedText>
         )}
         {estado === "rechazado" && (
