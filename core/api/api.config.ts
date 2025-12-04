@@ -39,6 +39,9 @@ export const API_ENDPOINTS = {
     UPLOAD_FILE: (id: number) => `/events/${id}/upload-file`,
     CREATE_AVAL: (id: number) => `/events/${id}/aval`,
     UPLOAD_AVAL_ARCHIVO: (id: number) => `/events/${id}/aval/archivo`,
+    COLECCIONES: "/events/colecciones",
+    APROBAR: (id: number) => `/events/${id}/aprobar`,
+    RECHAZAR: (id: number) => `/events/${id}/rechazar`,
   },
   DEPORTISTAS: {
     LIST: "/deportistas",
