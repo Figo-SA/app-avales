@@ -11,7 +11,7 @@ export const API_URL =
 
 export const API_CONFIG = {
   baseURL: API_URL || "https://api.figo.com",
-  timeout: 10000,
+  timeout: 40000,
   retryAttempts: 3,
 } as const;
 
