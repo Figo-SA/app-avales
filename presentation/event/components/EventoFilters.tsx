@@ -3,8 +3,8 @@ import { ThemedSelect } from "@/presentation/theme/components/ThemedSelect";
 import { ThemedText } from "@/presentation/theme/components/ThemedText";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import React from "react";
-import { ScrollView, View } from "react-native";
-import { Button } from "react-native-paper";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Button, useTheme } from "react-native-paper";
 
 interface EventoFiltersProps {
   filters: EventoFilters;
@@ -15,6 +15,8 @@ export const EventoFiltersComponent: React.FC<EventoFiltersProps> = ({
   filters,
   onFiltersChange,
 }) => {
+  const theme = useTheme();
+
   const tipoEventoOptions = [
     { label: "Todos", value: "" },
     { label: "Campeonato", value: "CAMPEONATO" },
@@ -66,9 +68,11 @@ export const EventoFiltersComponent: React.FC<EventoFiltersProps> = ({
   );
 
   return (
-    <ThemedView className="bg-white border-b border-gray-200 p-4">
-      <View className="flex-row justify-between items-center mb-3">
-        <ThemedText className="text-lg font-semibold">Filtros</ThemedText>
+    <ThemedView
+      style={[styles.container, { borderBottomColor: theme.colors.outline }]}
+    >
+      <View style={styles.header}>
+        <ThemedText style={styles.title}>Filtros</ThemedText>
         {hasActiveFilters && (
           <Button mode="outlined" onPress={clearAllFilters} compact>
             Limpiar
@@ -77,11 +81,9 @@ export const EventoFiltersComponent: React.FC<EventoFiltersProps> = ({
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View className="flex-row space-x-3">
-          <View className="min-w-[150px]">
-            <ThemedText className="text-sm font-medium mb-2">
-              Tipo de Evento
-            </ThemedText>
+        <View style={styles.filtersRow}>
+          <View style={styles.filterItem}>
+            <ThemedText style={styles.filterLabel}>Tipo de Evento</ThemedText>
             <ThemedSelect
               label="Tipo de Evento"
               options={tipoEventoOptions}
@@ -91,10 +93,8 @@ export const EventoFiltersComponent: React.FC<EventoFiltersProps> = ({
             />
           </View>
 
-          <View className="min-w-[150px]">
-            <ThemedText className="text-sm font-medium mb-2">
-              Deporte
-            </ThemedText>
+          <View style={styles.filterItem}>
+            <ThemedText style={styles.filterLabel}>Deporte</ThemedText>
             <ThemedSelect
               label="Deporte"
               options={deporteOptions}
@@ -104,10 +104,8 @@ export const EventoFiltersComponent: React.FC<EventoFiltersProps> = ({
             />
           </View>
 
-          <View className="min-w-[150px]">
-            <ThemedText className="text-sm font-medium mb-2">
-              Provincia
-            </ThemedText>
+          <View style={styles.filterItem}>
+            <ThemedText style={styles.filterLabel}>Provincia</ThemedText>
             <ThemedSelect
               label="Provincia"
               options={provinciaOptions}
@@ -117,10 +115,8 @@ export const EventoFiltersComponent: React.FC<EventoFiltersProps> = ({
             />
           </View>
 
-          <View className="min-w-[150px]">
-            <ThemedText className="text-sm font-medium mb-2">
-              Alcance
-            </ThemedText>
+          <View style={styles.filterItem}>
+            <ThemedText style={styles.filterLabel}>Alcance</ThemedText>
             <ThemedSelect
               label="Alcance"
               options={alcanceOptions}
@@ -134,3 +130,32 @@ export const EventoFiltersComponent: React.FC<EventoFiltersProps> = ({
     </ThemedView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+    borderBottomWidth: 1,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  filtersRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  filterItem: {
+    minWidth: 150,
+  },
+  filterLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    marginBottom: 8,
+  },
+});
