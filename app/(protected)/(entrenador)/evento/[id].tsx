@@ -1,0 +1,445 @@
+import { getEventoById } from "@/core/eventos/actions/eventos-actions";
+import { Evento } from "@/core/eventos/interfaces/evento";
+import { formatDateLong } from "@/helpers/date.helper";
+import { EmptyState } from "@/presentation/theme/components/EmptyState";
+import { ThemedView } from "@/presentation/theme/components/ThemedView";
+import { useQuery } from "@tanstack/react-query";
+import * as Haptics from "expo-haptics";
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import React from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
+import {
+  Button,
+  Card,
+  Chip,
+  Icon,
+  Surface,
+  Text,
+  useTheme,
+} from "react-native-paper";
+
+export default function EventoDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const theme = useTheme();
+
+  const {
+    data: evento,
+    isLoading,
+    error,
+  } = useQuery<Evento, Error>({
+    queryKey: ["evento", id],
+    queryFn: async () => {
+      const result = await getEventoById(Number(id));
+      if (!result) throw new Error("Evento no encontrado");
+      return result;
+    },
+    enabled: !!id,
+  });
+
+  if (isLoading) {
+    return (
+      <ThemedView style={styles.container}>
+        <Stack.Screen options={{ title: "Cargando..." }} />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </ThemedView>
+    );
+  }
+
+  if (error || !evento) {
+    return (
+      <ThemedView style={styles.container}>
+        <Stack.Screen options={{ title: "Error" }} />
+        <EmptyState
+          icon="ion:alert-circle-outline"
+          title="Error al cargar"
+          description="No se pudo cargar el evento."
+        />
+      </ThemedView>
+    );
+  }
+
+  const estadoEvento = evento.estado?.toLowerCase() || "disponible";
+
+  const getEstadoInfo = () => {
+    const isDark = theme.dark;
+    switch (estadoEvento) {
+      case "solicitado":
+        return {
+          label: "En Revisión",
+          color: isDark ? "#FBBF24" : "#D97706",
+          bg: isDark ? "#78350F" : "#FEF3C7",
+          icon: "ion:time-outline"
+        };
+      case "aceptado":
+        return {
+          label: "Aprobado",
+          color: isDark ? "#34D399" : "#059669",
+          bg: isDark ? "#064E3B" : "#D1FAE5",
+          icon: "ion:checkmark-circle"
+        };
+      case "rechazado":
+        return {
+          label: "Rechazado",
+          color: isDark ? "#F87171" : "#DC2626",
+          bg: isDark ? "#7F1D1D" : "#FEE2E2",
+          icon: "ion:close-circle"
+        };
+      default:
+        return {
+          label: "Disponible",
+          color: theme.colors.primary,
+          bg: theme.colors.primaryContainer,
+          icon: "ion:checkmark-circle-outline"
+        };
+    }
+  };
+
+  const estado = getEstadoInfo();
+
+  const handleSolicitar = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push(`/(entrenador)/solicitud/${evento.id}`);
+  };
+
+  return (
+    <ThemedView style={styles.container}>
+      <Stack.Screen
+        options={{
+          title: "Detalle del Evento",
+          headerBackTitle: "Atrás",
+          headerStyle: {
+            backgroundColor: theme.colors.primary,
+          },
+          headerTintColor: theme.colors.onPrimary,
+        }}
+      />
+
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header Card */}
+        <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="elevated">
+          <Card.Content style={styles.headerContent}>
+            <View style={[styles.estadoBadge, { backgroundColor: estado.bg }]}>
+              <Icon source={estado.icon} size={14} color={estado.color} />
+              <Text style={[styles.estadoText, { color: estado.color }]}>
+                {estado.label}
+              </Text>
+            </View>
+
+            <Text variant="titleMedium" style={[styles.title, { color: theme.colors.onSurface }]}>
+              {evento.nombre}
+            </Text>
+
+            <View style={styles.metaRow}>
+              <Chip compact style={[{ backgroundColor: theme.colors.primaryContainer }]}>
+                <Text style={{ fontSize: 10, color: theme.colors.primary }}>{evento.tipoEvento}</Text>
+              </Chip>
+              <Chip compact style={[{ backgroundColor: theme.colors.secondaryContainer }]}>
+                <Text style={{ fontSize: 10, color: theme.colors.onSecondaryContainer }}>{evento.codigo}</Text>
+              </Chip>
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Info Cards Row */}
+        <View style={styles.infoCardsRow}>
+          <Surface style={[styles.infoCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+            <Icon source="ion:calendar-outline" size={18} color={theme.colors.primary} />
+            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Inicio</Text>
+            <Text style={[styles.infoValue, { color: theme.colors.onSurface }]} numberOfLines={1}>
+              {formatDateLong(evento.fechaInicio).split(",")[0]}
+            </Text>
+          </Surface>
+
+          <Surface style={[styles.infoCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+            <Icon source="ion:location-outline" size={18} color={theme.colors.primary} />
+            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Ciudad</Text>
+            <Text style={[styles.infoValue, { color: theme.colors.onSurface }]} numberOfLines={1}>
+              {evento.ciudad}
+            </Text>
+          </Surface>
+
+          <Surface style={[styles.infoCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+            <Icon source="ion:globe-outline" size={18} color={theme.colors.primary} />
+            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Alcance</Text>
+            <Text style={[styles.infoValue, { color: theme.colors.onSurface }]} numberOfLines={1}>
+              {evento.alcance}
+            </Text>
+          </Surface>
+        </View>
+
+        {/* Detalles Card */}
+        <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="elevated">
+          <Card.Content>
+            <View style={styles.sectionHeader}>
+              <Icon source="ion:information-circle-outline" size={18} color={theme.colors.primary} />
+              <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Detalles</Text>
+            </View>
+
+            <View style={styles.detailsList}>
+              <DetailRow label="Fecha Inicio" value={formatDateLong(evento.fechaInicio)} theme={theme} />
+              <DetailRow label="Fecha Fin" value={formatDateLong(evento.fechaFin)} theme={theme} />
+              <DetailRow label="Lugar" value={`${evento.lugar}, ${evento.ciudad}`} theme={theme} />
+              <DetailRow label="Provincia" value={`${evento.provincia}, ${evento.pais}`} theme={theme} />
+              <DetailRow label="Disciplina" value={evento.disciplina?.nombre} theme={theme} />
+              <DetailRow label="Categoría" value={evento.categoria?.nombre} theme={theme} />
+              <DetailRow label="Género" value={evento.genero} theme={theme} isLast />
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Participantes Card */}
+        <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="elevated">
+          <Card.Content>
+            <View style={styles.sectionHeader}>
+              <Icon source="ion:people-outline" size={18} color={theme.colors.primary} />
+              <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Participantes</Text>
+            </View>
+
+            <View style={styles.participantsRow}>
+              <View style={[styles.participantBox, { backgroundColor: theme.colors.primaryContainer }]}>
+                <Text style={[styles.participantNumber, { color: theme.colors.primary }]}>
+                  {evento.numAtletasHombres + evento.numAtletasMujeres}
+                </Text>
+                <Text style={[styles.participantLabel, { color: theme.colors.onPrimaryContainer }]}>
+                  Atletas
+                </Text>
+                <Text style={[styles.participantSub, { color: theme.colors.onPrimaryContainer }]}>
+                  {evento.numAtletasHombres}H / {evento.numAtletasMujeres}M
+                </Text>
+              </View>
+
+              <View style={[styles.participantBox, { backgroundColor: theme.colors.secondaryContainer }]}>
+                <Text style={[styles.participantNumber, { color: theme.colors.secondary }]}>
+                  {evento.numEntrenadoresHombres + evento.numEntrenadoresMujeres}
+                </Text>
+                <Text style={[styles.participantLabel, { color: theme.colors.onSecondaryContainer }]}>
+                  Entrenadores
+                </Text>
+                <Text style={[styles.participantSub, { color: theme.colors.onSecondaryContainer }]}>
+                  {evento.numEntrenadoresHombres}H / {evento.numEntrenadoresMujeres}M
+                </Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Alertas de estado */}
+        {estadoEvento === "solicitado" && (
+          <Surface style={[styles.alertBox, { backgroundColor: estado.bg }]} elevation={0}>
+            <Icon source="ion:time-outline" size={18} color={estado.color} />
+            <Text style={[styles.alertText, { color: estado.color }]}>
+              Tu solicitud está en revisión.
+            </Text>
+          </Surface>
+        )}
+
+        {estadoEvento === "aceptado" && (
+          <Surface style={[styles.alertBox, { backgroundColor: estado.bg }]} elevation={0}>
+            <Icon source="ion:checkmark-circle" size={18} color={estado.color} />
+            <Text style={[styles.alertText, { color: estado.color }]}>
+              ¡Solicitud aprobada!
+            </Text>
+          </Surface>
+        )}
+
+        {estadoEvento === "rechazado" && (
+          <Surface style={[styles.alertBox, { backgroundColor: estado.bg }]} elevation={0}>
+            <Icon source="ion:close-circle" size={18} color={estado.color} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.alertText, { color: estado.color }]}>
+                Solicitud rechazada.
+              </Text>
+              {evento.motivoRechazo && (
+                <Text style={[styles.alertText, { color: estado.color, marginTop: 2 }]}>
+                  {evento.motivoRechazo}
+                </Text>
+              )}
+            </View>
+          </Surface>
+        )}
+
+        {/* Botón */}
+        {estadoEvento === "disponible" && (
+          <Button
+            mode="contained"
+            onPress={handleSolicitar}
+            style={styles.button}
+            labelStyle={styles.buttonLabel}
+          >
+            Solicitar Participación
+          </Button>
+        )}
+
+        <View style={{ height: 20 }} />
+      </ScrollView>
+    </ThemedView>
+  );
+}
+
+const DetailRow = ({
+  label,
+  value,
+  theme,
+  isLast = false
+}: {
+  label: string;
+  value: string;
+  theme: any;
+  isLast?: boolean;
+}) => (
+  <View style={[
+    detailRowStyles.container,
+    !isLast && { borderBottomWidth: 1, borderBottomColor: theme.colors.surfaceVariant }
+  ]}>
+    <Text style={[detailRowStyles.label, { color: theme.colors.onSurfaceVariant }]}>{label}</Text>
+    <Text style={[detailRowStyles.value, { color: theme.colors.onSurface }]} numberOfLines={2}>{value}</Text>
+  </View>
+);
+
+const detailRowStyles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 10,
+    gap: 12,
+  },
+  label: {
+    fontSize: 13,
+  },
+  value: {
+    fontSize: 13,
+    fontWeight: "500",
+    flex: 1,
+    textAlign: "right",
+  },
+});
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  content: {
+    padding: 16,
+    gap: 12,
+  },
+  card: {
+    borderRadius: 12,
+  },
+  headerContent: {
+    gap: 10,
+  },
+  estadoBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  estadoText: {
+    fontWeight: "600",
+    fontSize: 11,
+  },
+  title: {
+    fontWeight: "600",
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  metaRow: {
+    flexDirection: "row",
+    gap: 6,
+    flexWrap: "wrap",
+  },
+
+  infoCardsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  infoCard: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    gap: 4,
+  },
+  infoLabel: {
+    fontSize: 9,
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  infoValue: {
+    fontSize: 11,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  detailsList: {
+    gap: 0,
+  },
+  participantsRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  participantBox: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    gap: 4,
+  },
+  participantNumber: {
+    fontSize: 22,
+    fontWeight: "700",
+  },
+  participantLabel: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  participantSub: {
+    fontSize: 10,
+  },
+  alertBox: {
+    flexDirection: "row",
+    padding: 12,
+    borderRadius: 10,
+    gap: 10,
+    alignItems: "center",
+  },
+  alertText: {
+    fontSize: 12,
+    flex: 1,
+  },
+  button: {
+    borderRadius: 10,
+    marginTop: 4,
+  },
+  buttonLabel: {
+    fontSize: 14,
+  },
+});

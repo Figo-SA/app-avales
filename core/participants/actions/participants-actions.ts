@@ -9,24 +9,98 @@ import {
 } from "../interfaces/participante";
 
 /**
- * Obtener todos los participantes disponibles
+ * Interfaz para la respuesta del backend de usuarios/entrenadores
+ */
+interface UserBackendResponse {
+  id: number;
+  nombre: string;
+  apellido?: string;
+  email: string;
+  cedula: string;
+  genero?: "MASCULINO" | "FEMENINO";
+  categoria?: { id: number; nombre: string };
+  disciplina?: { id: number; nombre: string };
+}
+
+interface EntrenadoresApiResponse {
+  items: UserBackendResponse[];
+  pagination: { page: number; limit: number; total: number };
+}
+
+/**
+ * Interfaz para la respuesta del backend de atletas
+ */
+interface AthleteBackendResponse {
+  id: number;
+  nombres: string;
+  apellidos: string;
+  cedula: string;
+  fechaNacimiento: string;
+  genero: "MASCULINO" | "FEMENINO";
+  afiliacion: boolean;
+}
+
+interface AthletesApiResponse {
+  items: AthleteBackendResponse[];
+  pagination: { page: number; limit: number; total: number };
+}
+
+/**
+ * Mapea un usuario (entrenador) del backend al formato Participante
+ */
+const mapUserToParticipante = (
+  user: UserBackendResponse,
+  tipo: TipoParticipante = "entrenador"
+): Participante => ({
+  id: user.id.toString(),
+  tipo,
+  sexo: user.genero === "FEMENINO" ? "femenino" : "masculino",
+  nombres: user.nombre,
+  apellidos: user.apellido || "",
+  cedula: user.cedula,
+  fechaNacimiento: "",
+  eventoId: 0,
+});
+
+/**
+ * Mapea un atleta del backend al formato Participante
+ */
+const mapAthleteToParticipante = (
+  athlete: AthleteBackendResponse
+): Participante => ({
+  id: athlete.id.toString(),
+  tipo: "atleta",
+  sexo: athlete.genero === "FEMENINO" ? "femenino" : "masculino",
+  nombres: athlete.nombres,
+  apellidos: athlete.apellidos,
+  cedula: athlete.cedula,
+  fechaNacimiento: athlete.fechaNacimiento,
+  eventoId: 0,
+});
+
+/**
+ * Obtener todos los participantes disponibles (atletas)
  */
 export const getAllParticipantes = async (): Promise<Participante[]> => {
   try {
-    const response = await httpClient.get<Participante[]>(
-      API_ENDPOINTS.DEPORTISTAS.LIST
+    const response = await httpClient.get<AthletesApiResponse>(
+      API_ENDPOINTS.ATHLETES.LIST,
+      { params: { page: 1, limit: 100, soloAfiliados: true } }
     );
-    return response.data;
+    const responseData = response.data as any;
+    const athletes: AthleteBackendResponse[] = Array.isArray(responseData)
+      ? responseData
+      : (responseData?.items || []);
+    return athletes.map(mapAthleteToParticipante);
   } catch (error) {
-    console.warn("getAllParticipantes failed, falling back to mock", error);
-    // unreachable (kept for safety)
+    console.warn("getAllParticipantes failed", error);
     const errMsg = handleApiError(error, "getAllParticipantes");
     throw new Error(errMsg);
   }
 };
 
 /**
- * Buscar participantes por tipo y sexo
+ * Buscar participantes por tipo y género
  */
 export const searchParticipantes = async (
   tipo?: TipoParticipante,
@@ -34,33 +108,44 @@ export const searchParticipantes = async (
   query: string = ""
 ): Promise<Participante[]> => {
   try {
-    // No enviamos `tipo` como query param al backend. En su lugar,
-    // usamos el endpoint específico para entrenadores cuando corresponde.
+    // Convertir sexo a genero (formato del backend: MASCULINO/FEMENINO)
+    const genero = sexo ? sexo.toUpperCase() : undefined;
+
+    // Usamos el endpoint específico para entrenadores cuando corresponde.
     if (tipo === "entrenador") {
       try {
-        const res = await httpClient.get<Participante[]>(
-          API_ENDPOINTS.DEPORTISTAS.ENTRENADORES,
-          { params: { sexo, query } }
+        const res = await httpClient.get<EntrenadoresApiResponse>(
+          API_ENDPOINTS.USERS.ENTRENADORES,
+          { params: { genero, page: 1, limit: 100 } }
         );
-        return res.data;
+        // La respuesta puede venir como { items, pagination } o directamente como array
+        const responseData = res.data as any;
+        const users: UserBackendResponse[] = Array.isArray(responseData)
+          ? responseData
+          : (responseData?.items || []);
+        console.log("Entrenadores response:", users.length, "items");
+        return users.map((user) => mapUserToParticipante(user, "entrenador"));
       } catch (err) {
-        console.warn(
-          "searchParticipantes (entrenadores) failed, using mock",
-          err
-        );
+        console.warn("searchParticipantes (entrenadores) failed", err);
         return [];
       }
     }
 
-    // Default: buscar entre deportistas (atletas)
+    // Default: buscar entre atletas
     try {
-      const res = await httpClient.get<Participante[]>(
-        API_ENDPOINTS.DEPORTISTAS.LIST,
-        { params: { sexo, query } }
+      const res = await httpClient.get<AthletesApiResponse>(
+        API_ENDPOINTS.ATHLETES.LIST,
+        { params: { genero, page: 1, limit: 100, soloAfiliados: true } }
       );
-      return res.data;
+      // La respuesta puede venir como { items, pagination } o directamente como array
+      const responseData = res.data as any;
+      const athletes: AthleteBackendResponse[] = Array.isArray(responseData)
+        ? responseData
+        : (responseData?.items || []);
+      console.log("Athletes response:", athletes.length, "items");
+      return athletes.map(mapAthleteToParticipante);
     } catch (err) {
-      console.warn("searchParticipantes (deportistas) failed, using mock", err);
+      console.warn("searchParticipantes (athletes) failed", err);
       return [];
     }
   } catch (error) {
@@ -76,21 +161,15 @@ export const getParticipantesByEvento = async (
   eventoId: number
 ): Promise<ParticipantesPorCategoria> => {
   try {
-    // Actualmente no existe un endpoint específico documentado para
-    // participantes por evento en el backend. Intentamos hacer una
-    // petición al endpoint de deportistas con filtro por evento si el API
-    // lo soporta; si falla, devolvemos el mock.
     try {
       const response = await httpClient.get<ParticipantesPorCategoria>(
-        API_ENDPOINTS.DEPORTISTAS.LIST,
+        API_ENDPOINTS.ATHLETES.LIST,
         { params: { eventoId } }
       );
-      // Si el backend retorna la estructura esperada
       if (response && response.data) return response.data;
     } catch (innerError) {
-      // ignorar y usar fallback
       console.warn(
-        "getParticipantesByEvento: no hay endpoint específico, usando mock",
+        "getParticipantesByEvento: no hay endpoint específico, usando fallback",
         innerError
       );
     }
@@ -108,14 +187,14 @@ export const getParticipantesByEvento = async (
 };
 
 /**
- * Crear un nuevo participante
+ * Crear un nuevo participante (atleta)
  */
 export const createParticipante = async (
   participante: Omit<Participante, "id">
 ): Promise<Participante> => {
   try {
     const response = await httpClient.post<Participante>(
-      API_ENDPOINTS.DEPORTISTAS.LIST,
+      API_ENDPOINTS.ATHLETES.CREATE,
       participante
     );
     return response.data;
@@ -132,12 +211,12 @@ export const createParticipante = async (
  * Actualizar un participante existente
  */
 export const updateParticipante = async (
-  id: string,
+  id: number,
   participante: Partial<Participante>
 ): Promise<Participante> => {
   try {
-    const response = await httpClient.put<Participante>(
-      API_ENDPOINTS.DEPORTISTAS.GET_BY_ID(id),
+    const response = await httpClient.patch<Participante>(
+      API_ENDPOINTS.ATHLETES.UPDATE(id),
       participante
     );
     return response.data;
@@ -150,9 +229,9 @@ export const updateParticipante = async (
 /**
  * Eliminar un participante
  */
-export const deleteParticipante = async (id: string): Promise<void> => {
+export const deleteParticipante = async (id: number): Promise<void> => {
   try {
-    await httpClient.delete(API_ENDPOINTS.DEPORTISTAS.GET_BY_ID(id));
+    await httpClient.delete(API_ENDPOINTS.ATHLETES.DELETE(id));
   } catch (error) {
     console.error("Error al eliminar participante:", error);
     throw error;

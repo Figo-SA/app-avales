@@ -1,11 +1,8 @@
-import { getColecciones } from "@/core/avales/actions/colecciones-actions";
-import { ColeccionAval } from "@/core/avales/interfaces/coleccion";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
-import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { FlatList, RefreshControl, View } from "react-native";
 import {
-  ActivityIndicator,
   Chip,
   Icon,
   Surface,
@@ -14,22 +11,76 @@ import {
   useTheme,
 } from "react-native-paper";
 
-export default function DtmDashboard() {
+// Mock data - TODO: Replace with API call when backend is ready
+const MOCK_SOLICITUDES = [
+  {
+    id: 1,
+    evento: {
+      id: 1,
+      nombre: "Campeonato Nacional de Atletismo",
+      codigo: "ATL-2024-001",
+      ciudad: "Quito",
+      provincia: "Pichincha",
+      fechaInicio: "2024-03-15",
+      estado: "APROBADO_DTM",
+    },
+    descripcion: "Participación en campeonato nacional categoría juvenil",
+    avalTecnico: {
+      atletas: 12,
+      entrenadores: 3,
+      fechaHoraSalida: "2024-03-14T08:00:00",
+      fechaHoraRetorno: "2024-03-17T18:00:00",
+      transporteSalida: "Bus",
+      transporteRetorno: "Bus",
+    },
+    presupuestoEstimado: 15000,
+  },
+  {
+    id: 2,
+    evento: {
+      id: 2,
+      nombre: "Copa Internacional de Natación",
+      codigo: "NAT-2024-002",
+      ciudad: "Guayaquil",
+      provincia: "Guayas",
+      fechaInicio: "2024-04-20",
+      estado: "APROBADO_DTM",
+    },
+    descripcion: "Competencia internacional de natación",
+    avalTecnico: {
+      atletas: 8,
+      entrenadores: 2,
+      fechaHoraSalida: "2024-04-19T06:00:00",
+      fechaHoraRetorno: "2024-04-22T20:00:00",
+      transporteSalida: "Avión",
+      transporteRetorno: "Avión",
+    },
+    presupuestoEstimado: 25000,
+  },
+];
+
+type SolicitudPda = (typeof MOCK_SOLICITUDES)[0];
+
+export default function PdaDashboard() {
   const theme = useTheme();
   const router = useRouter();
-  const { data, isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ["colecciones"],
-    queryFn: () => getColecciones(),
-  });
+  const [refreshing, setRefreshing] = useState(false);
+  const [data] = useState(MOCK_SOLICITUDES);
 
-  const handlePressItem = (item: ColeccionAval) => {
+  const handleRefresh = () => {
+    setRefreshing(true);
+    // TODO: Implement actual refresh when API is ready
+    setTimeout(() => setRefreshing(false), 1000);
+  };
+
+  const handlePressItem = (item: SolicitudPda) => {
     router.push({
-      pathname: "/(dtm)/coleccion",
+      pathname: "/(protected)/(pda)/coleccion",
       params: { data: JSON.stringify(item) },
     });
   };
 
-  const renderItem = ({ item }: { item: ColeccionAval }) => (
+  const renderItem = ({ item }: { item: SolicitudPda }) => (
     <Surface
       style={{
         marginHorizontal: 16,
@@ -64,24 +115,14 @@ export default function DtmDashboard() {
             <Chip
               mode="flat"
               style={{
-                backgroundColor:
-                  item.evento.estado === "ACEPTADO"
-                    ? theme.colors.primaryContainer
-                    : item.evento.estado === "RECHAZADO"
-                    ? theme.colors.errorContainer
-                    : theme.colors.secondaryContainer,
+                backgroundColor: theme.colors.secondaryContainer,
               }}
               textStyle={{
-                color:
-                  item.evento.estado === "ACEPTADO"
-                    ? theme.colors.onPrimaryContainer
-                    : item.evento.estado === "RECHAZADO"
-                    ? theme.colors.onErrorContainer
-                    : theme.colors.onSecondaryContainer,
+                color: theme.colors.onSecondaryContainer,
                 fontSize: 12,
               }}
             >
-              {item.evento.estado || "SOLICITADO"}
+              Pendiente PDA
             </Chip>
           </View>
 
@@ -102,7 +143,7 @@ export default function DtmDashboard() {
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <Icon
-                source="calendar-outline"
+                source="ion:calendar-outline"
                 size={16}
                 color={theme.colors.onSurfaceVariant}
               />
@@ -110,15 +151,26 @@ export default function DtmDashboard() {
                 {new Date(item.evento.fechaInicio).toLocaleDateString()}
               </Text>
             </View>
-            
+
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <Icon
-                source="people-outline"
+                source="ion:people-outline"
                 size={16}
                 color={theme.colors.onSurfaceVariant}
               />
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {item.avalTecnico.atletas + item.avalTecnico.entrenadores} part.
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Icon
+                source="ion:cash-outline"
+                size={16}
+                color={theme.colors.primary}
+              />
+              <Text variant="bodySmall" style={{ color: theme.colors.primary, fontWeight: "600" }}>
+                ${item.presupuestoEstimado.toLocaleString()}
               </Text>
             </View>
           </View>
@@ -127,71 +179,29 @@ export default function DtmDashboard() {
     </Surface>
   );
 
-  if (isLoading) {
-    return (
-      <ThemedView
-        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-      >
-        <ActivityIndicator size="large" />
-        <Text style={{ marginTop: 16 }}>Cargando solicitudes...</Text>
-      </ThemedView>
-    );
-  }
-
-  if (error) {
-    return (
-      <ThemedView
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          padding: 20,
-        }}
-      >
-        <Icon source="alert-circle-outline" size={48} color={theme.colors.error} />
-        <Text
-          variant="titleMedium"
-          style={{
-            color: theme.colors.error,
-            textAlign: "center",
-            marginVertical: 16,
-          }}
-        >
-          Error al cargar las solicitudes
-        </Text>
-        <Text variant="bodyMedium" style={{ textAlign: "center", marginBottom: 24 }}>
-          No pudimos conectar con el servidor. Por favor, intenta de nuevo.
-        </Text>
-        <Chip onPress={() => refetch()} icon="refresh">
-          Reintentar
-        </Chip>
-      </ThemedView>
-    );
-  }
-
   return (
     <ThemedView style={{ flex: 1 }}>
       <View style={{ padding: 16, paddingBottom: 8 }}>
         <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>
-          Solicitudes de Aval
+          Solicitudes PDA
         </Text>
         <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-          Revisa y gestiona las solicitudes pendientes
+          Solicitudes aprobadas por DTM pendientes de presupuesto
         </Text>
       </View>
 
       <FlatList
-        data={data?.data || []}
+        data={data}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={{ paddingBottom: 16 }}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
         ListEmptyComponent={
           <View style={{ padding: 32, alignItems: "center" }}>
             <Icon
-              source="file-document-outline"
+              source="ion:document-text-outline"
               size={48}
               color={theme.colors.outline}
             />

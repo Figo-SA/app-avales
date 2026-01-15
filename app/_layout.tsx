@@ -15,7 +15,6 @@ import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 
 // Utilidades de terceros
 import { Toasts } from "@backpackapp-io/react-native-toast";
-import { useMaterial3Theme } from "@pchmn/expo-material3-theme";
 // Constantes del proyecto
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -38,7 +37,6 @@ const queryClient = new QueryClient({
 // 1. Mueve toda tu lógica a este nuevo componente interno
 function RootLayoutContent() {
   const systemColorScheme = useColorScheme();
-  const { theme } = useMaterial3Theme();
   const { themeMode, isDarkMode, setIsDarkMode, loadThemeFromStorage } =
     useThemeStore();
 
@@ -74,7 +72,7 @@ function RootLayoutContent() {
   const customDarkTheme = {
     ...MD3DarkTheme,
     colors: {
-      ...theme.dark,
+      ...MD3DarkTheme.colors,
       ...Colors.dark,
     },
   };
@@ -82,7 +80,7 @@ function RootLayoutContent() {
   const customLightTheme = {
     ...MD3LightTheme,
     colors: {
-      ...theme.light,
+      ...MD3LightTheme.colors,
       ...Colors.light,
     },
   };
@@ -135,7 +133,11 @@ function RootLayoutContent() {
               : customLightTheme.colors.background
           }
         />
-        <Stack screenOptions={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(protected)" />
+          <Stack.Screen name="auth" />
+        </Stack>
         <Toasts />
       </GestureHandlerRootView>
     </PaperProvider>

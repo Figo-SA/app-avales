@@ -1,5 +1,4 @@
 import { Participante } from "@/core/participants/interfaces/participante";
-import type { SolicitudData } from "@/core/solicitud/actions/solicitud-actions";
 import { useEventos } from "@/presentation/event/hooks/useEvento";
 import { AgregarParticipanteModal } from "@/presentation/participants/components/AgregarParticipanteModal";
 import { DateTimeInput } from "@/presentation/solicitud/components/DateTimeInput";
@@ -74,6 +73,54 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
     canContinue,
   } = useSolicitud(eventoId);
 
+  // Validar si los participantes están completos según el evento
+  const validarParticipantesCompletos = () => {
+    if (!evento) return { completo: false, mensaje: "" };
+
+    const deportistasHombresCant = deportistasSeleccionados.filter(
+      (d) => d.sexo === "masculino"
+    ).length;
+    const deportistasMujeresCant = deportistasSeleccionados.filter(
+      (d) => d.sexo === "femenino"
+    ).length;
+    const entrenadoresHombresCant = entrenadoresSeleccionados.filter(
+      (e) => e.sexo === "masculino"
+    ).length;
+    const entrenadoresMujeresCant = entrenadoresSeleccionados.filter(
+      (e) => e.sexo === "femenino"
+    ).length;
+
+    const faltantes: string[] = [];
+
+    if (deportistasHombresCant < evento.numAtletasHombres) {
+      faltantes.push(
+        `${evento.numAtletasHombres - deportistasHombresCant} atleta(s) hombre(s)`
+      );
+    }
+    if (deportistasMujeresCant < evento.numAtletasMujeres) {
+      faltantes.push(
+        `${evento.numAtletasMujeres - deportistasMujeresCant} atleta(s) mujer(es)`
+      );
+    }
+    if (entrenadoresHombresCant < evento.numEntrenadoresHombres) {
+      faltantes.push(
+        `${evento.numEntrenadoresHombres - entrenadoresHombresCant} entrenador(es) hombre(s)`
+      );
+    }
+    if (entrenadoresMujeresCant < evento.numEntrenadoresMujeres) {
+      faltantes.push(
+        `${evento.numEntrenadoresMujeres - entrenadoresMujeresCant} entrenador(es) mujer(es)`
+      );
+    }
+
+    return {
+      completo: faltantes.length === 0,
+      mensaje: faltantes.length > 0 ? `Faltan: ${faltantes.join(", ")}` : "",
+    };
+  };
+
+  const participantesValidacion = validarParticipantesCompletos();
+
   const abrirModal = (
     tipo: "atleta" | "entrenador",
     sexo: "masculino" | "femenino"
@@ -120,7 +167,7 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
 
     try {
       // Transformar los datos al formato de la API
-      const solicitudData: SolicitudData = {
+      const solicitudData = {
         fechaHoraSalida: formData.fechaSalida.toISOString(),
         fechaHoraRetorno: formData.fechaRetorno.toISOString(),
         transporteSalida: formData.transporteSalida,
@@ -132,11 +179,6 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
         criterios: formData.criterios
           .filter((crit) => crit.trim())
           .map((descripcion, index) => ({ orden: index + 1, descripcion })),
-        rubros: [
-          // Rubros hardcodeados temporalmente
-          { rubroId: 1, cantidadDias: "5", valorUnitario: 35.0 },
-          { rubroId: 2, cantidadDias: "5", valorUnitario: 15.0 },
-        ],
         deportistas: formData.deportistas.map((id) => ({
           deportistaId: Number(id),
           rol: "ATLETA",
@@ -148,15 +190,11 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
         })),
       };
 
-      console.log("✅ Solicitud enviada correctamente", solicitudData);
-
       await solicitudMutation.mutateAsync({
         eventoId: Number(eventoId),
         archivo: documento,
         solicitudData,
       });
-
-      console.log("✅ Solicitud enviada correctamente", solicitudData);
 
       toast.success("Solicitud enviada correctamente");
       router.back();
@@ -521,6 +559,19 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
             </Text>
           )}
         </View>
+
+        {/* Mensaje de validación de participantes */}
+        {!participantesValidacion.completo && (
+          <Surface style={styles.warningBanner} elevation={0}>
+            <Icon source="ion:alert-circle" size={20} color={theme.colors.error} />
+            <Text
+              variant="bodySmall"
+              style={{ color: theme.colors.error, flex: 1 }}
+            >
+              {participantesValidacion.mensaje}
+            </Text>
+          </Surface>
+        )}
       </View>
     );
   };
@@ -633,7 +684,7 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
                 <Button
                   mode="contained"
                   onPress={handleNext}
-                  disabled={!canContinue}
+                  disabled={!canContinue || (step === 4 && !participantesValidacion.completo)}
                   icon="ion:arrow-forward-outline"
                   contentStyle={styles.nextButtonContent}
                   style={styles.nextButton}
@@ -783,6 +834,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginLeft: 12,
     marginBottom: 8,
+  },
+  warningBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "#FEE2E2",
+    marginTop: 8,
   },
   addButton: {
     alignSelf: "flex-start",

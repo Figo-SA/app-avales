@@ -12,13 +12,11 @@ interface TransporteSelectorProps {
 }
 
 const TRANSPORTE_OPTIONS = [
-  { value: "bus_interprovincial", label: "Bus Interprovincial", icon: "bus" },
-  { value: "bus_urbano", label: "Bus Urbano", icon: "bus" },
-  { value: "avion", label: "Avión", icon: "airplane" },
+  { value: "aereo", label: "Aéreo", icon: "airplane" },
+  { value: "terrestre", label: "Terrestre", icon: "bus" },
   { value: "vehiculo_propio", label: "Vehículo Propio", icon: "car" },
-  { value: "taxi", label: "Taxi", icon: "taxi" },
-  { value: "tren", label: "Tren", icon: "train" },
-  { value: "otro", label: "Otro", icon: "dots-horizontal" },
+  { value: "maritimo", label: "Marítimo", icon: "boat" },
+  { value: "otro", label: "Otro", icon: "ellipsis-horizontal" },
 ];
 
 export const TransporteSelector = ({

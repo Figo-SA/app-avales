@@ -9,7 +9,7 @@ import { UpdateProfileRequest, UserProfile } from "../interface/profile";
 export const getUserProfile = async (): Promise<UserProfile> => {
   try {
     const response = await httpClient.get<UserProfile>(
-      API_ENDPOINTS.USER.PROFILE
+      API_ENDPOINTS.AUTH.PROFILE
     );
     return response.data;
   } catch (error) {
@@ -26,7 +26,7 @@ export const updateUserProfile = async (
 ): Promise<UserProfile> => {
   try {
     const response = await httpClient.patch<UserProfile>(
-      API_ENDPOINTS.USER.UPDATE_PROFILE,
+      API_ENDPOINTS.USERS.UPDATE_PROFILE,
       data
     );
     return response.data;

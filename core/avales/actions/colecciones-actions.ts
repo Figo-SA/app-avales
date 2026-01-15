@@ -8,8 +8,9 @@ export const getColecciones = async (
   limit = 10
 ): Promise<ColeccionResponse> => {
   try {
+    // Usar el endpoint de avales para obtener las colecciones/solicitudes
     const response = await httpClient.get<ColeccionResponse>(
-      API_ENDPOINTS.EVENTOS.COLECCIONES,
+      API_ENDPOINTS.AVALES.LIST,
       {
         params: {
           page,
@@ -17,8 +18,7 @@ export const getColecciones = async (
         },
       }
     );
-    console.log("✅ Colecciones obtenidas:", response.data);
-    console.log(API_ENDPOINTS.EVENTOS.COLECCIONES);
+    console.log("✅ Avales obtenidos:", response.data);
 
     // Si la respuesta es un array, lo envolvemos en la estructura ColeccionResponse
     if (Array.isArray(response.data)) {
@@ -46,11 +46,11 @@ export const getColecciones = async (
 };
 
 export const aprobarSolicitud = async (
-  eventoId: number,
+  avalId: number,
   usuarioId: number
 ): Promise<void> => {
   try {
-    await httpClient.patch(API_ENDPOINTS.EVENTOS.APROBAR(eventoId), {
+    await httpClient.patch(API_ENDPOINTS.AVALES.APROBAR(avalId), {
       usuarioId,
     });
   } catch (error) {
@@ -60,12 +60,12 @@ export const aprobarSolicitud = async (
 };
 
 export const rechazarSolicitud = async (
-  eventoId: number,
+  avalId: number,
   usuarioId: number,
   motivo?: string
 ): Promise<void> => {
   try {
-    await httpClient.patch(API_ENDPOINTS.EVENTOS.RECHAZAR(eventoId), {
+    await httpClient.patch(API_ENDPOINTS.AVALES.RECHAZAR(avalId), {
       usuarioId,
       motivo,
     });

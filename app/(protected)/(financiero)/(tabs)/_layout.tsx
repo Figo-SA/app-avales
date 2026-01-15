@@ -1,10 +1,10 @@
 import { HapticTab } from "@/presentation/theme/components/HapticTab";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform } from "react-native";
 import { useTheme } from "react-native-paper";
 
-export default function DtmTabLayout() {
+export default function FinancieroTabLayout() {
   const theme = useTheme();
 
   return (
@@ -48,15 +48,13 @@ export default function DtmTabLayout() {
         name="index"
         options={{
           title: "Panel",
-          headerTitle: "Panel DTM",
+          headerTitle: "Financiero",
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : undefined}>
-              <Ionicons
-                size={focused ? 24 : 22}
-                name={focused ? "grid" : "grid-outline"}
-                color={color}
-              />
-            </View>
+            <Ionicons
+              size={24}
+              name={focused ? "wallet" : "wallet-outline"}
+              color={color}
+            />
           ),
         }}
       />
@@ -67,25 +65,14 @@ export default function DtmTabLayout() {
           title: "Perfil",
           headerTitle: "Mi Perfil",
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : undefined}>
-              <Ionicons
-                size={focused ? 24 : 22}
-                name={focused ? "person-circle" : "person-circle-outline"}
-                color={color}
-              />
-            </View>
+            <Ionicons
+              size={24}
+              name={focused ? "person-circle" : "person-circle-outline"}
+              color={color}
+            />
           ),
         }}
       />
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  activeIconContainer: {
-    backgroundColor: "rgba(0, 70, 121, 0.1)",
-    borderRadius: 12,
-    padding: 6,
-    marginBottom: -4,
-  },
-});

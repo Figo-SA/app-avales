@@ -1,10 +1,10 @@
 import { HapticTab } from "@/presentation/theme/components/HapticTab";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform } from "react-native";
 import { useTheme } from "react-native-paper";
 
-export default function TabLayout() {
+export default function ControlPrevioTabLayout() {
   const theme = useTheme();
 
   return (
@@ -45,35 +45,16 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="event"
-        options={{
-          title: "Explorar",
-          headerTitle: "Explorar Eventos",
-          tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : undefined}>
-              <Ionicons
-                size={focused ? 24 : 22}
-                name={focused ? "compass" : "compass-outline"}
-                color={color}
-              />
-            </View>
-          ),
-        }}
-      />
-
-      <Tabs.Screen
         name="index"
         options={{
-          title: "Solicitudes",
-          headerTitle: "Mis Solicitudes",
+          title: "Panel",
+          headerTitle: "Control Previo",
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : undefined}>
-              <Ionicons
-                size={focused ? 24 : 22}
-                name={focused ? "document-text" : "document-text-outline"}
-                color={color}
-              />
-            </View>
+            <Ionicons
+              size={24}
+              name={focused ? "shield-checkmark" : "shield-checkmark-outline"}
+              color={color}
+            />
           ),
         }}
       />
@@ -84,25 +65,14 @@ export default function TabLayout() {
           title: "Perfil",
           headerTitle: "Mi Perfil",
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : undefined}>
-              <Ionicons
-                size={focused ? 24 : 22}
-                name={focused ? "person-circle" : "person-circle-outline"}
-                color={color}
-              />
-            </View>
+            <Ionicons
+              size={24}
+              name={focused ? "person-circle" : "person-circle-outline"}
+              color={color}
+            />
           ),
         }}
       />
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  activeIconContainer: {
-    backgroundColor: "rgba(0, 70, 121, 0.1)",
-    borderRadius: 12,
-    padding: 6,
-    marginBottom: -4,
-  },
-});
