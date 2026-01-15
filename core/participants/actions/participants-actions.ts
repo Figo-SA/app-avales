@@ -44,7 +44,10 @@ export const searchParticipantes = async (
         );
         return res.data;
       } catch (err) {
-        console.warn("searchParticipantes (entrenadores) failed, using mock", err);
+        console.warn(
+          "searchParticipantes (entrenadores) failed, using mock",
+          err
+        );
         return [];
       }
     }
