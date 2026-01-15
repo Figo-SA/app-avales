@@ -1,44 +1,73 @@
 import { API_ENDPOINTS } from "@/core/api/api.config";
 import { httpClient } from "@/core/api/http-client";
 import { handleApiError } from "@/helpers/error-handler";
-import { ColeccionResponse } from "../interfaces/coleccion";
+import { ColeccionAval, ColeccionResponse } from "../interfaces/coleccion";
+
+/**
+ * Obtiene la colección de aval de un evento específico
+ */
+export const getColeccionByEvento = async (
+  eventoId: number
+): Promise<ColeccionAval | null> => {
+  try {
+    const response = await httpClient.get<ColeccionAval>(
+      API_ENDPOINTS.EVENTOS.GET_COLLECTION(eventoId)
+    );
+    return response.data;
+  } catch (error: any) {
+    // Si no existe colección, retornar null en lugar de lanzar error
+    if (error?.response?.status === 404) {
+      return null;
+    }
+    const errorMessage = handleApiError(error, "getColeccionByEvento");
+    throw new Error(errorMessage);
+  }
+};
+
+export type ColeccionEstado = "SOLICITADO" | "ACEPTADO" | "RECHAZADO";
 
 export const getColecciones = async (
   page = 1,
-  limit = 10
+  limit = 10,
+  estado?: ColeccionEstado,
+  search?: string
 ): Promise<ColeccionResponse> => {
   try {
-    // Usar el endpoint de avales para obtener las colecciones/solicitudes
-    const response = await httpClient.get<ColeccionResponse>(
-      API_ENDPOINTS.AVALES.LIST,
-      {
-        params: {
-          page,
-          limit,
-        },
-      }
-    );
-    console.log("✅ Avales obtenidos:", response.data);
+    const params: Record<string, any> = { page, limit };
+    if (estado) params.estado = estado;
+    if (search) params.search = search;
 
-    // Si la respuesta es un array, lo envolvemos en la estructura ColeccionResponse
-    if (Array.isArray(response.data)) {
-      return {
-        status: "success",
-        message: "Datos obtenidos correctamente",
-        meta: {
-          requestId: "",
-          timestamp: new Date().toISOString(),
-          apiVersion: "v1",
-          durationMs: 0,
-          page,
-          limit,
-          total: response.data.length,
-        },
-        data: response.data,
-      };
+    // Usar fetch directamente para obtener la respuesta completa sin unwrapping del httpClient
+    const { SecureStorageAdapter } = await import("@/helpers/adapters/secure-storage.adapter");
+    const { API_URL } = await import("@/core/api/api.config");
+
+    const token = await SecureStorageAdapter.getItem("token");
+    const queryString = new URLSearchParams(
+      Object.entries(params).map(([k, v]) => [k, String(v)])
+    ).toString();
+    const fullUrl = `${API_URL}${API_ENDPOINTS.AVALES.LIST}?${queryString}`;
+
+    const response = await fetch(fullUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return response.data;
+    const json = await response.json();
+
+    // Retornar la respuesta completa con meta y data
+    return {
+      status: json.status,
+      message: json.message,
+      meta: json.meta,
+      data: json.data || [],
+    };
   } catch (error) {
     const errorMessage = handleApiError(error, "getColecciones");
     throw new Error(errorMessage);

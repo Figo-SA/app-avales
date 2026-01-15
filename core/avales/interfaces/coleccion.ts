@@ -4,18 +4,21 @@ export interface ColeccionAval {
   id: number;
   descripcion: string;
   eventoId: number;
-  dtmUrl: string;
-  pdaUrl: string;
-  solicitudUrl: string;
+  convocatoriaUrl?: string | null;
+  dtmUrl?: string | null;
+  pdaUrl?: string | null;
+  solicitudUrl?: string | null;
+  aval?: string | null;
+  estado: string;
+  comentario?: string | null;
   createdAt: string;
   updatedAt: string;
   evento: Evento;
-  avalTecnico: AvalTecnico;
+  avalTecnico?: AvalTecnico;
   pda: any[];
   dtm: any[];
   entrenadores: EntrenadorColeccion[];
   financiero: any[];
-  aval?: string;
 }
 
 export interface AvalTecnico {
@@ -110,17 +113,30 @@ export interface Entrenador {
   deleted: boolean;
 }
 
+export interface ColeccionCounts {
+  all: number;
+  solicitado: number;
+  aceptado: number;
+  rechazado: number;
+}
+
+export interface ColeccionMeta {
+  requestId: string;
+  timestamp: string;
+  apiVersion: string;
+  durationMs: number;
+  page: number;
+  limit: number;
+  total: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  counts?: ColeccionCounts;
+}
+
 export interface ColeccionResponse {
   status: string;
   message: string;
-  meta: {
-    requestId: string;
-    timestamp: string;
-    apiVersion: string;
-    durationMs: number;
-    page: number;
-    limit: number;
-    total: number;
-  };
+  meta: ColeccionMeta;
   data: ColeccionAval[];
 }

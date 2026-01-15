@@ -93,11 +93,11 @@ export default function ControlPrevioDashboard() {
         marginBottom: 16,
         borderRadius: 12,
         backgroundColor: theme.colors.surface,
-        overflow: "hidden",
       }}
       elevation={1}
     >
-      <TouchableRipple onPress={() => handlePressItem(item)}>
+      <View style={{ borderRadius: 12, overflow: "hidden" }}>
+        <TouchableRipple onPress={() => handlePressItem(item)}>
         <View style={{ padding: 16 }}>
           <View
             style={{
@@ -181,7 +181,8 @@ export default function ControlPrevioDashboard() {
             </View>
           </View>
         </View>
-      </TouchableRipple>
+        </TouchableRipple>
+      </View>
     </Surface>
   );
 

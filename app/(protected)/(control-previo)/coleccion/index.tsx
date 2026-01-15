@@ -288,9 +288,10 @@ export default function ControlPrevioColeccionDetail() {
         {/* Checklist de Documentos */}
         <SectionTitle title="Checklist de Documentos" icon="ion:checkbox-outline" />
         <Surface
-          style={{ marginHorizontal: 16, borderRadius: 12, overflow: "hidden" }}
+          style={{ marginHorizontal: 16, borderRadius: 12 }}
           elevation={1}
         >
+          <View style={{ borderRadius: 12, overflow: "hidden" }}>
           <DocumentItem
             title="Convocatoria"
             description="Documento oficial del evento"
@@ -308,6 +309,7 @@ export default function ControlPrevioColeccionDetail() {
             description="Presupuesto aprobado"
             isPresent={item.documentos.pda}
           />
+          </View>
         </Surface>
 
         {/* Observaciones */}

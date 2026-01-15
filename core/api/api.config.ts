@@ -44,6 +44,7 @@ export const API_ENDPOINTS = {
   EVENTOS: {
     LIST: "/events",
     GET_BY_ID: (id: number) => `/events/${id}`,
+    GET_COLLECTION: (id: number) => `/events/${id}/collection`,
     CREATE: "/events",
     UPDATE: (id: number) => `/events/${id}`,
     DELETE: (id: number) => `/events/${id}`,
@@ -64,5 +65,14 @@ export const API_ENDPOINTS = {
     GET_BY_ID: (id: number) => `/users/${id}`,
     UPDATE_PROFILE: "/users/profile",
     UPDATE_PUSH_TOKEN: "/users/me/push-token",
+  },
+  STATISTICS: {
+    ALL: "/statistics",
+    DASHBOARD: "/statistics/dashboard",
+    AVALES_POR_ESTADO: "/statistics/avales/por-estado",
+    AVALES_POR_ETAPA: "/statistics/avales/por-etapa",
+    AVALES_TIMELINE: "/statistics/avales/timeline",
+    AVALES_POR_DISCIPLINA: "/statistics/avales/por-disciplina",
+    AVALES_POR_CATEGORIA: "/statistics/avales/por-categoria",
   },
 } as const;

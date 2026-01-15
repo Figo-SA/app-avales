@@ -1,3 +1,5 @@
+import { getColeccionByEvento } from "@/core/avales/actions/colecciones-actions";
+import { ColeccionAval } from "@/core/avales/interfaces/coleccion";
 import { getEventoById } from "@/core/eventos/actions/eventos-actions";
 import { Evento } from "@/core/eventos/interfaces/evento";
 import { formatDateLong } from "@/helpers/date.helper";
@@ -5,12 +7,14 @@ import { EmptyState } from "@/presentation/theme/components/EmptyState";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import { useQuery } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
+import * as WebBrowser from "expo-web-browser";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from "react-native";
 import {
@@ -40,6 +44,20 @@ export default function EventoDetailScreen() {
     },
     enabled: !!id,
   });
+
+  // Obtener la colección/aval del evento si existe
+  const { data: coleccion } = useQuery<ColeccionAval | null>({
+    queryKey: ["coleccion-evento", id],
+    queryFn: () => getColeccionByEvento(Number(id)),
+    enabled: !!id && evento?.estado !== "DISPONIBLE",
+  });
+
+  const openDocument = async (url: string | null | undefined) => {
+    if (url) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await WebBrowser.openBrowserAsync(url);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -233,6 +251,71 @@ export default function EventoDetailScreen() {
           </Card.Content>
         </Card>
 
+        {/* Documentos Card - Solo si hay colección */}
+        {coleccion && (
+          <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="elevated">
+            <Card.Content>
+              <View style={styles.sectionHeader}>
+                <Icon source="ion:document-text-outline" size={18} color={theme.colors.primary} />
+                <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Documentos</Text>
+              </View>
+
+              <View style={styles.documentsList}>
+                {coleccion.convocatoriaUrl && (
+                  <DocumentRow
+                    label="Convocatoria"
+                    icon="ion:megaphone-outline"
+                    url={coleccion.convocatoriaUrl}
+                    theme={theme}
+                    onPress={openDocument}
+                  />
+                )}
+                {coleccion.dtmUrl && (
+                  <DocumentRow
+                    label="Aval DTM"
+                    icon="ion:clipboard-outline"
+                    url={coleccion.dtmUrl}
+                    theme={theme}
+                    onPress={openDocument}
+                  />
+                )}
+                {coleccion.pdaUrl && (
+                  <DocumentRow
+                    label="Certificación PDA"
+                    icon="ion:document-attach-outline"
+                    url={coleccion.pdaUrl}
+                    theme={theme}
+                    onPress={openDocument}
+                  />
+                )}
+                {coleccion.solicitudUrl && (
+                  <DocumentRow
+                    label="Solicitud de Aval"
+                    icon="ion:paper-plane-outline"
+                    url={coleccion.solicitudUrl}
+                    theme={theme}
+                    onPress={openDocument}
+                  />
+                )}
+                {coleccion.aval && (
+                  <DocumentRow
+                    label="Aval Completo"
+                    icon="ion:checkmark-done-circle-outline"
+                    url={coleccion.aval}
+                    theme={theme}
+                    onPress={openDocument}
+                  />
+                )}
+                {!coleccion.convocatoriaUrl && !coleccion.dtmUrl && !coleccion.pdaUrl && !coleccion.solicitudUrl && !coleccion.aval && (
+                  <Text style={[styles.noDocuments, { color: theme.colors.onSurfaceVariant }]}>
+                    No hay documentos disponibles aún
+                  </Text>
+                )}
+              </View>
+            </Card.Content>
+          </Card>
+        )}
+
         {/* Alertas de estado */}
         {estadoEvento === "solicitado" && (
           <Surface style={[styles.alertBox, { backgroundColor: estado.bg }]} elevation={0}>
@@ -305,6 +388,54 @@ const DetailRow = ({
     <Text style={[detailRowStyles.value, { color: theme.colors.onSurface }]} numberOfLines={2}>{value}</Text>
   </View>
 );
+
+const DocumentRow = ({
+  label,
+  icon,
+  url,
+  theme,
+  onPress,
+}: {
+  label: string;
+  icon: string;
+  url: string;
+  theme: any;
+  onPress: (url: string) => void;
+}) => (
+  <TouchableOpacity
+    style={[documentRowStyles.container, { borderBottomColor: theme.colors.surfaceVariant }]}
+    onPress={() => onPress(url)}
+    activeOpacity={0.7}
+  >
+    <View style={[documentRowStyles.iconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+      <Icon source={icon} size={18} color={theme.colors.primary} />
+    </View>
+    <Text style={[documentRowStyles.label, { color: theme.colors.onSurface }]}>{label}</Text>
+    <Icon source="ion:open-outline" size={16} color={theme.colors.primary} />
+  </TouchableOpacity>
+);
+
+const documentRowStyles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    gap: 12,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  label: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+});
 
 const detailRowStyles = StyleSheet.create({
   container: {
@@ -401,6 +532,14 @@ const styles = StyleSheet.create({
   },
   detailsList: {
     gap: 0,
+  },
+  documentsList: {
+    gap: 0,
+  },
+  noDocuments: {
+    fontSize: 13,
+    textAlign: "center",
+    paddingVertical: 16,
   },
   participantsRow: {
     flexDirection: "row",

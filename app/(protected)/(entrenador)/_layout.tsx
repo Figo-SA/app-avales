@@ -13,10 +13,11 @@ export default function EntrenadorLayout() {
   }, [expoPushToken, permissionStatus]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="solicitud" />
       <Stack.Screen name="aval" />
+      <Stack.Screen name="evento" />
     </Stack>
   );
 }
