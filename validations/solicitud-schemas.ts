@@ -100,6 +100,7 @@ export const solicitudCompletaSchema = z.object({
   deportistas: z.array(z.any()),
   entrenadores: z.array(z.any()),
   documento: z.any(),
+  coleccionAvalId: z.number().optional(),
   observaciones: z.string().optional(),
 });
 

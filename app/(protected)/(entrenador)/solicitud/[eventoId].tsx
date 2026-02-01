@@ -4,7 +4,11 @@ import React from "react";
 import { useTheme } from "react-native-paper";
 
 export default function SolicitudScreen() {
-  const { eventoId } = useLocalSearchParams<{ eventoId: string }>();
+  const { eventoId, initialStep, coleccionId } = useLocalSearchParams<{ 
+    eventoId: string;
+    initialStep?: string;
+    coleccionId?: string;
+  }>();
   const theme = useTheme();
 
   return (
@@ -19,7 +23,11 @@ export default function SolicitudScreen() {
           headerBackTitle: "Volver",
         }}
       />
-      <SolicitudForm eventoId={eventoId} />
+      <SolicitudForm 
+        eventoId={eventoId} 
+        initialStep={initialStep ? Number(initialStep) : 1}
+        coleccionId={coleccionId ? Number(coleccionId) : undefined}
+      />
     </>
   );
 }

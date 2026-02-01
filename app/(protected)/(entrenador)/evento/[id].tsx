@@ -2,29 +2,37 @@ import { getColeccionByEvento } from "@/core/avales/actions/colecciones-actions"
 import { ColeccionAval } from "@/core/avales/interfaces/coleccion";
 import { getEventoById } from "@/core/eventos/actions/eventos-actions";
 import { Evento } from "@/core/eventos/interfaces/evento";
+import { uploadConvocatoria } from "@/core/solicitud/actions/solicitud-actions";
 import { formatDateLong } from "@/helpers/date.helper";
 import { EmptyState } from "@/presentation/theme/components/EmptyState";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
-import { useQuery } from "@tanstack/react-query";
-import * as Haptics from "expo-haptics";
-import * as WebBrowser from "expo-web-browser";
-import { router, Stack, useLocalSearchParams } from "expo-router";
-import React from "react";
+import { toast } from "@backpackapp-io/react-native-toast";
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
+    BottomSheetBackdrop,
+    BottomSheetModal,
+    BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import { useQuery } from "@tanstack/react-query";
+import * as DocumentPicker from "expo-document-picker";
+import * as Haptics from "expo-haptics";
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import {
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import {
-  Button,
-  Card,
-  Chip,
-  Icon,
-  Surface,
-  Text,
-  useTheme,
+    Button,
+    Card,
+    Chip,
+    Icon,
+    Surface,
+    Text,
+    useTheme
 } from "react-native-paper";
 
 export default function EventoDetailScreen() {
@@ -121,10 +129,143 @@ export default function EventoDetailScreen() {
 
   const estado = getEstadoInfo();
 
+  const [documento, setDocumento] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Ref para el Bottom Sheet
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const snapPoints = useMemo(() => ["50%", "80%"], []);
+
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+      />
+    ),
+    []
+  );
+
   const handleSolicitar = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push(`/(entrenador)/solicitud/${evento.id}`);
+    // Si ya existe una colección, navegar directamente al formulario (Paso 2)
+    if (coleccion) {
+        router.push({
+            pathname: "/solicitud/[eventoId]",
+            params: { eventoId: evento.id, initialStep: 2, coleccionId: coleccion.id }
+        });
+    } else {
+        // Si no, abrir el bottom sheet para subir la convocatoria
+        bottomSheetRef.current?.present();
+    }
   };
+
+  const seleccionarDocumento = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/pdf",
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        setDocumento({
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType || "application/pdf",
+        });
+      }
+    } catch (error) {
+      console.error("Error al seleccionar documento:", error);
+      toast.error("No se pudo seleccionar el documento");
+    }
+  };
+
+  const handleUpload = async (continueToForm: boolean) => {
+      if (!documento) {
+          toast.error("Debes seleccionar un documento");
+          return;
+      }
+
+      try {
+          setIsUploading(true);
+          const result = await uploadConvocatoria(Number(evento.id), documento);
+          toast.success("Convocatoria subida exitosamente");
+          
+          bottomSheetRef.current?.dismiss();
+          
+          if (continueToForm) {
+              router.push({
+                  pathname: "/solicitud/[eventoId]",
+                  params: { eventoId: evento.id, initialStep: 2, coleccionId: result.coleccionAvalId }
+              });
+          }
+
+      } catch (error) {
+          console.error("Error uploading:", error);
+          toast.error("Error al subir el documento");
+      } finally {
+          setIsUploading(false);
+      }
+  };
+
+  const renderDocumentoSheet = () => (
+      <BottomSheetView style={styles.sheetContent}>
+          <Text variant="titleLarge" style={[styles.sheetTitle, { color: theme.colors.onSurface }]}>
+              Iniciar Solicitud
+          </Text>
+          <Text variant="bodyMedium" style={[styles.sheetDesc, { color: theme.colors.onSurfaceVariant }]}>
+              Para solicitar el aval, primero debes subir la convocatoria oficial del evento.
+          </Text>
+
+          <Button
+            mode="outlined"
+            icon="ion:cloud-upload-outline"
+            onPress={seleccionarDocumento}
+            style={styles.uploadButton}
+            contentStyle={{ height: 48 }}
+          >
+            {documento ? "Cambiar Documento" : "Seleccionar Convocatoria"}
+          </Button>
+
+          {documento && (
+            <Surface style={[styles.filePreview, { backgroundColor: theme.colors.elevation.level1 }]} elevation={0}>
+              <Icon source="ion:document" size={24} color={theme.colors.primary} />
+              <View style={{ flex: 1 }}>
+                <Text numberOfLines={1} style={{ fontWeight: '500', color: theme.colors.onSurface }}>{documento.name}</Text>
+                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{(documento.uri.length/1024).toFixed(2)} KB</Text>
+              </View>
+              <Icon source="ion:checkmark-circle" size={20} color={theme.colors.primary} />
+            </Surface>
+          )}
+
+          <View style={styles.sheetActions}>
+            <Button 
+                mode="contained" 
+                onPress={() => handleUpload(true)}
+                disabled={!documento || isUploading}
+                loading={isUploading}
+                style={styles.actionButton}
+            >
+                Subir y Llenar Formulario
+            </Button>
+            <Button 
+                mode="text" 
+                onPress={() => handleUpload(false)}
+                disabled={!documento || isUploading}
+                style={styles.actionButton}
+            >
+                Subir y Llenar Después
+            </Button>
+          </View>
+      </BottomSheetView>
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -365,6 +506,16 @@ export default function EventoDetailScreen() {
 
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      <BottomSheetModal
+        ref={bottomSheetRef}
+        index={1}
+        snapPoints={snapPoints}
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{ backgroundColor: theme.colors.elevation.level2 }}
+      >
+        {renderDocumentoSheet()}
+      </BottomSheetModal>
     </ThemedView>
   );
 }
@@ -581,4 +732,37 @@ const styles = StyleSheet.create({
   buttonLabel: {
     fontSize: 14,
   },
+  sheetContent: {
+    padding: 24,
+    gap: 16,
+    flex: 1,
+  },
+  sheetTitle: {
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  sheetDesc: {
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  uploadButton: {
+    borderColor: '#E0E0E0', 
+    borderStyle: 'dashed',
+    borderRadius: 8,
+  },
+  filePreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    gap: 12,
+    marginTop: 8,
+  },
+  sheetActions: {
+    marginTop: 24,
+    gap: 12,
+  },
+  actionButton: {
+    borderRadius: 8,
+  }
 });

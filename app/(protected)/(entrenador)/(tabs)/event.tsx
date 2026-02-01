@@ -49,7 +49,7 @@ export default function EventTab() {
           </View>
           <View style={styles.headerTextContainer}>
             <Text variant="titleLarge" style={styles.headerTitle}>
-              Explorar Eventos
+              Eventos Disponibles
             </Text>
             <Text variant="bodySmall" style={styles.headerSubtitle}>
               {totalEventos > 0

@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 import { View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
-type SolicitudStatus = "solicitados" | "rechazados" | "aceptados";
+type SolicitudStatus = "solicitados" | "rechazados" | "aceptados" | "borrador";
 
 export default function MisSolicitudesTab() {
   const [selectedStatus, setSelectedStatus] = useState<SolicitudStatus>("solicitados");
@@ -41,22 +41,34 @@ export default function MisSolicitudesTab() {
           title: "No tienes avales aceptados",
           description: "Cuando tus solicitudes sean aprobadas, tus avales aparecerán aquí.",
         };
+      case "borrador":
+        return {
+          icon: "ion:document-text-outline",
+          title: "No tienes borradores",
+          description: "Aquí aparecerán las solicitudes que has iniciado pero no completado.",
+        };
     }
   };
 
   const filterOptions: ChipFilterOption<SolicitudStatus>[] = useMemo(
     () => [
       { 
-        value: "solicitados", 
-        label: "En Revisión", 
-        count: counts?.solicitados || 0, 
-        color: "#EA580C" 
+        value: "borrador", 
+        label: "Borradores", 
+        count: (counts as any)?.borradores || 0, 
+        color: "#6B7280" 
       },
       { 
         value: "rechazados", 
         label: "Rechazados", 
         count: counts?.rechazados || 0, 
         color: "#DC2626" 
+      },
+      { 
+        value: "solicitados", 
+        label: "En Revisión", 
+        count: counts?.solicitados || 0, 
+        color: "#EA580C" 
       },
       { 
         value: "aceptados", 

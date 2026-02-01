@@ -47,8 +47,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="event"
         options={{
-          title: "Explorar",
-          headerTitle: "Explorar Eventos",
+          title: "Eventos",
+          headerTitle: "Eventos Disponibles",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               size={24}
@@ -62,12 +62,12 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Solicitudes",
-          headerTitle: "Mis Solicitudes",
+          title: "Mis Trámites",
+          headerTitle: "Mis Trámites",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               size={24}
-              name={focused ? "document-text" : "document-text-outline"}
+              name={focused ? "folder-open" : "folder-open-outline"}
               color={color}
             />
           ),

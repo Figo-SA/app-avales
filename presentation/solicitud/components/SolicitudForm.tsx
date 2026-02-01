@@ -27,19 +27,39 @@ import {
 
 interface SolicitudFormProps {
   eventoId: string;
+  initialStep?: number;
+  coleccionId?: number;
 }
 
-export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
+export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: SolicitudFormProps) => {
   const theme = useTheme();
   const { eventoQuery } = useEventos(eventoId);
   const evento = eventoQuery.data;
   const solicitudMutation = useSolicitudMutation();
+
+  // Usar el hook personalizado para toda la lógica del formulario
+  const {
+    step,
+    totalSteps,
+    formData,
+    errors,
+    control,
+    handleNext,
+    handleBack,
+    updateFormData,
+    updateArrayItem,
+    addArrayItem,
+    canContinue,
+    isUploading,
+  } = useSolicitud(eventoId, initialStep, coleccionId);
 
   const [documento, setDocumento] = useState<{
     uri: string;
     name: string;
     type: string;
   } | null>(null);
+
+
 
   const [modalState, setModalState] = useState<{
     visible: boolean;
@@ -57,21 +77,8 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
   const [entrenadoresSeleccionados, setEntrenadoresSeleccionados] = useState<
     Participante[]
   >([]);
+  
 
-  // Usar el hook personalizado para toda la lógica del formulario
-  const {
-    step,
-    totalSteps,
-    formData,
-    errors,
-    control,
-    handleNext,
-    handleBack,
-    updateFormData,
-    updateArrayItem,
-    addArrayItem,
-    canContinue,
-  } = useSolicitud(eventoId);
 
   // Validar si los participantes están completos según el evento
   const validarParticipantesCompletos = () => {
@@ -135,7 +142,7 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
   const seleccionarDocumento = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: "*/*",
+        type: "application/pdf",
         copyToCacheDirectory: true,
       });
 
@@ -144,7 +151,7 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
         setDocumento({
           uri: file.uri,
           name: file.name,
-          type: file.mimeType || "application/octet-stream",
+          type: file.mimeType || "application/pdf",
         });
         updateFormData("documento", file);
       }
@@ -153,6 +160,9 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
       toast.error("No se pudo seleccionar el documento");
     }
   };
+
+
+
 
   const onSubmit = async () => {
     if (!documento) {
@@ -165,9 +175,17 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
       return;
     }
 
+    if (!formData.coleccionAvalId) {
+      toast.error(
+        "No se ha creado la colección de aval. Intenta subir el documento nuevamente."
+      );
+      return;
+    }
+
     try {
       // Transformar los datos al formato de la API
       const solicitudData = {
+        coleccionAvalId: formData.coleccionAvalId,
         fechaHoraSalida: formData.fechaSalida.toISOString(),
         fechaHoraRetorno: formData.fechaRetorno.toISOString(),
         transporteSalida: formData.transporteSalida,
@@ -192,7 +210,6 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
 
       await solicitudMutation.mutateAsync({
         eventoId: Number(eventoId),
-        archivo: documento,
         solicitudData,
       });
 
@@ -250,25 +267,32 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
     );
   };
 
-  const renderStepIndicator = () => (
-    <View style={styles.stepIndicator}>
-      <View style={styles.stepHeader}>
-        <ThemedText style={styles.stepText}>
-          Paso {step} de {totalSteps}
-        </ThemedText>
-        <ThemedText style={styles.stepPercentage}>
-          {Math.round((step / totalSteps) * 100)}%
-        </ThemedText>
-      </View>
-      <ProgressBar
-        progress={step / totalSteps}
-        color={theme.colors.primary}
-        style={styles.progressBar}
-      />
-    </View>
-  );
+  const renderStepIndicator = () => {
+    if (step === 1) return null;
 
-  const renderStep1 = () => (
+    const currentStep = step - 1;
+    const totalFormSteps = totalSteps - 1;
+
+    return (
+      <View style={styles.stepIndicator}>
+        <View style={styles.stepHeader}>
+          <ThemedText style={styles.stepText}>
+            Paso {currentStep} de {totalFormSteps}
+          </ThemedText>
+          <ThemedText style={styles.stepPercentage}>
+            {Math.round((currentStep / totalFormSteps) * 100)}%
+          </ThemedText>
+        </View>
+        <ProgressBar
+          progress={currentStep / totalFormSteps}
+          color={theme.colors.primary}
+          style={styles.progressBar}
+        />
+      </View>
+    );
+  };
+
+  const renderStepFechas = () => (
     <View style={styles.stepContainer}>
       <View style={styles.stepTitleContainer}>
         <Icon source="ion:calendar" size={24} color={theme.colors.primary} />
@@ -320,7 +344,7 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
     </View>
   );
 
-  const renderStep2 = () => (
+  const renderStepObjetivos = () => (
     <View style={styles.stepContainer}>
       <View style={styles.stepTitleContainer}>
         <Icon
@@ -358,7 +382,7 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
     </View>
   );
 
-  const renderStep3 = () => (
+  const renderStepCriterios = () => (
     <View style={styles.stepContainer}>
       <View style={styles.stepTitleContainer}>
         <Icon
@@ -401,7 +425,7 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
     </View>
   );
 
-  const renderStep4 = () => {
+  const renderStepParticipantes = () => {
     if (!evento) return null;
 
     const deportistasHombresCant = deportistasSeleccionados.filter(
@@ -576,7 +600,7 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
     );
   };
 
-  const renderStep5 = () => (
+  const renderStepDocumento = () => (
     <View style={styles.stepContainer}>
       <View style={styles.stepTitleContainer}>
         <Icon
@@ -584,11 +608,20 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
           size={24}
           color={theme.colors.primary}
         />
-        <ThemedText style={styles.stepTitle}>Documento Final</ThemedText>
+        <ThemedText style={styles.stepTitle}>Convocatoria / Solicitud</ThemedText>
+      </View>
+
+      <View style={styles.infoBox}>
+        <Icon source="ion:information-circle-outline" size={20} color={theme.colors.onSurfaceVariant} />
+        <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
+          Para iniciar tu solicitud de aval, primero debes subir la convocatoria oficial.
+          {"\n\n"}
+          Una vez subida, podrás completar el formulario con los detalles técnicos (fechas, objetivos y participantes).
+        </Text>
       </View>
 
       <ThemedText style={styles.helperText}>
-        Sube el documento oficial de solicitud (PDF o imagen)
+        Sube la convocatoria o documento oficial de solicitud
       </ThemedText>
 
       <Button
@@ -659,15 +692,19 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
               {renderStepIndicator()}
 
               {/* Renderizar paso actual */}
-              {step === 1 && renderStep1()}
-              {step === 2 && renderStep2()}
-              {step === 3 && renderStep3()}
-              {step === 4 && renderStep4()}
-              {step === 5 && renderStep5()}
+              {step === 1 && renderStepDocumento()}
+              
+              {step === 2 && renderStepFechas()}
+              {step === 3 && renderStepObjetivos()}
+              {step === 4 && renderStepCriterios()}
+              {step === 5 && renderStepParticipantes()}
             </ScrollView>
 
             {/* Footer con botones */}
 
+            {/* Footer con botones */}
+            {/* Ocultar footer en paso 1 porque se maneja en el sheet */}
+            {step > 1 && (
             <View style={styles.footerButtons}>
               {step > 1 && (
                 <Button
@@ -684,12 +721,17 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
                 <Button
                   mode="contained"
                   onPress={handleNext}
-                  disabled={!canContinue || (step === 4 && !participantesValidacion.completo)}
-                  icon="ion:arrow-forward-outline"
+                  disabled={
+                    !canContinue ||
+                    (step === 5 && !participantesValidacion.completo) ||
+                    isUploading
+                  }
+                  loading={isUploading}
+                  icon={step === 1 ? "ion:cloud-upload-outline" : "ion:arrow-forward-outline"}
                   contentStyle={styles.nextButtonContent}
                   style={styles.nextButton}
                 >
-                  Continuar
+                  {isUploading ? "Subiendo..." : "Continuar"}
                 </Button>
               ) : (
                 <Button
@@ -706,6 +748,8 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
                 </Button>
               )}
             </View>
+            )}
+
 
             {/* Modal para agregar participantes */}
             {modalState.visible &&
@@ -748,6 +792,8 @@ export const SolicitudForm = ({ eventoId }: SolicitudFormProps) => {
                   />
                 );
               })()}
+
+              
           </>
         )}
       </ThemedView>
@@ -928,5 +974,81 @@ const styles = StyleSheet.create({
   },
   nextButtonContent: {
     flexDirection: "row-reverse",
+  },
+  infoBox: {
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.05)",
+    marginBottom: 20,
+    flexDirection: "row",
+    gap: 12,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  // Bottom Sheet Styles
+  sheetContent: {
+      padding: 24,
+      flex: 1,
+  },
+  sheetHeader: {
+      alignItems: 'center',
+      marginBottom: 16,
+      gap: 8,
+  },
+  sheetTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      marginBottom: 16,
+      textAlign: 'center',
+      marginTop: 8,
+  },
+  sheetDesc: {
+      textAlign: 'center',
+      marginBottom: 24,
+  },
+  sheetUploadBtn: {
+      marginBottom: 16,
+      borderColor: '#E0E0E0', 
+      borderStyle: 'dashed',
+  },
+  filePreviewItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      borderRadius: 8,
+      backgroundColor: '#F5F5F5',
+      gap: 12,
+      marginBottom: 24,
+  },
+  sheetActions: {
+      gap: 12,
+      marginTop: 'auto',
+      marginBottom: 24,
+  },
+  sheetMainBtn: {
+      borderRadius: 8,
+      paddingVertical: 6,
+  },
+  // Empty State Styles
+  emptyStateContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 32,
+      gap: 12,
+      minHeight: 300,
+      marginTop: 20,
+  },
+  emptyTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginTop: 8,
+  },
+  emptyDesc: {
+      textAlign: 'center',
+      color: '#666',
   },
 });

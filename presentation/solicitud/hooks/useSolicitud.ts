@@ -7,8 +7,12 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-export const useSolicitud = (eventoId: string) => {
-  const [step, setStep] = useState(1);
+import { uploadConvocatoria } from "@/core/solicitud/actions/solicitud-actions";
+import { toast } from "@backpackapp-io/react-native-toast";
+
+export const useSolicitud = (eventoId: string, initialStep: number = 1, existingColeccionId?: number) => {
+  const [step, setStep] = useState(initialStep);
+  const [isUploading, setIsUploading] = useState(false);
   const totalSteps = 5;
 
   // React Hook Form con validación de Zod
@@ -31,6 +35,7 @@ export const useSolicitud = (eventoId: string) => {
       deportistas: [],
       entrenadores: [],
       documento: null,
+      coleccionAvalId: existingColeccionId,
       observaciones: "",
     },
   });
@@ -92,6 +97,8 @@ export const useSolicitud = (eventoId: string) => {
   const getCanContinue = () => {
     switch (step) {
       case 1:
+        return formData.documento !== null && !errors.documento;
+      case 2:
         return (
           formData.fechaSalida &&
           formData.fechaRetorno &&
@@ -102,25 +109,23 @@ export const useSolicitud = (eventoId: string) => {
           !errors.transporteSalida &&
           !errors.transporteRetorno
         );
-      case 2:
+      case 3:
         return (
           formData.objetivos.filter((obj) => obj.trim()).length >= 2 &&
           !errors.objetivos
         );
-      case 3:
+      case 4:
         return (
           formData.criterios.filter((crit) => crit.trim()).length >= 2 &&
           !errors.criterios
         );
-      case 4:
+      case 5:
         return (
           formData.deportistas.length > 0 &&
           formData.entrenadores.length > 0 &&
           !errors.deportistas &&
           !errors.entrenadores
         );
-      case 5:
-        return formData.documento !== null && !errors.documento;
       default:
         return false;
     }
@@ -134,6 +139,9 @@ export const useSolicitud = (eventoId: string) => {
 
     switch (step) {
       case 1:
+        fieldsToValidate = ["documento"];
+        break;
+      case 2:
         fieldsToValidate = [
           "fechaSalida",
           "fechaRetorno",
@@ -141,17 +149,14 @@ export const useSolicitud = (eventoId: string) => {
           "transporteRetorno",
         ];
         break;
-      case 2:
+      case 3:
         fieldsToValidate = ["objetivos"];
         break;
-      case 3:
+      case 4:
         fieldsToValidate = ["criterios"];
         break;
-      case 4:
-        fieldsToValidate = ["deportistas", "entrenadores"];
-        break;
       case 5:
-        fieldsToValidate = ["documento"];
+        fieldsToValidate = ["deportistas", "entrenadores"];
         break;
     }
 
@@ -159,7 +164,31 @@ export const useSolicitud = (eventoId: string) => {
     const isStepValid = await trigger(fieldsToValidate);
 
     if (isStepValid && step < totalSteps) {
-      setStep(step + 1);
+      // Si estamos en el paso 1, subir la convocatoria
+      if (step === 1) {
+        // Verificar si ya se subió (por si el usuario retrocedió)
+        if (formData.coleccionAvalId) {
+          setStep(step + 1);
+          return;
+        }
+
+        try {
+          setIsUploading(true);
+          const result = await uploadConvocatoria(Number(eventoId), formData.documento);
+          setValue("coleccionAvalId", result.coleccionAvalId);
+          toast.success("Convocatoria subida correctamente");
+          setStep(step + 1);
+        } catch (error) {
+          console.error("Error al subir convocatoria:", error);
+          toast.error(
+             error instanceof Error ? error.message : "Error al subir la convocatoria"
+          );
+        } finally {
+          setIsUploading(false);
+        }
+      } else {
+        setStep(step + 1);
+      }
     }
   };
 
@@ -178,6 +207,7 @@ export const useSolicitud = (eventoId: string) => {
     totalSteps,
     formData,
     errors,
+    isUploading,
 
     // React Hook Form
     control,

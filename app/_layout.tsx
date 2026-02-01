@@ -7,6 +7,9 @@ import { Stack } from "expo-router";
 // Gesture Handler
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+// Bottom Sheet
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+
 // Paper UI + Adaptador de temas
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
 
@@ -124,21 +127,23 @@ function RootLayoutContent() {
       }}
     >
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <Toasts />
-        <StatusBar
-          barStyle={isDarkMode ? "light-content" : "dark-content"}
-          backgroundColor={
-            isDarkMode
-              ? customDarkTheme.colors.background
-              : customLightTheme.colors.background
-          }
-        />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(protected)" />
-          <Stack.Screen name="auth" />
-        </Stack>
-        <Toasts />
+        <BottomSheetModalProvider>
+          <Toasts />
+          <StatusBar
+            barStyle={isDarkMode ? "light-content" : "dark-content"}
+            backgroundColor={
+              isDarkMode
+                ? customDarkTheme.colors.background
+                : customLightTheme.colors.background
+            }
+          />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(protected)" />
+            <Stack.Screen name="auth" />
+          </Stack>
+          <Toasts />
+        </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </PaperProvider>
   );

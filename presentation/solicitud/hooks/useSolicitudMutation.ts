@@ -1,11 +1,16 @@
-import { uploadSolicitud } from "@/core/solicitud/actions/solicitud-actions";
+import { createAvalTecnico, SolicitudData } from "@/core/solicitud/actions/solicitud-actions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+interface CreateSolicitudParams {
+  solicitudData: SolicitudData;
+  eventoId: number;
+}
 
 export const useSolicitudMutation = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: uploadSolicitud,
+    mutationFn: ({ solicitudData }: CreateSolicitudParams) => createAvalTecnico(solicitudData),
     onSuccess: (data, variables) => {
       // Invalidar las queries relacionadas con el evento
       queryClient.invalidateQueries({
