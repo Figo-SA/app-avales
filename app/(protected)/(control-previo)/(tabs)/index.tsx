@@ -1,226 +1,103 @@
+import { ColeccionListSkeleton } from "@/presentation/coleccion/components/ColeccionCardSkeleton";
+import { ColeccionList } from "@/presentation/coleccion/components/ColeccionList";
+import { useColecciones } from "@/presentation/coleccion/hooks/useColecciones";
+import { ChipFilters } from "@/presentation/theme/components/ChipFilters";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import { FlatList, RefreshControl, View } from "react-native";
-import {
-  Chip,
-  Icon,
-  Surface,
-  Text,
-  TouchableRipple,
-  useTheme,
-} from "react-native-paper";
-
-// Mock data - TODO: Replace with API call when backend is ready
-const MOCK_SOLICITUDES = [
-  {
-    id: 1,
-    evento: {
-      id: 1,
-      nombre: "Campeonato Nacional de Atletismo",
-      codigo: "ATL-2024-001",
-      ciudad: "Quito",
-      provincia: "Pichincha",
-      fechaInicio: "2024-03-15",
-      estado: "APROBADO_PDA",
-    },
-    descripcion: "Participación en campeonato nacional categoría juvenil",
-    avalTecnico: {
-      atletas: 12,
-      entrenadores: 3,
-    },
-    presupuestoAprobado: 14500,
-    documentos: {
-      convocatoria: true,
-      avalTecnico: true,
-      pda: true,
-    },
-  },
-  {
-    id: 2,
-    evento: {
-      id: 2,
-      nombre: "Copa Internacional de Natación",
-      codigo: "NAT-2024-002",
-      ciudad: "Guayaquil",
-      provincia: "Guayas",
-      fechaInicio: "2024-04-20",
-      estado: "APROBADO_PDA",
-    },
-    descripcion: "Competencia internacional de natación",
-    avalTecnico: {
-      atletas: 8,
-      entrenadores: 2,
-    },
-    presupuestoAprobado: 24000,
-    documentos: {
-      convocatoria: true,
-      avalTecnico: true,
-      pda: true,
-    },
-  },
-];
-
-type SolicitudControlPrevio = (typeof MOCK_SOLICITUDES)[0];
+import { useMemo, useState } from "react";
+import { View } from "react-native";
+import { Text, useTheme } from "react-native-paper";
 
 export default function ControlPrevioDashboard() {
   const theme = useTheme();
-  const router = useRouter();
-  const [refreshing, setRefreshing] = useState(false);
-  const [data] = useState(MOCK_SOLICITUDES);
+  const [activeTab, setActiveTab] = useState<"revisar" | "historial">("revisar");
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    // TODO: Implement actual refresh when API is ready
-    setTimeout(() => setRefreshing(false), 1000);
+  const { coleccionesQuery, loadNextPage } = useColecciones({
+    etapa: activeTab === "revisar" ? "COMPRAS_PUBLICAS" : "CONTROL_PREVIO",
+  });
+
+  const colecciones =
+    coleccionesQuery.data?.pages.flatMap((page) => page.data ?? []).filter(Boolean) || [];
+  const isInitialLoading =
+    coleccionesQuery.isLoading && colecciones.length === 0;
+
+  const getEmptyStateProps = () => {
+    if (activeTab === "revisar") {
+      return {
+        icon: "ion:shield-checkmark-outline",
+        title: "Todo al día",
+        description: "No hay expedientes pendientes de control previo.",
+      };
+    }
+    return {
+      icon: "ion:checkmark-done-circle-outline",
+      title: "Sin historial",
+      description: "Aún no has auditado expedientes.",
+    };
   };
 
-  const handlePressItem = (item: SolicitudControlPrevio) => {
-    router.push({
-      pathname: "/(protected)/(control-previo)/coleccion",
-      params: { data: JSON.stringify(item) },
-    });
-  };
-
-  const getDocumentCount = (docs: SolicitudControlPrevio["documentos"]) => {
-    return Object.values(docs).filter(Boolean).length;
-  };
-
-  const renderItem = ({ item }: { item: SolicitudControlPrevio }) => (
-    <Surface
-      style={{
-        marginHorizontal: 16,
-        marginBottom: 16,
-        borderRadius: 12,
-        backgroundColor: theme.colors.surface,
-      }}
-      elevation={1}
-    >
-      <View style={{ borderRadius: 12, overflow: "hidden" }}>
-        <TouchableRipple onPress={() => handlePressItem(item)}>
-        <View style={{ padding: 16 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              marginBottom: 12,
-            }}
-          >
-            <View style={{ flex: 1, marginRight: 12 }}>
-              <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
-                {item.evento.nombre}
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant }}
-              >
-                {item.evento.ciudad}, {item.evento.provincia}
-              </Text>
-            </View>
-            <Chip
-              mode="flat"
-              style={{
-                backgroundColor: theme.colors.tertiaryContainer,
-              }}
-              textStyle={{
-                color: theme.colors.onTertiaryContainer,
-                fontSize: 12,
-              }}
-            >
-              Por Revisar
-            </Chip>
-          </View>
-
-          <Text
-            variant="bodyMedium"
-            numberOfLines={2}
-            style={{ marginBottom: 12, color: theme.colors.onSurface }}
-          >
-            {item.descripcion}
-          </Text>
-
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 16,
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Icon
-                source="ion:calendar-outline"
-                size={16}
-                color={theme.colors.onSurfaceVariant}
-              />
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                {new Date(item.evento.fechaInicio).toLocaleDateString()}
-              </Text>
-            </View>
-
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Icon
-                source="ion:document-text-outline"
-                size={16}
-                color={theme.colors.onSurfaceVariant}
-              />
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                {getDocumentCount(item.documentos)} docs
-              </Text>
-            </View>
-
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Icon
-                source="ion:cash-outline"
-                size={16}
-                color={theme.colors.primary}
-              />
-              <Text variant="bodySmall" style={{ color: theme.colors.primary, fontWeight: "600" }}>
-                ${item.presupuestoAprobado.toLocaleString()}
-              </Text>
-            </View>
-          </View>
-        </View>
-        </TouchableRipple>
-      </View>
-    </Surface>
+  const filterOptions = useMemo(
+    () => [
+      {
+        value: "revisar",
+        label: "Pendientes Control",
+        color: "#EA580C",
+      },
+      {
+        value: "historial",
+        label: "Auditados",
+        color: "#059669",
+      },
+    ],
+    []
   );
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      <View style={{ padding: 16, paddingBottom: 8 }}>
-        <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}>
+        <Text
+          variant="titleLarge"
+          style={{ fontWeight: "700", color: theme.colors.onSurface }}
+        >
           Control Previo
         </Text>
-        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-          Revisión de documentación antes de aprobación final
+        <Text
+          variant="bodySmall"
+          style={{ color: theme.colors.onSurfaceVariant }}
+        >
+          {activeTab === "revisar" 
+            ? "Expedientes aprobados por Compras Públicas para revisión final."
+            : "Historial de expedientes auditados."}
         </Text>
       </View>
 
-      <FlatList
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ paddingBottom: 16 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={{ padding: 32, alignItems: "center" }}>
-            <Icon
-              source="ion:shield-checkmark-outline"
-              size={48}
-              color={theme.colors.outline}
-            />
-            <Text
-              variant="bodyLarge"
-              style={{ color: theme.colors.outline, marginTop: 16 }}
-            >
-              No hay solicitudes pendientes de revisión
-            </Text>
-          </View>
-        }
+      <ChipFilters
+        options={filterOptions}
+        selectedValue={activeTab}
+        onValueChange={(val) => setActiveTab(val as any)}
       />
+
+      {isInitialLoading ? (
+        <ColeccionListSkeleton count={5} />
+      ) : (
+        <ColeccionList
+          colecciones={colecciones}
+          emptyStateProps={getEmptyStateProps()}
+          filterKey={activeTab}
+          routePath="/(protected)/(control-previo)/coleccion"
+          onEndReached={() => {
+            if (
+              coleccionesQuery.hasNextPage &&
+              !coleccionesQuery.isFetchingNextPage
+            ) {
+              loadNextPage();
+            }
+          }}
+          onEndReachedThreshold={0.5}
+          isLoadingMore={coleccionesQuery.isFetchingNextPage}
+          onRefresh={() => coleccionesQuery.refetch()}
+          isRefreshing={coleccionesQuery.isRefetching}
+        />
+      )}
     </ThemedView>
   );
 }

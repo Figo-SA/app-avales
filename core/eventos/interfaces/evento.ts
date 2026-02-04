@@ -51,6 +51,7 @@ export interface Evento {
   categoria: Categoria;
   // Campos locales/UI
   estado?: EventoEstado; // Estado del evento para el usuario actual
+  etapa?: string; // Etapa actual del proceso (e.g., "REVISION_DTM", "COMPRAS_PUBLICAS")
   motivoRechazo?: string; // Solo presente cuando estado === "rechazado"
 }
 

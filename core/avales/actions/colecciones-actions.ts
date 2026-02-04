@@ -30,12 +30,14 @@ export const getColecciones = async (
   page = 1,
   limit = 10,
   estado?: ColeccionEstado,
-  search?: string
+  search?: string,
+  etapa?: string
 ): Promise<ColeccionResponse> => {
   try {
     const params: Record<string, any> = { page, limit };
     if (estado) params.estado = estado;
     if (search) params.search = search;
+    if (etapa) params.etapa = etapa;
 
     // Usar fetch directamente para obtener la respuesta completa sin unwrapping del httpClient
     const { SecureStorageAdapter } = await import("@/helpers/adapters/secure-storage.adapter");
@@ -76,12 +78,15 @@ export const getColecciones = async (
 
 export const aprobarSolicitud = async (
   avalId: number,
-  usuarioId: number
+  usuarioId: number,
+  etapa?: string
 ): Promise<void> => {
   try {
-    await httpClient.patch(API_ENDPOINTS.AVALES.APROBAR(avalId), {
-      usuarioId,
-    });
+    const payload: { usuarioId: number; etapa?: string } = { usuarioId };
+    if (etapa) {
+      payload.etapa = etapa;
+    }
+    await httpClient.patch(API_ENDPOINTS.AVALES.APROBAR(avalId), payload);
   } catch (error) {
     const errorMessage = handleApiError(error, "aprobarSolicitud");
     throw new Error(errorMessage);
@@ -91,13 +96,17 @@ export const aprobarSolicitud = async (
 export const rechazarSolicitud = async (
   avalId: number,
   usuarioId: number,
-  motivo?: string
+  motivo?: string,
+  etapa?: string
 ): Promise<void> => {
   try {
-    await httpClient.patch(API_ENDPOINTS.AVALES.RECHAZAR(avalId), {
+    const payload: { usuarioId: number; motivo?: string; etapa?: string } = {
       usuarioId,
       motivo,
-    });
+    };
+    if (etapa) payload.etapa = etapa;
+
+    await httpClient.patch(API_ENDPOINTS.AVALES.RECHAZAR(avalId), payload);
   } catch (error) {
     const errorMessage = handleApiError(error, "rechazarSolicitud");
     throw new Error(errorMessage);

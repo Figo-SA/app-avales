@@ -48,7 +48,7 @@ export default function ColeccionDetail() {
     : null;
 
   // Determine if the item is editable based on the current stage
-  const isEditable = item?.etapa === "REVISION_METODOLOGO";
+  const isEditable = item?.etapa === "SOLICITADO";
 
   const openDocument = async (url: string | null | undefined) => {
     if (url) {
@@ -97,7 +97,7 @@ export default function ColeccionDetail() {
             try {
               setIsProcessing(true);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              await aprobarSolicitud(item.id, user.id, "REVISION_DTM");
+              await aprobarSolicitud(item.id, user.id, "REVISION_METODOLOGO");
               toast.success("Solicitud aprobada correctamente");
               queryClient.invalidateQueries({ queryKey: ["colecciones"] });
               router.back();
@@ -410,6 +410,7 @@ export default function ColeccionDetail() {
             <View style={{ flex: 1 }}>
               <Text style={[styles.alertTitle, { color: estado.color }]}>Motivo del Rechazo</Text>
               <Text style={[styles.alertText, { color: estado.color }]}>{item.comentario}</Text>
+```javascript
             </View>
           </Surface>
         )}

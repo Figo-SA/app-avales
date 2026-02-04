@@ -1,33 +1,48 @@
+import {
+    aprobarSolicitud,
+    rechazarSolicitud,
+} from "@/core/avales/actions/colecciones-actions";
+import { ColeccionAval } from "@/core/avales/interfaces/coleccion";
+import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import { toast } from "@backpackapp-io/react-native-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import * as Haptics from "expo-haptics";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 import {
-  Button,
-  Card,
-  Chip,
-  Dialog,
-  Divider,
-  Icon,
-  Portal,
-  Surface,
-  Text,
-  TextInput,
-  useTheme,
+    Button,
+    Card,
+    Chip,
+    Dialog,
+    Divider,
+    Icon,
+    Portal,
+    Surface,
+    Text,
+    TextInput,
+    useTheme,
 } from "react-native-paper";
 
 export default function SecretariaColeccionDetail() {
   const router = useRouter();
   const theme = useTheme();
   const params = useLocalSearchParams();
+  const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
   // Parse data from params
-  const item = params.data ? JSON.parse(params.data as string) : null;
+  const item: ColeccionAval | null = params.data
+    ? JSON.parse(params.data as string)
+    : null;
+
+  // Determine if the item is editable based on the current stage
+  const isEditable = item?.etapa === "CONTROL_PREVIO";
 
   if (!item) {
     return (
@@ -43,9 +58,14 @@ export default function SecretariaColeccionDetail() {
   }
 
   const handleAprobar = async () => {
+    if (!user?.id) {
+        toast.error("Usuario no identificado");
+        return;
+    }
+
     Alert.alert(
-      "Confirmar Aprobación",
-      "¿Confirmas la aprobación administrativa? La solicitud pasará a Financiero.",
+      "Generar Resolución y Pasar",
+      "¿Confirmas que el oficio está listo y el trámite puede pasar a Financiero?",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -53,9 +73,10 @@ export default function SecretariaColeccionDetail() {
           onPress: async () => {
             try {
               setIsProcessing(true);
-              // TODO: Call API when ready
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-              toast.success("Solicitud aprobada y enviada a Financiero");
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              await aprobarSolicitud(item.id, user.id, "SECRETARIA");
+              toast.success("Tramite despachado a Financiero");
+              queryClient.invalidateQueries({ queryKey: ["colecciones"] });
               router.back();
             } catch (error) {
               console.error(error);
@@ -70,6 +91,11 @@ export default function SecretariaColeccionDetail() {
   };
 
   const handleRechazar = async () => {
+    if (!user?.id) {
+        toast.error("Usuario no identificado");
+        return;
+    }
+
     if (!rejectReason.trim()) {
       toast.error("Debes ingresar el motivo del rechazo");
       return;
@@ -77,14 +103,15 @@ export default function SecretariaColeccionDetail() {
 
     try {
       setIsProcessing(true);
-      // TODO: Call API when ready
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success("Solicitud rechazada correctamente");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      await rechazarSolicitud(item.id, user.id, rejectReason, "SECRETARIA");
+      toast.success("Trámite devuelto para corrección");
+      queryClient.invalidateQueries({ queryKey: ["colecciones"] });
       setShowRejectDialog(false);
       router.back();
     } catch (error) {
       console.error(error);
-      toast.error("Error al rechazar la solicitud");
+      toast.error("Error al rechazar");
     } finally {
       setIsProcessing(false);
     }
@@ -134,76 +161,22 @@ export default function SecretariaColeccionDetail() {
     </View>
   );
 
-  const ApprovalStep = ({
-    title,
-    subtitle,
-    isApproved,
-  }: {
-    title: string;
-    subtitle: string;
-    isApproved: boolean;
-  }) => (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 12,
-        gap: 12,
-      }}
-    >
-      <View
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: isApproved
-            ? theme.colors.primaryContainer
-            : theme.colors.surfaceVariant,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Icon
-          source={isApproved ? "ion:checkmark" : "ion:time-outline"}
-          size={20}
-          color={
-            isApproved ? theme.colors.primary : theme.colors.onSurfaceVariant
-          }
-        />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text variant="bodyLarge" style={{ fontWeight: "600" }}>
-          {title}
-        </Text>
-        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-          {subtitle}
-        </Text>
-      </View>
-      <Chip
-        compact
-        style={{
-          backgroundColor: isApproved
-            ? theme.colors.primaryContainer
-            : theme.colors.surfaceVariant,
-        }}
-        textStyle={{
-          fontSize: 10,
-          color: isApproved
-            ? theme.colors.onPrimaryContainer
-            : theme.colors.onSurfaceVariant,
-        }}
-      >
-        {isApproved ? "Aprobado" : "Pendiente"}
-      </Chip>
-    </View>
-  );
+  const calculateTotalBudget = () => {
+    if (!item.avalTecnico?.requerimientos) return 0;
+    return item.avalTecnico.requerimientos.reduce(
+      (acc: number, req: any) => acc + (Number(req.cantidadDias) * Number(req.valorUnitario)),
+      0
+    );
+  };
+  
+  const totalBudget = calculateTotalBudget();
 
   return (
     <ThemedView style={{ flex: 1 }}>
       <Stack.Screen
         options={{
           headerShown: true,
-          title: "Revisión Administrativa",
+          title: "Despacho de Resolución",
           headerBackTitle: "Atrás",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: theme.colors.onPrimary,
@@ -220,73 +193,52 @@ export default function SecretariaColeccionDetail() {
           }}
           elevation={1}
         >
-          <Text
-            variant="headlineSmall"
-            style={{ fontWeight: "bold", marginBottom: 8 }}
-          >
-            {item.evento.nombre}
-          </Text>
-          <Text
-            variant="bodyMedium"
-            style={{ color: theme.colors.onSurfaceVariant, marginBottom: 16 }}
-          >
-            {item.descripcion}
-          </Text>
-
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <Chip icon="ion:location-outline" compact>
-              {item.evento.ciudad}
+          <View style={{ marginBottom: 16 }}>
+            <Chip
+              icon="ion:shield-checkmark"
+              style={{
+                backgroundColor: "#DCFCE7",
+                alignSelf: "flex-start",
+                marginBottom: 12,
+              }}
+              textStyle={{ color: "#166534", fontWeight: "bold" }}
+            >
+              Auditado Correctamente
             </Chip>
-            <Chip icon="ion:calendar-outline" compact>
-              {new Date(item.evento.fechaInicio).toLocaleDateString()}
-            </Chip>
+            <Text
+              variant="headlineSmall"
+              style={{ fontWeight: "bold", marginBottom: 8 }}
+            >
+              {item.evento.nombre}
+            </Text>
+            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+              {item.descripcion}
+            </Text>
           </View>
         </Surface>
 
-        {/* Resumen */}
-        <View style={{ flexDirection: "row", marginHorizontal: 16, gap: 12 }}>
-          <Surface
-            style={{
-              flex: 1,
-              padding: 16,
-              borderRadius: 12,
-              backgroundColor: theme.colors.primaryContainer,
-              alignItems: "center",
-            }}
-            elevation={0}
-          >
-            <Text
-              variant="headlineMedium"
-              style={{ fontWeight: "bold", color: theme.colors.primary }}
-            >
-              {item.avalTecnico.atletas + item.avalTecnico.entrenadores}
-            </Text>
-            <Text variant="bodySmall" style={{ color: theme.colors.onPrimaryContainer }}>
-              Participantes
-            </Text>
-          </Surface>
-
-          <Surface
-            style={{
-              flex: 1,
-              padding: 16,
-              borderRadius: 12,
-              backgroundColor: theme.colors.secondaryContainer,
-              alignItems: "center",
-            }}
-            elevation={0}
-          >
-            <Text
-              variant="headlineMedium"
-              style={{ fontWeight: "bold", color: theme.colors.secondary }}
-            >
-              ${(item.presupuestoAprobado / 1000).toFixed(0)}K
-            </Text>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSecondaryContainer }}>
-              Presupuesto
-            </Text>
-          </Surface>
-        </View>
+        {/* Datos para Resolución */}
+        <SectionTitle title="Datos para Resolución" icon="ion:document-text-outline" />
+        <Card style={{ marginHorizontal: 16 }} mode="outlined">
+          <Card.Content>
+            <InfoRow label="Evento" value={item.evento.nombre} />
+            <Divider style={{ marginVertical: 8 }} />
+            <InfoRow 
+               label="Lugar" 
+               value={`${item.evento.ciudad}, ${item.evento.provincia}`} 
+            />
+            <Divider style={{ marginVertical: 8 }} />
+            <InfoRow
+              label="Vigencia"
+              value={`${new Date(item.evento.fechaInicio).toLocaleDateString()}`}
+            />
+            <Divider style={{ marginVertical: 8 }} />
+            <InfoRow
+               label="Monto Autorizado"
+               value={`$${totalBudget > 0 ? totalBudget.toLocaleString() : "0.00"}`}
+            />
+          </Card.Content>
+        </Card>
 
         <SectionTitle
           title="Información del Evento"
@@ -307,73 +259,64 @@ export default function SecretariaColeccionDetail() {
           </Card.Content>
         </Card>
 
-        {/* Flujo de Aprobaciones */}
-        <SectionTitle title="Flujo de Aprobaciones" icon="ion:git-branch-outline" />
-        <Card style={{ marginHorizontal: 16 }} mode="outlined">
-          <Card.Content>
-            <ApprovalStep
-              title="Revisión DTM"
-              subtitle="Aprobación técnica metodológica"
-              isApproved={item.aprobaciones.dtm}
-            />
-            <Divider />
-            <ApprovalStep
-              title="Aprobación PDA"
-              subtitle="Presupuesto asignado"
-              isApproved={item.aprobaciones.pda}
-            />
-            <Divider />
-            <ApprovalStep
-              title="Control Previo"
-              subtitle="Documentación verificada"
-              isApproved={item.aprobaciones.controlPrevio}
-            />
-            <Divider />
-            <ApprovalStep
-              title="Secretaría"
-              subtitle="Revisión administrativa final"
-              isApproved={false}
-            />
-          </Card.Content>
-        </Card>
+
       </ScrollView>
 
-      {/* Footer Actions */}
-      <Surface
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: 16,
-          backgroundColor: theme.colors.surface,
-          borderTopWidth: 1,
-          borderTopColor: theme.colors.outlineVariant,
-          flexDirection: "row",
-          gap: 12,
-        }}
-        elevation={4}
-      >
-        <Button
-          mode="outlined"
-          onPress={() => setShowRejectDialog(true)}
-          style={{ flex: 1, borderColor: theme.colors.error }}
-          textColor={theme.colors.error}
-          disabled={isProcessing}
+      {/* Footer Actions - Only if editable */}
+      {isEditable ? (
+        <Surface
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: 16,
+            backgroundColor: theme.colors.surface,
+            borderTopWidth: 1,
+            borderTopColor: theme.colors.outlineVariant,
+            flexDirection: "row",
+            gap: 12,
+          }}
+          elevation={4}
         >
-          Rechazar
-        </Button>
-        <Button
-          mode="contained"
-          onPress={handleAprobar}
-          style={{ flex: 1 }}
-          disabled={isProcessing}
-          loading={isProcessing}
-          icon="ion:send-outline"
+          <Button
+            mode="outlined"
+            onPress={() => setShowRejectDialog(true)}
+            style={{ flex: 1, borderColor: theme.colors.error }}
+            textColor={theme.colors.error}
+            disabled={isProcessing}
+          >
+            Rechazar
+          </Button>
+          <Button
+            mode="contained"
+            onPress={handleAprobar}
+            style={{ flex: 1 }}
+            disabled={isProcessing}
+            loading={isProcessing}
+            icon="ion:send-outline"
+          >
+            Enviar a Financiero
+          </Button>
+        </Surface>
+      ) : (
+        <Surface
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: 16,
+            backgroundColor: theme.colors.surfaceVariant,
+            alignItems: "center",
+          }}
+          elevation={4}
         >
-          Enviar a Financiero
-        </Button>
-      </Surface>
+          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, fontWeight: "bold" }}>
+             Solicitud ya procesada ({item?.etapa})
+          </Text>
+        </Surface>
+      )}
 
       {/* Reject Dialog */}
       <Portal>

@@ -7,16 +7,12 @@ import { useMemo, useState } from "react";
 import { View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
-type FilterStatus = "SOLICITADO" | "ACEPTADO" | "RECHAZADO";
-
-export default function DtmDashboard() {
+export default function ComprasPublicasDashboard() {
   const theme = useTheme();
-  const [activeTab, setActiveTab] = useState<"revision" | "historial">("revision");
+  const [activeTab, setActiveTab] = useState<"validar" | "historial">("validar");
 
-  const { coleccionesQuery, counts, loadNextPage } = useColecciones({
-    etapa: activeTab === "revision" ? "REVISION_METODOLOGO" : "REVISION_DTM",
-    // Si quisieramos filtrar por estado global también:
-    // estado: "SOLICITADO" 
+  const { coleccionesQuery, loadNextPage } = useColecciones({
+    etapa: activeTab === "validar" ? "PDA" : "COMPRAS_PUBLICAS",
   });
 
   const colecciones =
@@ -25,33 +21,31 @@ export default function DtmDashboard() {
     coleccionesQuery.isLoading && colecciones.length === 0;
 
   const getEmptyStateProps = () => {
-    if (activeTab === "revision") {
+    if (activeTab === "validar") {
       return {
-        icon: "ion:list-outline",
+        icon: "ion:briefcase-outline",
         title: "Todo al día",
-        description: "No tienes trámites pendientes de revisión.",
+        description: "No hay procesos pendientes de validación de contratación.",
       };
     }
     return {
       icon: "ion:checkmark-done-circle-outline",
       title: "Sin historial",
-      description: "Aún no has aprobado trámites.",
+      description: "Aún no has validado procesos de contratación.",
     };
   };
 
   const filterOptions = useMemo(
     () => [
       {
-        value: "revision",
-        label: "Por Revisar",
-        // count: counts?.pending || 0, // Si tuvieramos counts específicos
-        color: "#EA580C", // Naranja (Pendiente)
+        value: "validar",
+        label: "Pendientes Compras",
+        color: "#EA580C",
       },
       {
         value: "historial",
-        label: "Mis Aprobaciones",
-        // count: counts?.history || 0,
-        color: "#059669", // Verde (Historial/Listo)
+        label: "Procesos Validados",
+        color: "#059669",
       },
     ],
     []
@@ -64,15 +58,15 @@ export default function DtmDashboard() {
           variant="titleLarge"
           style={{ fontWeight: "700", color: theme.colors.onSurface }}
         >
-          Gestión DTM
+          Gestión Compras Públicas
         </Text>
         <Text
           variant="bodySmall"
           style={{ color: theme.colors.onSurfaceVariant }}
         >
-          {activeTab === "revision" 
-            ? "Trámites aprobados por Metodología que requieren tu revisión."
-            : "Historial de trámites que ya has procesado."}
+          {activeTab === "validar" 
+            ? "Procesos por validar contratación."
+            : "Historial de procesos validados."}
         </Text>
       </View>
 
@@ -89,7 +83,7 @@ export default function DtmDashboard() {
           colecciones={colecciones}
           emptyStateProps={getEmptyStateProps()}
           filterKey={activeTab}
-          routePath="/(protected)/(dtm)/coleccion"
+          routePath="/(protected)/(compras-publicas)/coleccion"
           onEndReached={() => {
             if (
               coleccionesQuery.hasNextPage &&

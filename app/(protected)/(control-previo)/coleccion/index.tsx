@@ -1,34 +1,57 @@
+import {
+    aprobarSolicitud,
+    rechazarSolicitud,
+} from "@/core/avales/actions/colecciones-actions";
+import { ColeccionAval } from "@/core/avales/interfaces/coleccion";
+import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import { toast } from "@backpackapp-io/react-native-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import * as Haptics from "expo-haptics";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 import {
-  Button,
-  Card,
-  Chip,
-  Dialog,
-  Divider,
-  Icon,
-  List,
-  Portal,
-  Surface,
-  Text,
-  TextInput,
-  useTheme,
+    Button,
+    Card,
+    Chip,
+    Dialog,
+    Divider,
+    Icon,
+    Portal,
+    Surface,
+    Text,
+    TextInput,
+    useTheme
 } from "react-native-paper";
 
 export default function ControlPrevioColeccionDetail() {
   const router = useRouter();
   const theme = useTheme();
   const params = useLocalSearchParams();
+  const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
-  // Parse data from params
-  const item = params.data ? JSON.parse(params.data as string) : null;
+  //  // Parse data from params
+  const item: ColeccionAval | null = params.data
+    ? JSON.parse(params.data as string)
+    : null;
+
+  // Determine if the item is editable based on the current stage
+  const isEditable = item?.etapa === "COMPRAS_PUBLICAS";
+
+  const openDocument = async (url: string | null | undefined) => {
+    if (url) {
+      await WebBrowser.openBrowserAsync(url);
+    } else {
+      toast.error("El documento no está disponible");
+    }
+  };
 
   if (!item) {
     return (
@@ -44,9 +67,14 @@ export default function ControlPrevioColeccionDetail() {
   }
 
   const handleAprobar = async () => {
+    if (!user?.id) {
+      toast.error("No se pudo identificar al usuario");
+      return;
+    }
+
     Alert.alert(
-      "Confirmar Aprobación",
-      "¿Confirmas que la documentación está completa y correcta?",
+      "Aprobar Control Previo",
+      "¿Has verificado que todo el expediente cumple con la normativa?",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -54,13 +82,14 @@ export default function ControlPrevioColeccionDetail() {
           onPress: async () => {
             try {
               setIsProcessing(true);
-              // TODO: Call API when ready
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-              toast.success("Documentación aprobada correctamente");
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              await aprobarSolicitud(item.id, user.id, "CONTROL_PREVIO");
+              toast.success("Expediente aprobado para Financiero");
+              queryClient.invalidateQueries({ queryKey: ["colecciones"] });
               router.back();
             } catch (error) {
               console.error(error);
-              toast.error("Error al aprobar la documentación");
+              toast.error("Error al aprobar el expediente");
             } finally {
               setIsProcessing(false);
             }
@@ -71,6 +100,11 @@ export default function ControlPrevioColeccionDetail() {
   };
 
   const handleRechazar = async () => {
+    if (!user?.id) {
+      toast.error("Usuario no identificado");
+      return;
+    }
+
     if (!rejectReason.trim()) {
       toast.error("Debes ingresar el motivo del rechazo");
       return;
@@ -78,14 +112,15 @@ export default function ControlPrevioColeccionDetail() {
 
     try {
       setIsProcessing(true);
-      // TODO: Call API when ready
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success("Solicitud rechazada correctamente");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      await rechazarSolicitud(item.id, user.id, rejectReason, "CONTROL_PREVIO");
+      toast.success("Expediente devuelto por inconsistencias");
+      queryClient.invalidateQueries({ queryKey: ["colecciones"] });
       setShowRejectDialog(false);
       router.back();
     } catch (error) {
       console.error(error);
-      toast.error("Error al rechazar la solicitud");
+      toast.error("Error al rechazar");
     } finally {
       setIsProcessing(false);
     }
@@ -135,46 +170,63 @@ export default function ControlPrevioColeccionDetail() {
     </View>
   );
 
-  const DocumentItem = ({
-    title,
-    description,
-    isPresent,
+  const TimelineItem = ({
+    label,
+    date,
+    isCompleted,
+    isLast = false,
   }: {
-    title: string;
-    description: string;
-    isPresent: boolean;
+    label: string;
+    date: string;
+    isCompleted: boolean;
+    isLast?: boolean;
   }) => (
-    <List.Item
-      title={title}
-      description={description}
-      left={(props) => (
-        <List.Icon
-          {...props}
-          icon={isPresent ? "ion:checkmark-circle" : "ion:close-circle"}
-          color={isPresent ? theme.colors.primary : theme.colors.error}
+    <View style={{ flexDirection: "row", height: isLast ? 24 : 48 }}>
+      <View style={{ alignItems: "center", marginRight: 12, width: 20 }}>
+        <Icon
+          source={isCompleted ? "ion:checkmark-circle" : "ion:ellipse-outline"}
+          size={20}
+          color={isCompleted ? theme.colors.primary : theme.colors.outline}
         />
-      )}
-      right={(props) => (
-        <Chip
-          compact
+        {!isLast && (
+          <View
+            style={{
+              width: 2,
+              flex: 1,
+              backgroundColor: isCompleted
+                ? theme.colors.primary
+                : theme.colors.outlineVariant,
+              marginVertical: 4,
+            }}
+          />
+        )}
+      </View>
+      <View>
+        <Text
+          variant="bodyMedium"
           style={{
-            backgroundColor: isPresent
-              ? theme.colors.primaryContainer
-              : theme.colors.errorContainer,
-          }}
-          textStyle={{
-            color: isPresent
-              ? theme.colors.onPrimaryContainer
-              : theme.colors.onErrorContainer,
-            fontSize: 10,
+            fontWeight: isCompleted ? "bold" : "regular",
+            color: isCompleted ? theme.colors.onSurface : theme.colors.onSurfaceVariant,
           }}
         >
-          {isPresent ? "Presente" : "Faltante"}
-        </Chip>
-      )}
-      style={{ backgroundColor: theme.colors.surface }}
-    />
+          {label}
+        </Text>
+        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+          {date}
+        </Text>
+      </View>
+    </View>
   );
+
+  const calculateTotalBudget = () => {
+    if (!item.avalTecnico?.requerimientos) return 0;
+    return item.avalTecnico.requerimientos.reduce(
+      (acc: number, req: any) => acc + (Number(req.cantidadDias) * Number(req.valorUnitario)),
+      0
+    );
+  };
+  
+  const totalBudget = calculateTotalBudget();
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -222,6 +274,7 @@ export default function ControlPrevioColeccionDetail() {
         </Surface>
 
         {/* Resumen */}
+        {/* Resumen */}
         <View style={{ flexDirection: "row", marginHorizontal: 16, gap: 12 }}>
           <Surface
             style={{
@@ -237,13 +290,14 @@ export default function ControlPrevioColeccionDetail() {
               variant="headlineMedium"
               style={{ fontWeight: "bold", color: theme.colors.primary }}
             >
-              {item.avalTecnico.atletas + item.avalTecnico.entrenadores}
+              {item.avalTecnico ? (item.avalTecnico.atletas + item.avalTecnico.entrenadores) : 0}
             </Text>
             <Text variant="bodySmall" style={{ color: theme.colors.onPrimaryContainer }}>
               Participantes
             </Text>
           </Surface>
 
+          {/* Placeholder for budget since we don't have it in interface yet */}
           <Surface
             style={{
               flex: 1,
@@ -258,13 +312,41 @@ export default function ControlPrevioColeccionDetail() {
               variant="headlineMedium"
               style={{ fontWeight: "bold", color: theme.colors.secondary }}
             >
-              ${(item.presupuestoAprobado / 1000).toFixed(0)}K
+              ${totalBudget > 0 ? totalBudget.toLocaleString() : "0.00"}
             </Text>
             <Text variant="bodySmall" style={{ color: theme.colors.onSecondaryContainer }}>
-              Presupuesto
+              Total a Pagar
             </Text>
           </Surface>
         </View>
+
+        {/* Trazabilidad */}
+        <SectionTitle title="Trazabilidad" icon="ion:git-network-outline" />
+        <Card style={{ marginHorizontal: 16 }} mode="outlined">
+          <Card.Content>
+            <TimelineItem
+              label="Solicitud (Entrenador)"
+              date={new Date(item.createdAt).toLocaleDateString()}
+              isCompleted={true}
+            />
+            <TimelineItem
+              label="Aprobación Técnica (DTM)"
+              date={item.dtmUrl ? "Completado" : "Pendiente"}
+              isCompleted={!!item.dtmUrl}
+            />
+            <TimelineItem
+              label="Certificación PDA"
+              date={item.pdaUrl ? "Completado" : "Pendiente"}
+              isCompleted={!!item.pdaUrl}
+            />
+            <TimelineItem
+              label="Validación Compras Públicas"
+              date="Completado"
+              isCompleted={true}
+              isLast
+            />
+          </Card.Content>
+        </Card>
 
         <SectionTitle
           title="Información del Evento"
@@ -286,31 +368,49 @@ export default function ControlPrevioColeccionDetail() {
         </Card>
 
         {/* Checklist de Documentos */}
-        <SectionTitle title="Checklist de Documentos" icon="ion:checkbox-outline" />
-        <Surface
-          style={{ marginHorizontal: 16, borderRadius: 12 }}
-          elevation={1}
-        >
-          <View style={{ borderRadius: 12, overflow: "hidden" }}>
-          <DocumentItem
-            title="Convocatoria"
-            description="Documento oficial del evento"
-            isPresent={item.documentos.convocatoria}
-          />
-          <Divider />
-          <DocumentItem
-            title="Aval Técnico"
-            description="Aprobación técnica del DTM"
-            isPresent={item.documentos.avalTecnico}
-          />
-          <Divider />
-          <DocumentItem
-            title="Certificación PDA"
-            description="Presupuesto aprobado"
-            isPresent={item.documentos.pda}
-          />
-          </View>
-        </Surface>
+
+        {/* Expediente Digital */}
+        <SectionTitle title="Expediente Digital" icon="ion:folder-open-outline" />
+        <Card style={{ marginHorizontal: 16 }} mode="outlined">
+          <Card.Content style={{ gap: 12 }}>
+            <Button
+              mode="contained-tonal"
+              icon="ion:document-text-outline"
+              onPress={() => openDocument(item.dtmUrl)}
+              disabled={!item.dtmUrl}
+              contentStyle={{ justifyContent: "flex-start" }}
+            >
+              Aval Técnico (DTM)
+            </Button>
+            <Button
+              mode="contained-tonal"
+              icon="ion:ribbon-outline"
+              onPress={() => openDocument(item.pdaUrl)}
+              disabled={!item.pdaUrl}
+              contentStyle={{ justifyContent: "flex-start" }}
+            >
+              Certificación PDA
+            </Button>
+            <Button
+              mode="contained-tonal"
+              icon="ion:megaphone-outline"
+              onPress={() => openDocument(item.convocatoriaUrl)}
+              disabled={!item.convocatoriaUrl}
+              contentStyle={{ justifyContent: "flex-start" }}
+            >
+              Convocatoria Oficial
+            </Button>
+            <Button
+              mode="contained-tonal"
+              icon="ion:paper-plane-outline"
+              onPress={() => openDocument(item.solicitudUrl)}
+              disabled={!item.solicitudUrl}
+              contentStyle={{ justifyContent: "flex-start" }}
+            >
+              Solicitud Inicial
+            </Button>
+          </Card.Content>
+        </Card>
 
         {/* Observaciones */}
         <SectionTitle title="Observaciones" icon="ion:create-outline" />
@@ -329,41 +429,60 @@ export default function ControlPrevioColeccionDetail() {
         </Card>
       </ScrollView>
 
-      {/* Footer Actions */}
-      <Surface
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: 16,
-          backgroundColor: theme.colors.surface,
-          borderTopWidth: 1,
-          borderTopColor: theme.colors.outlineVariant,
-          flexDirection: "row",
-          gap: 12,
-        }}
-        elevation={4}
-      >
-        <Button
-          mode="outlined"
-          onPress={() => setShowRejectDialog(true)}
-          style={{ flex: 1, borderColor: theme.colors.error }}
-          textColor={theme.colors.error}
-          disabled={isProcessing}
+      {/* Footer Actions - Only if editable */}
+      {isEditable ? (
+        <Surface
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: 16,
+            backgroundColor: theme.colors.surface,
+            borderTopWidth: 1,
+            borderTopColor: theme.colors.outlineVariant,
+            flexDirection: "row",
+            gap: 12,
+          }}
+          elevation={4}
         >
-          Rechazar
-        </Button>
-        <Button
-          mode="contained"
-          onPress={handleAprobar}
-          style={{ flex: 1 }}
-          disabled={isProcessing}
-          loading={isProcessing}
+          <Button
+            mode="outlined"
+            onPress={() => setShowRejectDialog(true)}
+            style={{ flex: 1, borderColor: theme.colors.error }}
+            textColor={theme.colors.error}
+            disabled={isProcessing}
+          >
+            Rechazar
+          </Button>
+          <Button
+            mode="contained"
+            onPress={handleAprobar}
+            style={{ flex: 1 }}
+            disabled={isProcessing}
+            loading={isProcessing}
+          >
+            Aprobar
+          </Button>
+        </Surface>
+      ) : (
+        <Surface
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: 16,
+            backgroundColor: theme.colors.surfaceVariant,
+            alignItems: "center",
+          }}
+          elevation={4}
         >
-          Aprobar
-        </Button>
-      </Surface>
+          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, fontWeight: "bold" }}>
+             Solicitud ya procesada ({item?.etapa})
+          </Text>
+        </Surface>
+      )}
 
       {/* Reject Dialog */}
       <Portal>

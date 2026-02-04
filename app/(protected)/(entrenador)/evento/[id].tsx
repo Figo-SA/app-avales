@@ -8,9 +8,9 @@ import { EmptyState } from "@/presentation/theme/components/EmptyState";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import { toast } from "@backpackapp-io/react-native-toast";
 import {
-    BottomSheetBackdrop,
-    BottomSheetModal,
-    BottomSheetView,
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { useQuery } from "@tanstack/react-query";
 import * as DocumentPicker from "expo-document-picker";
@@ -19,25 +19,36 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
-    Button,
-    Card,
-    Chip,
-    Icon,
-    Surface,
-    Text,
-    useTheme
+  Button,
+  Card,
+  Chip,
+  Icon,
+  Surface,
+  Text,
+  useTheme
 } from "react-native-paper";
 
 export default function EventoDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
+
+  // State for upload
+  const [documento, setDocumento] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Ref para el Bottom Sheet
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
 
   const {
     data: evento,
@@ -129,15 +140,7 @@ export default function EventoDetailScreen() {
 
   const estado = getEstadoInfo();
 
-  const [documento, setDocumento] = useState<{
-    uri: string;
-    name: string;
-    type: string;
-  } | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
 
-  // Ref para el Bottom Sheet
-  const bottomSheetRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["50%", "80%"], []);
 
   const renderBackdrop = useCallback(

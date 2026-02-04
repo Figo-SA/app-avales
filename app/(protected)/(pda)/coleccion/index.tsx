@@ -1,5 +1,13 @@
+import {
+  aprobarSolicitud,
+  rechazarSolicitud,
+} from "@/core/avales/actions/colecciones-actions";
+import { ColeccionAval } from "@/core/avales/interfaces/coleccion";
+import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import { toast } from "@backpackapp-io/react-native-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import * as Haptics from "expo-haptics";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
@@ -21,13 +29,20 @@ export default function PdaColeccionDetail() {
   const router = useRouter();
   const theme = useTheme();
   const params = useLocalSearchParams();
+  const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
   // Parse data from params
-  const item = params.data ? JSON.parse(params.data as string) : null;
+  const item: ColeccionAval | null = params.data
+    ? JSON.parse(params.data as string)
+    : null;
+
+  // Determine if the item is editable based on the current stage
+  const isEditable = item?.etapa === "REVISION_DTM";
 
   if (!item) {
     return (
@@ -43,6 +58,11 @@ export default function PdaColeccionDetail() {
   }
 
   const handleAprobar = async () => {
+    if (!user?.id) {
+      toast.error("No se pudo identificar al usuario");
+      return;
+    }
+
     Alert.alert(
       "Confirmar Aprobación",
       "¿Estás seguro de que deseas aprobar el presupuesto de esta solicitud?",
@@ -53,9 +73,10 @@ export default function PdaColeccionDetail() {
           onPress: async () => {
             try {
               setIsProcessing(true);
-              // TODO: Call API when ready
-              await new Promise((resolve) => setTimeout(resolve, 1000));
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              await aprobarSolicitud(item.id, user.id, "PDA");
               toast.success("Presupuesto aprobado correctamente");
+              queryClient.invalidateQueries({ queryKey: ["colecciones"] });
               router.back();
             } catch (error) {
               console.error(error);
@@ -70,6 +91,11 @@ export default function PdaColeccionDetail() {
   };
 
   const handleRechazar = async () => {
+    if (!user?.id) {
+      toast.error("No se pudo identificar al usuario");
+      return;
+    }
+
     if (!rejectReason.trim()) {
       toast.error("Debes ingresar un motivo de rechazo");
       return;
@@ -77,9 +103,10 @@ export default function PdaColeccionDetail() {
 
     try {
       setIsProcessing(true);
-      // TODO: Call API when ready
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      await rechazarSolicitud(item.id, user.id, rejectReason, "PDA");
       toast.success("Solicitud rechazada correctamente");
+      queryClient.invalidateQueries({ queryKey: ["colecciones"] });
       setShowRejectDialog(false);
       router.back();
     } catch (error) {
@@ -180,27 +207,7 @@ export default function PdaColeccionDetail() {
         </Surface>
 
         {/* Presupuesto Estimado */}
-        <Surface
-          style={{
-            marginHorizontal: 16,
-            padding: 20,
-            borderRadius: 12,
-            backgroundColor: theme.colors.primaryContainer,
-            alignItems: "center",
-          }}
-          elevation={0}
-        >
-          <Icon source="ion:cash-outline" size={32} color={theme.colors.primary} />
-          <Text
-            variant="headlineLarge"
-            style={{ fontWeight: "bold", color: theme.colors.primary, marginTop: 8 }}
-          >
-            ${item.presupuestoEstimado?.toLocaleString() || "0"}
-          </Text>
-          <Text variant="bodyMedium" style={{ color: theme.colors.onPrimaryContainer }}>
-            Presupuesto Estimado
-          </Text>
-        </Surface>
+
 
         <SectionTitle
           title="Información del Evento"
@@ -226,16 +233,16 @@ export default function PdaColeccionDetail() {
           <Card.Content>
             <InfoRow
               label="Salida"
-              value={`${new Date(
+              value={item.avalTecnico ? `${new Date(
                 item.avalTecnico.fechaHoraSalida
-              ).toLocaleString()} (${item.avalTecnico.transporteSalida})`}
+              ).toLocaleString()} (${item.avalTecnico.transporteSalida})` : "N/A"}
             />
             <Divider style={{ marginVertical: 8 }} />
             <InfoRow
               label="Retorno"
-              value={`${new Date(
+              value={item.avalTecnico ? `${new Date(
                 item.avalTecnico.fechaHoraRetorno
-              ).toLocaleString()} (${item.avalTecnico.transporteRetorno})`}
+              ).toLocaleString()} (${item.avalTecnico.transporteRetorno})` : "N/A"}
             />
             <Divider style={{ marginVertical: 8 }} />
             <View
@@ -250,7 +257,7 @@ export default function PdaColeccionDetail() {
                   variant="headlineMedium"
                   style={{ color: theme.colors.primary, fontWeight: "bold" }}
                 >
-                  {item.avalTecnico.atletas}
+                  {item.avalTecnico?.atletas || 0}
                 </Text>
                 <Text variant="bodySmall">Atletas</Text>
               </View>
@@ -265,7 +272,7 @@ export default function PdaColeccionDetail() {
                   variant="headlineMedium"
                   style={{ color: theme.colors.primary, fontWeight: "bold" }}
                 >
-                  {item.avalTecnico.entrenadores}
+                  {item.avalTecnico?.entrenadores || 0}
                 </Text>
                 <Text variant="bodySmall">Entrenadores</Text>
               </View>
@@ -288,43 +295,77 @@ export default function PdaColeccionDetail() {
             </View>
           </Card.Content>
         </Card>
+
+        <View style={{ margin: 16 }}>
+          <Button
+            mode="outlined"
+            icon="ion:document-text-outline"
+            onPress={() => {
+              toast.success("Descargando certificación... (Simulado)");
+              // TODO: Implement actual PDF download
+              // WebBrowser.openBrowserAsync(\`\${API_URL}/avales/\${item.id}/pda-pdf\`);
+            }}
+            style={{ borderColor: theme.colors.primary }}
+          >
+            Generar Certificación PDA
+          </Button>
+        </View>
       </ScrollView>
 
-      {/* Footer Actions */}
-      <Surface
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: 16,
-          backgroundColor: theme.colors.surface,
-          borderTopWidth: 1,
-          borderTopColor: theme.colors.outlineVariant,
-          flexDirection: "row",
-          gap: 12,
-        }}
-        elevation={4}
-      >
-        <Button
-          mode="outlined"
-          onPress={() => setShowRejectDialog(true)}
-          style={{ flex: 1, borderColor: theme.colors.error }}
-          textColor={theme.colors.error}
-          disabled={isProcessing}
+      {/* Footer Actions - Only if editable */}
+      {isEditable ? (
+        <Surface
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: 16,
+            backgroundColor: theme.colors.surface,
+            borderTopWidth: 1,
+            borderTopColor: theme.colors.outlineVariant,
+            flexDirection: "row",
+            gap: 12,
+          }}
+          elevation={4}
         >
-          Rechazar
-        </Button>
-        <Button
-          mode="contained"
-          onPress={handleAprobar}
-          style={{ flex: 1 }}
-          disabled={isProcessing}
-          loading={isProcessing}
+          <Button
+            mode="outlined"
+            onPress={() => setShowRejectDialog(true)}
+            style={{ flex: 1, borderColor: theme.colors.error }}
+            textColor={theme.colors.error}
+            disabled={isProcessing}
+          >
+            Rechazar
+          </Button>
+          <Button
+            mode="contained"
+            onPress={handleAprobar}
+            style={{ flex: 1 }}
+            disabled={isProcessing}
+            loading={isProcessing}
+          >
+            Aprobar Certificación
+          </Button>
+        </Surface>
+      ) : (
+        <Surface
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: 16,
+            backgroundColor: theme.colors.surfaceVariant,
+            alignItems: "center",
+          }}
+          elevation={4}
         >
-          Aprobar PDA
-        </Button>
-      </Surface>
+          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, fontWeight: "bold" }}>
+             Solicitud ya procesada ({item?.etapa})
+          </Text>
+        </Surface>
+      )}
 
       {/* Reject Dialog */}
       <Portal>
@@ -335,7 +376,7 @@ export default function PdaColeccionDetail() {
           <Dialog.Title>Rechazar Solicitud</Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium" style={{ marginBottom: 12 }}>
-              Por favor, indica el motivo del rechazo:
+              Indica el motivo del rechazo:
             </Text>
             <TextInput
               label="Motivo"
@@ -343,7 +384,7 @@ export default function PdaColeccionDetail() {
               onChangeText={setRejectReason}
               mode="outlined"
               multiline
-              numberOfLines={3}
+              numberOfLines={4}
             />
           </Dialog.Content>
           <Dialog.Actions>

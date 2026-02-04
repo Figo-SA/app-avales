@@ -165,10 +165,6 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
 
 
   const onSubmit = async () => {
-    if (!documento) {
-      toast.error("Debes seleccionar un documento");
-      return;
-    }
 
     if (!formData.fechaSalida || !formData.fechaRetorno) {
       toast.error("Las fechas son requeridas");
@@ -737,7 +733,7 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
                 <Button
                   mode="contained"
                   onPress={onSubmit}
-                  disabled={!documento || solicitudMutation.isPending}
+                  disabled={solicitudMutation.isPending}
                   loading={solicitudMutation.isPending}
                   icon="send"
                   style={styles.nextButton}

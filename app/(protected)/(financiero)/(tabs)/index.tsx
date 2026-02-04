@@ -1,295 +1,152 @@
+import { ColeccionListSkeleton } from "@/presentation/coleccion/components/ColeccionCardSkeleton";
+import { ColeccionList } from "@/presentation/coleccion/components/ColeccionList";
+import { useColecciones } from "@/presentation/coleccion/hooks/useColecciones";
+import { ChipFilters } from "@/presentation/theme/components/ChipFilters";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import { FlatList, RefreshControl, View } from "react-native";
-import {
-  Chip,
-  Icon,
-  Surface,
-  Text,
-  TouchableRipple,
-  useTheme,
-} from "react-native-paper";
-
-// Mock data - TODO: Replace with API call when backend is ready
-const MOCK_SOLICITUDES = [
-  {
-    id: 1,
-    evento: {
-      id: 1,
-      nombre: "Campeonato Nacional de Atletismo",
-      codigo: "ATL-2024-001",
-      ciudad: "Quito",
-      provincia: "Pichincha",
-      fechaInicio: "2024-03-15",
-      estado: "APROBADO_SECRETARIA",
-    },
-    descripcion: "Participación en campeonato nacional categoría juvenil",
-    avalTecnico: {
-      atletas: 12,
-      entrenadores: 3,
-    },
-    presupuestoAprobado: 14500,
-    datosFinancieros: {
-      beneficiario: "Federación Deportiva",
-      ruc: "1791234567001",
-      banco: "Banco Pichincha",
-      tipoCuenta: "Corriente",
-      numeroCuenta: "2100012345",
-    },
-    etapaActual: "FINANCIERO",
-  },
-  {
-    id: 2,
-    evento: {
-      id: 2,
-      nombre: "Copa Internacional de Natación",
-      codigo: "NAT-2024-002",
-      ciudad: "Guayaquil",
-      provincia: "Guayas",
-      fechaInicio: "2024-04-20",
-      estado: "APROBADO_SECRETARIA",
-    },
-    descripcion: "Competencia internacional de natación",
-    avalTecnico: {
-      atletas: 8,
-      entrenadores: 2,
-    },
-    presupuestoAprobado: 24000,
-    datosFinancieros: {
-      beneficiario: "Federación Deportiva",
-      ruc: "1791234567001",
-      banco: "Banco del Pacífico",
-      tipoCuenta: "Ahorros",
-      numeroCuenta: "7654321000",
-    },
-    etapaActual: "FINANCIERO",
-  },
-];
-
-type SolicitudFinanciero = (typeof MOCK_SOLICITUDES)[0];
+import { useMemo, useState } from "react";
+import { View } from "react-native";
+import { Icon, Surface, Text, useTheme } from "react-native-paper";
 
 export default function FinancieroDashboard() {
   const theme = useTheme();
-  const router = useRouter();
-  const [refreshing, setRefreshing] = useState(false);
-  const [data] = useState(MOCK_SOLICITUDES);
+  const [activeTab, setActiveTab] = useState<"pendientes" | "historial">("pendientes");
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    // TODO: Implement actual refresh when API is ready
-    setTimeout(() => setRefreshing(false), 1000);
+  const { coleccionesQuery, loadNextPage } = useColecciones({
+    etapa: activeTab === "pendientes" ? "SECRETARIA" : "FINANCIERO",
+  });
+
+  const colecciones =
+    coleccionesQuery.data?.pages.flatMap((page) => page.data ?? []).filter(Boolean) || [];
+  const isInitialLoading =
+    coleccionesQuery.isLoading && colecciones.length === 0;
+
+  // Calculate total pending budget for the current view
+  const totalPendiente = useMemo(() => {
+    return colecciones.reduce((sum, item) => {
+      // Logic to calculate estimated budget from Requerimientos if not available directly
+      const presupuesto = item.avalTecnico?.requerimientos?.reduce(
+        (acc: number, req: any) => acc + (Number(req.cantidadDias) * Number(req.valorUnitario)),
+        0
+      ) || 0;
+      return sum + presupuesto;
+    }, 0);
+  }, [colecciones]);
+
+  const getEmptyStateProps = () => {
+    if (activeTab === "pendientes") {
+      return {
+        icon: "ion:wallet-outline",
+        title: "Al día con los pagos",
+        description: "No hay órdenes de pago pendientes.",
+      };
+    }
+    return {
+      icon: "ion:receipt-outline",
+      title: "Sin historial",
+      description: "No se han realizado pagos aún.",
+    };
   };
 
-  const handlePressItem = (item: SolicitudFinanciero) => {
-    router.push({
-      pathname: "/(protected)/(financiero)/coleccion",
-      params: { data: JSON.stringify(item) },
-    });
-  };
-
-  // Calculate total pending
-  const totalPendiente = data.reduce((sum, item) => sum + item.presupuestoAprobado, 0);
-
-  const renderItem = ({ item }: { item: SolicitudFinanciero }) => (
-    <Surface
-      style={{
-        marginHorizontal: 16,
-        marginBottom: 16,
-        borderRadius: 12,
-        backgroundColor: theme.colors.surface,
-      }}
-      elevation={1}
-    >
-      <View style={{ borderRadius: 12, overflow: "hidden" }}>
-        <TouchableRipple onPress={() => handlePressItem(item)}>
-        <View style={{ padding: 16 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              marginBottom: 12,
-            }}
-          >
-            <View style={{ flex: 1, marginRight: 12 }}>
-              <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
-                {item.evento.nombre}
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant }}
-              >
-                {item.evento.ciudad}, {item.evento.provincia}
-              </Text>
-            </View>
-            <Chip
-              mode="flat"
-              icon="ion:wallet-outline"
-              style={{
-                backgroundColor: theme.colors.primaryContainer,
-              }}
-              textStyle={{
-                color: theme.colors.onPrimaryContainer,
-                fontSize: 12,
-              }}
-            >
-              Por Pagar
-            </Chip>
-          </View>
-
-          <Text
-            variant="bodyMedium"
-            numberOfLines={2}
-            style={{ marginBottom: 12, color: theme.colors.onSurface }}
-          >
-            {item.descripcion}
-          </Text>
-
-          {/* Financial summary */}
-          <Surface
-            style={{
-              padding: 12,
-              borderRadius: 8,
-              backgroundColor: theme.colors.primaryContainer,
-              marginBottom: 12,
-            }}
-            elevation={0}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <View>
-                <Text variant="bodySmall" style={{ color: theme.colors.onPrimaryContainer }}>
-                  Monto Aprobado
-                </Text>
-                <Text
-                  variant="titleLarge"
-                  style={{ fontWeight: "bold", color: theme.colors.primary }}
-                >
-                  ${item.presupuestoAprobado.toLocaleString()}
-                </Text>
-              </View>
-              <View style={{ alignItems: "flex-end" }}>
-                <Text variant="bodySmall" style={{ color: theme.colors.onPrimaryContainer }}>
-                  {item.datosFinancieros.banco}
-                </Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.onPrimaryContainer }}>
-                  {item.datosFinancieros.tipoCuenta}
-                </Text>
-              </View>
-            </View>
-          </Surface>
-
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 16,
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Icon
-                source="ion:calendar-outline"
-                size={16}
-                color={theme.colors.onSurfaceVariant}
-              />
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                {new Date(item.evento.fechaInicio).toLocaleDateString()}
-              </Text>
-            </View>
-
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Icon
-                source="ion:people-outline"
-                size={16}
-                color={theme.colors.onSurfaceVariant}
-              />
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                {item.avalTecnico.atletas + item.avalTecnico.entrenadores} part.
-              </Text>
-            </View>
-          </View>
-        </View>
-        </TouchableRipple>
-      </View>
-    </Surface>
+  const filterOptions = useMemo(
+    () => [
+      {
+        value: "pendientes",
+        label: "Órdenes de Pago",
+        color: "#EA580C",
+      },
+      {
+        value: "historial",
+        label: "Historial Pagos",
+        color: "#059669",
+      },
+    ],
+    []
   );
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      <View style={{ padding: 16, paddingBottom: 8 }}>
-        <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>
-          Aprobación Financiera
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}>
+        <Text
+          variant="titleLarge"
+          style={{ fontWeight: "700", color: theme.colors.onSurface }}
+        >
+          Gestión Financiera
         </Text>
-        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-          Solicitudes pendientes de pago
+        <Text
+          variant="bodySmall"
+          style={{ color: theme.colors.onSurfaceVariant }}
+        >
+          {activeTab === "pendientes" 
+            ? "Órdenes de pago validadas listas para desembolso."
+            : "Historial de pagos ejecutados."}
         </Text>
       </View>
 
-      {/* Total Summary */}
-      <Surface
-        style={{
-          marginHorizontal: 16,
-          marginBottom: 16,
-          padding: 16,
-          borderRadius: 12,
-          backgroundColor: theme.colors.primary,
-        }}
-        elevation={2}
-      >
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <View>
-            <Text variant="bodyMedium" style={{ color: theme.colors.onPrimary, opacity: 0.8 }}>
-              Total Pendiente de Pago
-            </Text>
-            <Text variant="headlineMedium" style={{ fontWeight: "bold", color: theme.colors.onPrimary }}>
-              ${totalPendiente.toLocaleString()}
-            </Text>
-          </View>
-          <View
-            style={{
-              backgroundColor: "rgba(255,255,255,0.2)",
-              padding: 12,
-              borderRadius: 12,
-            }}
-          >
-            <Icon source="ion:cash-outline" size={28} color={theme.colors.onPrimary} />
-          </View>
-        </View>
-        <Text variant="bodySmall" style={{ color: theme.colors.onPrimary, opacity: 0.7, marginTop: 8 }}>
-          {data.length} solicitudes pendientes
-        </Text>
-      </Surface>
-
-      <FlatList
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ paddingBottom: 16 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={{ padding: 32, alignItems: "center" }}>
-            <Icon
-              source="ion:wallet-outline"
-              size={48}
-              color={theme.colors.outline}
-            />
-            <Text
-              variant="bodyLarge"
-              style={{ color: theme.colors.outline, marginTop: 16 }}
+      {/* Summary Card - Only visible in "Pendientes" */}
+      {activeTab === "pendientes" && (
+        <Surface
+          style={{
+            marginHorizontal: 16,
+            marginBottom: 16,
+            padding: 16,
+            borderRadius: 12,
+            backgroundColor: theme.colors.primary,
+          }}
+          elevation={2}
+        >
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <View>
+              <Text variant="bodyMedium" style={{ color: theme.colors.onPrimary, opacity: 0.8 }}>
+                Total Pendiente
+              </Text>
+              <Text variant="headlineMedium" style={{ fontWeight: "bold", color: theme.colors.onPrimary }}>
+                ${totalPendiente.toLocaleString()}
+              </Text>
+            </View>
+            <View
+              style={{
+                backgroundColor: "rgba(255,255,255,0.2)",
+                padding: 12,
+                borderRadius: 12,
+              }}
             >
-              No hay pagos pendientes
-            </Text>
+              <Icon source="ion:cash-outline" size={28} color={theme.colors.onPrimary} />
+            </View>
           </View>
-        }
+          <Text variant="bodySmall" style={{ color: theme.colors.onPrimary, opacity: 0.7, marginTop: 8 }}>
+            {colecciones.length} solicitudes por pagar
+          </Text>
+        </Surface>
+      )}
+
+      <ChipFilters
+        options={filterOptions}
+        selectedValue={activeTab}
+        onValueChange={(val) => setActiveTab(val as any)}
       />
+
+      {isInitialLoading ? (
+        <ColeccionListSkeleton count={5} />
+      ) : (
+        <ColeccionList
+          colecciones={colecciones}
+          emptyStateProps={getEmptyStateProps()}
+          filterKey={activeTab}
+          routePath="/(protected)/(financiero)/coleccion"
+          onEndReached={() => {
+            if (
+              coleccionesQuery.hasNextPage &&
+              !coleccionesQuery.isFetchingNextPage
+            ) {
+              loadNextPage();
+            }
+          }}
+          onEndReachedThreshold={0.5}
+          isLoadingMore={coleccionesQuery.isFetchingNextPage}
+          onRefresh={() => coleccionesQuery.refetch()}
+          isRefreshing={coleccionesQuery.isRefetching}
+        />
+      )}
     </ThemedView>
   );
 }

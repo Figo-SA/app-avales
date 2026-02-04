@@ -8,6 +8,8 @@ export const ROLES = {
   PDA: "PDA",
   FINANCIERO: "FINANCIERO",
   ENTRENADOR: "ENTRENADOR",
+  METODOLOGO: "METODOLOGO",
+  COMPRAS_PUBLICAS: "COMPRAS_PUBLICAS",
 } as const;
 
 export type Role = keyof typeof ROLES;

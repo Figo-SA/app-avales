@@ -36,8 +36,18 @@ export const EventoCard = ({
           icon: "ion:checkmark-circle",
         };
       case "solicitado":
+        const etapaMap: Record<string, string> = {
+          REVISION_METODOLOGO: "Revisión Metodólogo",
+          REVISION_DTM: "Revisión DTM",
+          PDA: "Certificación PDA",
+          COMPRAS_PUBLICAS: "Compras Públicas",
+          CONTROL_PREVIO: "Control Previo",
+          FINANCIERO: "Aprobación Financiera",
+        };
+        const etapaLabel = evento.etapa ? (etapaMap[evento.etapa] || evento.etapa) : "En Revisión";
+
         return {
-          label: "En Revisión",
+          label: etapaLabel,
           color: "#F59E0B",
           bgColor: "#F59E0B15",
           icon: "ion:time",

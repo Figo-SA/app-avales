@@ -1,7 +1,8 @@
+import { ColeccionEstado } from "@/core/avales/actions/colecciones-actions";
 import { ColeccionListSkeleton } from "@/presentation/coleccion/components/ColeccionCardSkeleton";
 import { ColeccionList } from "@/presentation/coleccion/components/ColeccionList";
 import { useColecciones } from "@/presentation/coleccion/hooks/useColecciones";
-import { ChipFilters } from "@/presentation/theme/components/ChipFilters";
+import { ChipFilterOption, ChipFilters } from "@/presentation/theme/components/ChipFilters";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import { useMemo, useState } from "react";
 import { View } from "react-native";
@@ -9,14 +10,13 @@ import { Text, useTheme } from "react-native-paper";
 
 type FilterStatus = "SOLICITADO" | "ACEPTADO" | "RECHAZADO";
 
-export default function DtmDashboard() {
+export default function MetodologoDashboard() {
   const theme = useTheme();
-  const [activeTab, setActiveTab] = useState<"revision" | "historial">("revision");
+  const [selectedStatus, setSelectedStatus] = useState<FilterStatus>("SOLICITADO");
 
   const { coleccionesQuery, counts, loadNextPage } = useColecciones({
-    etapa: activeTab === "revision" ? "REVISION_METODOLOGO" : "REVISION_DTM",
-    // Si quisieramos filtrar por estado global también:
-    // estado: "SOLICITADO" 
+    estado: selectedStatus as ColeccionEstado,
+    etapa: "SOLICITUD",
   });
 
   const colecciones =
@@ -25,36 +25,50 @@ export default function DtmDashboard() {
     coleccionesQuery.isLoading && colecciones.length === 0;
 
   const getEmptyStateProps = () => {
-    if (activeTab === "revision") {
-      return {
-        icon: "ion:list-outline",
-        title: "Todo al día",
-        description: "No tienes trámites pendientes de revisión.",
-      };
+    switch (selectedStatus) {
+      case "SOLICITADO":
+        return {
+          icon: "ion:time-outline",
+          title: "No hay solicitudes pendientes",
+          description: "Las solicitudes de aval pendientes de revisión aparecerán aquí.",
+        };
+      case "RECHAZADO":
+        return {
+          icon: "ion:close-circle-outline",
+          title: "No hay solicitudes rechazadas",
+          description: "Las solicitudes rechazadas aparecerán aquí.",
+        };
+      case "ACEPTADO":
+        return {
+          icon: "ion:checkmark-circle-outline",
+          title: "No hay solicitudes aprobadas",
+          description: "Las solicitudes aprobadas aparecerán aquí.",
+        };
     }
-    return {
-      icon: "ion:checkmark-done-circle-outline",
-      title: "Sin historial",
-      description: "Aún no has aprobado trámites.",
-    };
   };
 
-  const filterOptions = useMemo(
+  const filterOptions: ChipFilterOption<FilterStatus>[] = useMemo(
     () => [
       {
-        value: "revision",
-        label: "Por Revisar",
-        // count: counts?.pending || 0, // Si tuvieramos counts específicos
-        color: "#EA580C", // Naranja (Pendiente)
+        value: "SOLICITADO",
+        label: "Pendientes",
+        count: counts?.solicitado || 0,
+        color: "#EA580C",
       },
       {
-        value: "historial",
-        label: "Mis Aprobaciones",
-        // count: counts?.history || 0,
-        color: "#059669", // Verde (Historial/Listo)
+        value: "ACEPTADO",
+        label: "Aprobadas",
+        count: counts?.aceptado || 0,
+        color: "#059669",
+      },
+      {
+        value: "RECHAZADO",
+        label: "Rechazadas",
+        count: counts?.rechazado || 0,
+        color: "#DC2626",
       },
     ],
-    []
+    [counts]
   );
 
   return (
@@ -64,22 +78,20 @@ export default function DtmDashboard() {
           variant="titleLarge"
           style={{ fontWeight: "700", color: theme.colors.onSurface }}
         >
-          Gestión DTM
+          Solicitudes de Aval
         </Text>
         <Text
           variant="bodySmall"
           style={{ color: theme.colors.onSurfaceVariant }}
         >
-          {activeTab === "revision" 
-            ? "Trámites aprobados por Metodología que requieren tu revisión."
-            : "Historial de trámites que ya has procesado."}
+          Revisa y gestiona las solicitudes de aval técnico.
         </Text>
       </View>
 
       <ChipFilters
         options={filterOptions}
-        selectedValue={activeTab}
-        onValueChange={(val) => setActiveTab(val as any)}
+        selectedValue={selectedStatus}
+        onValueChange={(status) => setSelectedStatus(status as FilterStatus)}
       />
 
       {isInitialLoading ? (
@@ -88,8 +100,8 @@ export default function DtmDashboard() {
         <ColeccionList
           colecciones={colecciones}
           emptyStateProps={getEmptyStateProps()}
-          filterKey={activeTab}
-          routePath="/(protected)/(dtm)/coleccion"
+          filterKey={selectedStatus}
+          routePath="/(protected)/(metodologo)/coleccion"
           onEndReached={() => {
             if (
               coleccionesQuery.hasNextPage &&

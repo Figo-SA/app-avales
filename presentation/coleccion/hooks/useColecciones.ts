@@ -1,19 +1,20 @@
 import {
-  ColeccionEstado,
-  getColecciones,
+    ColeccionEstado,
+    getColecciones,
 } from "@/core/avales/actions/colecciones-actions";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 interface UseColeccionesProps {
   estado?: ColeccionEstado;
   search?: string;
+  etapa?: string;
 }
 
-export const useColecciones = ({ estado, search }: UseColeccionesProps = {}) => {
+export const useColecciones = ({ estado, search, etapa }: UseColeccionesProps = {}) => {
   const coleccionesQuery = useInfiniteQuery({
-    queryKey: ["colecciones", "infinite", { estado, search }],
+    queryKey: ["colecciones", "infinite", { estado, search, etapa }],
     queryFn: ({ pageParam }) => {
-      return getColecciones(pageParam, 10, estado, search);
+      return getColecciones(pageParam, 10, estado, search, etapa);
     },
     staleTime: 1000 * 60 * 5, // 5 minutos
     initialPageParam: 1,

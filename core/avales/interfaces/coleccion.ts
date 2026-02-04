@@ -10,6 +10,7 @@ export interface ColeccionAval {
   solicitudUrl?: string | null;
   aval?: string | null;
   estado: string;
+  etapa?: string; 
   comentario?: string | null;
   createdAt: string;
   updatedAt: string;

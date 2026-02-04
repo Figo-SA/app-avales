@@ -29,8 +29,18 @@ export const ColeccionCard = ({
     const isDark = theme.dark;
     switch (estado?.toUpperCase()) {
       case "SOLICITADO":
+        const etapaMap: Record<string, string> = {
+          REVISION_METODOLOGO: "Revisión Metodólogo",
+          REVISION_DTM: "Revisión DTM",
+          PDA: "Certificación PDA",
+          COMPRAS_PUBLICAS: "Compras Públicas",
+          CONTROL_PREVIO: "Control Previo",
+          FINANCIERO: "Aprobación Financiera",
+        };
+        const label = item.etapa ? (etapaMap[item.etapa] || item.etapa) : "Pendiente";
+        
         return {
-          label: "Pendiente",
+          label: label,
           color: isDark ? "#FBBF24" : "#D97706",
           bg: isDark ? "#78350F" : "#FEF3C7",
           icon: "ion:time-outline",

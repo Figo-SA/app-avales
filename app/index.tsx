@@ -39,12 +39,16 @@ export default function Index() {
         return <Redirect href={"/(protected)/(dtm)" as any} />;
       case ROLES.PDA:
         return <Redirect href={"/(protected)/(pda)" as any} />;
+      case ROLES.COMPRAS_PUBLICAS:
+        return <Redirect href={"/(protected)/(compras-publicas)" as any} />;
       case ROLES.CONTROL_PREVIO:
         return <Redirect href={"/(protected)/(control-previo)" as any} />;
       case ROLES.SECRETARIA:
         return <Redirect href={"/(protected)/(secretaria)" as any} />;
       case ROLES.FINANCIERO:
         return <Redirect href={"/(protected)/(financiero)" as any} />;
+      case ROLES.METODOLOGO:
+        return <Redirect href={"/(protected)/(metodologo)" as any} />;
       case ROLES.ENTRENADOR:
       default:
         return <Redirect href={"/(protected)/(entrenador)" as any} />;

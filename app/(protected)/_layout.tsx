@@ -20,6 +20,7 @@ export default function ProtectedLayout() {
       <Stack.Screen name="(dtm)" />
       <Stack.Screen name="(entrenador)" />
       <Stack.Screen name="(pda)" />
+      <Stack.Screen name="(compras-publicas)" />
       <Stack.Screen name="(control-previo)" />
       <Stack.Screen name="(secretaria)" />
       <Stack.Screen name="(financiero)" />

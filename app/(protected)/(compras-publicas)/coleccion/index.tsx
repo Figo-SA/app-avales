@@ -9,6 +9,7 @@ import { toast } from "@backpackapp-io/react-native-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 import {
@@ -25,7 +26,7 @@ import {
   useTheme,
 } from "react-native-paper";
 
-export default function FinancieroColeccionDetail() {
+export default function ComprasPublicasColeccionDetail() {
   const router = useRouter();
   const theme = useTheme();
   const params = useLocalSearchParams();
@@ -42,7 +43,15 @@ export default function FinancieroColeccionDetail() {
     : null;
 
   // Determine if the item is editable based on the current stage
-  const isEditable = item?.etapa === "SECRETARIA";
+  const isEditable = item?.etapa === "PDA";
+
+  const openDocument = async (url: string | null | undefined) => {
+    if (url) {
+      await WebBrowser.openBrowserAsync(url);
+    } else {
+      toast.error("El documento no está disponible");
+    }
+  };
 
   if (!item) {
     return (
@@ -57,40 +66,30 @@ export default function FinancieroColeccionDetail() {
     );
   }
 
-  const calculateTotalBudget = () => {
-    if (!item.avalTecnico?.requerimientos) return 0;
-    return item.avalTecnico.requerimientos.reduce(
-      (acc: number, req: any) => acc + (Number(req.cantidadDias) * Number(req.valorUnitario)),
-      0
-    );
-  };
-  
-  const totalBudget = calculateTotalBudget();
-
   const handleAprobar = async () => {
     if (!user?.id) {
-        toast.error("Usuario no identificado");
-        return;
+      toast.error("No se pudo identificar al usuario");
+      return;
     }
 
     Alert.alert(
-      "Confirmar Pago",
-      `¿Confirmas la ejecución del pago por $${totalBudget.toLocaleString()}? Esta acción finalizará el trámite.`,
+      "Confirmar Aprobación",
+      "¿Estás seguro de que deseas aprobar el presupuesto de esta solicitud?",
       [
         { text: "Cancelar", style: "cancel" },
         {
-          text: "Ejecutar Pago",
+          text: "Aprobar",
           onPress: async () => {
             try {
               setIsProcessing(true);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              await aprobarSolicitud(item.id, user.id, "FINANCIERO");
-              toast.success("Pago ejecutado. Ciclo finalizado.");
+              await aprobarSolicitud(item.id, user.id, "COMPRAS_PUBLICAS");
+              toast.success("Contratación validada correctamente");
               queryClient.invalidateQueries({ queryKey: ["colecciones"] });
               router.back();
             } catch (error) {
               console.error(error);
-              toast.error("Error al aprobar el pago");
+              toast.error("Error al aprobar el presupuesto");
             } finally {
               setIsProcessing(false);
             }
@@ -102,26 +101,26 @@ export default function FinancieroColeccionDetail() {
 
   const handleRechazar = async () => {
     if (!user?.id) {
-        toast.error("Usuario no identificado");
-        return;
+      toast.error("No se pudo identificar al usuario");
+      return;
     }
 
     if (!rejectReason.trim()) {
-      toast.error("Debes ingresar el motivo del rechazo");
+      toast.error("Debes ingresar un motivo de rechazo");
       return;
     }
 
     try {
       setIsProcessing(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      await rechazarSolicitud(item.id, user.id, rejectReason, "FINANCIERO");
-      toast.success("Pago rechazado correctamente");
+      await rechazarSolicitud(item.id, user.id, rejectReason, "COMPRAS_PUBLICAS");
+      toast.success("Solicitud rechazada correctamente");
       queryClient.invalidateQueries({ queryKey: ["colecciones"] });
       setShowRejectDialog(false);
       router.back();
     } catch (error) {
       console.error(error);
-      toast.error("Error al rechazar el pago");
+      toast.error("Error al rechazar la solicitud");
     } finally {
       setIsProcessing(false);
     }
@@ -176,7 +175,7 @@ export default function FinancieroColeccionDetail() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: "Aprobación de Pago",
+          title: "Detalle de Solicitud",
           headerBackTitle: "Atrás",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: theme.colors.onPrimary,
@@ -216,49 +215,8 @@ export default function FinancieroColeccionDetail() {
           </View>
         </Surface>
 
-        {/* Monto a Pagar */}
-        <Surface
-          style={{
-            marginHorizontal: 16,
-            padding: 24,
-            borderRadius: 16,
-            backgroundColor: theme.colors.primary,
-            alignItems: "center",
-          }}
-          elevation={2}
-        >
-          <Icon source="ion:cash-outline" size={40} color={theme.colors.onPrimary} />
-          <Text
-            variant="displaySmall"
-            style={{ fontWeight: "bold", color: theme.colors.onPrimary, marginTop: 12 }}
-          >
-            ${totalBudget.toLocaleString() || "0"}
-          </Text>
-          <Text variant="bodyLarge" style={{ color: theme.colors.onPrimary, opacity: 0.8 }}>
-            Monto Total a Pagar
-          </Text>
-          <Chip
-            style={{ marginTop: 12, backgroundColor: "rgba(255,255,255,0.2)" }}
-            textStyle={{ color: theme.colors.onPrimary }}
-            icon="ion:checkmark-circle"
-          >
-            Auditado por Control y Secretaría
-          </Chip>
-        </Surface>
+        {/* Presupuesto Estimado */}
 
-        <SectionTitle
-          title="Datos Bancarios"
-          icon="ion:card-outline"
-        />
-        <Card style={{ marginHorizontal: 16 }} mode="outlined">
-          <Card.Content>
-            <InfoRow label="Beneficiario" value={item.evento.nombre} />
-            <Divider style={{ marginVertical: 8 }} />
-            <InfoRow label="RUC" value="176000XXX0001 (Placeholder)" />
-            <Divider style={{ marginVertical: 8 }} />
-            <InfoRow label="Banco" value="Banco Central / Corresponsal" />
-          </Card.Content>
-        </Card>
 
         <SectionTitle
           title="Información del Evento"
@@ -279,133 +237,105 @@ export default function FinancieroColeccionDetail() {
           </Card.Content>
         </Card>
 
-        {/* Participantes */}
-        <SectionTitle title="Participantes" icon="ion:people-outline" />
-        <View style={{ flexDirection: "row", marginHorizontal: 16, gap: 12 }}>
-          <Surface
-            style={{
-              flex: 1,
-              padding: 16,
-              borderRadius: 12,
-              backgroundColor: theme.colors.primaryContainer,
-              alignItems: "center",
-            }}
-            elevation={0}
-          >
-            <Text
-              variant="headlineMedium"
-              style={{ fontWeight: "bold", color: theme.colors.primary }}
-            >
-              {item.avalTecnico?.atletas || 0}
-            </Text>
-            <Text variant="bodySmall" style={{ color: theme.colors.onPrimaryContainer }}>
-              Atletas
-            </Text>
-          </Surface>
-
-          <Surface
-            style={{
-              flex: 1,
-              padding: 16,
-              borderRadius: 12,
-              backgroundColor: theme.colors.secondaryContainer,
-              alignItems: "center",
-            }}
-            elevation={0}
-          >
-            <Text
-              variant="headlineMedium"
-              style={{ fontWeight: "bold", color: theme.colors.secondary }}
-            >
-              {item.avalTecnico?.entrenadores || 0}
-            </Text>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSecondaryContainer }}>
-              Entrenadores
-            </Text>
-          </Surface>
-        </View>
-
-        {/* Verificación */}
-        <SectionTitle title="Verificación" icon="ion:checkbox-outline" />
+        <SectionTitle title="Aval Técnico" icon="ion:list-outline" />
         <Card style={{ marginHorizontal: 16 }} mode="outlined">
           <Card.Content>
+            <InfoRow
+              label="Salida"
+              value={item.avalTecnico ? `${new Date(
+                item.avalTecnico.fechaHoraSalida
+              ).toLocaleString()} (${item.avalTecnico.transporteSalida})` : "N/A"}
+            />
+            <Divider style={{ marginVertical: 8 }} />
+            <InfoRow
+              label="Retorno"
+              value={item.avalTecnico ? `${new Date(
+                item.avalTecnico.fechaHoraRetorno
+              ).toLocaleString()} (${item.avalTecnico.transporteRetorno})` : "N/A"}
+            />
+            <Divider style={{ marginVertical: 8 }} />
             <View
               style={{
                 flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-                paddingVertical: 8,
+                justifyContent: "space-around",
+                marginTop: 8,
               }}
             >
-              <Icon source="ion:checkmark-circle" size={24} color={theme.colors.primary} />
-              <View style={{ flex: 1 }}>
-                <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
-                  Aprobación DTM
+              <View style={{ alignItems: "center" }}>
+                <Text
+                  variant="headlineMedium"
+                  style={{ color: theme.colors.primary, fontWeight: "bold" }}
+                >
+                  {item.avalTecnico?.atletas || 0}
                 </Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                  Revisión técnica completada
-                </Text>
+                <Text variant="bodySmall">Atletas</Text>
               </View>
-            </View>
-            <Divider />
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-                paddingVertical: 8,
-              }}
-            >
-              <Icon source="ion:checkmark-circle" size={24} color={theme.colors.primary} />
-              <View style={{ flex: 1 }}>
-                <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
-                  Aprobación PDA
+              <View
+                style={{
+                  width: 1,
+                  backgroundColor: theme.colors.outlineVariant,
+                }}
+              />
+              <View style={{ alignItems: "center" }}>
+                <Text
+                  variant="headlineMedium"
+                  style={{ color: theme.colors.primary, fontWeight: "bold" }}
+                >
+                  {item.avalTecnico?.entrenadores || 0}
                 </Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                  Presupuesto asignado
-                </Text>
-              </View>
-            </View>
-            <Divider />
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-                paddingVertical: 8,
-              }}
-            >
-              <Icon source="ion:checkmark-circle" size={24} color={theme.colors.primary} />
-              <View style={{ flex: 1 }}>
-                <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
-                  Control Previo
-                </Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                  Documentación verificada
-                </Text>
-              </View>
-            </View>
-            <Divider />
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-                paddingVertical: 8,
-              }}
-            >
-              <Icon source="ion:checkmark-circle" size={24} color={theme.colors.primary} />
-              <View style={{ flex: 1 }}>
-                <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
-                  Aprobación Secretaría (Resolución)
-                </Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                  Oficializado administrativamente
-                </Text>
+                <Text variant="bodySmall">Entrenadores</Text>
               </View>
             </View>
           </Card.Content>
         </Card>
+
+        {/* Items de Presupuesto - Placeholder */}
+        <SectionTitle title="Desglose de Presupuesto" icon="ion:receipt-outline" />
+        <Card style={{ marginHorizontal: 16 }} mode="outlined">
+          <Card.Content>
+            <View style={{ padding: 16, alignItems: "center" }}>
+              <Icon source="ion:construct-outline" size={32} color={theme.colors.outline} />
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.outline, marginTop: 8, textAlign: "center" }}
+              >
+                El desglose del presupuesto estará disponible cuando se integre la API
+              </Text>
+            </View>
+          </Card.Content>
+        </Card>
+        {/* Documentos de Respaldo */}
+        <SectionTitle title="Documentos de Respaldo" icon="ion:folder-open-outline" />
+        <Card style={{ marginHorizontal: 16 }} mode="outlined">
+          <Card.Content style={{ gap: 12 }}>
+            <Button
+              mode="outlined"
+              icon="ion:document-text-outline"
+              onPress={() => openDocument(item.dtmUrl)}
+              disabled={!item.dtmUrl}
+            >
+              Aval Técnico (DTM)
+            </Button>
+            <Button
+              mode="outlined"
+              icon="ion:ribbon-outline"
+              onPress={() => openDocument(item.pdaUrl)}
+              disabled={!item.pdaUrl}
+            >
+              Certificación PDA
+            </Button>
+            <Button
+              mode="outlined"
+              icon="ion:megaphone-outline"
+              onPress={() => openDocument(item.convocatoriaUrl)}
+              disabled={!item.convocatoriaUrl}
+            >
+              Convocatoria
+            </Button>
+          </Card.Content>
+        </Card>
+
+
       </ScrollView>
 
       {/* Footer Actions - Only if editable */}
@@ -440,9 +370,8 @@ export default function FinancieroColeccionDetail() {
             style={{ flex: 1 }}
             disabled={isProcessing}
             loading={isProcessing}
-            icon="ion:checkmark-circle-outline"
           >
-            Aprobar Pago
+            Aprobar Contratación
           </Button>
         </Surface>
       ) : (
@@ -470,10 +399,10 @@ export default function FinancieroColeccionDetail() {
           visible={showRejectDialog}
           onDismiss={() => setShowRejectDialog(false)}
         >
-          <Dialog.Title>Rechazar Pago</Dialog.Title>
+          <Dialog.Title>Rechazar Solicitud</Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium" style={{ marginBottom: 12 }}>
-              Indica el motivo por el que se rechaza el pago:
+              Indica el motivo del rechazo:
             </Text>
             <TextInput
               label="Motivo"
@@ -482,7 +411,6 @@ export default function FinancieroColeccionDetail() {
               mode="outlined"
               multiline
               numberOfLines={4}
-              placeholder="Ej: Datos bancarios incorrectos..."
             />
           </Dialog.Content>
           <Dialog.Actions>
