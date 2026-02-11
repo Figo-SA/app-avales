@@ -98,3 +98,25 @@ export interface EventoListResponse {
   page: number;
   limit: number;
 }
+
+export interface CreateEventoDto {
+  nombre: string;
+  tipoEvento: string;
+  tipoParticipacion: string;
+  genero: string;
+  disciplinaId: number;
+  categoriaId: number;
+  alcance: string;
+  lugar: string;
+  provincia: string;
+  ciudad: string;
+  pais: string;
+  fechaInicio: string;
+  fechaFin: string;
+  numEntrenadoresHombres: number;
+  numEntrenadoresMujeres: number;
+  numAtletasHombres: number;
+  numAtletasMujeres: number;
+}
+
+export interface UpdateEventoDto extends Partial<CreateEventoDto> {}

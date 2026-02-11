@@ -1,7 +1,12 @@
 import { API_ENDPOINTS } from "@/core/api/api.config";
 import { httpClient } from "@/core/api/http-client";
 import { handleApiError } from "@/helpers/error-handler";
-import { Evento, EventosPaginatedResponse } from "../interfaces/evento";
+import {
+  Evento,
+  EventosPaginatedResponse,
+  CreateEventoDto,
+  UpdateEventoDto,
+} from "../interfaces/evento";
 
 export const getEventos = async (
   page = 1,
@@ -69,6 +74,44 @@ export const getEventoById = async (id: number): Promise<Evento | null> => {
     return response.data;
   } catch (error) {
     const errorMessage = handleApiError(error, "getEventoById");
+    throw new Error(errorMessage);
+  }
+};
+
+export const createEvento = async (data: CreateEventoDto): Promise<Evento> => {
+  try {
+    const response = await httpClient.post<Evento>(
+      API_ENDPOINTS.EVENTOS.CREATE,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    const errorMessage = handleApiError(error, "createEvento");
+    throw new Error(errorMessage);
+  }
+};
+
+export const updateEvento = async (
+  id: number,
+  data: UpdateEventoDto
+): Promise<Evento> => {
+  try {
+    const response = await httpClient.patch<Evento>(
+      API_ENDPOINTS.EVENTOS.UPDATE(id),
+      data
+    );
+    return response.data;
+  } catch (error) {
+    const errorMessage = handleApiError(error, "updateEvento");
+    throw new Error(errorMessage);
+  }
+};
+
+export const deleteEvento = async (id: number): Promise<void> => {
+  try {
+    await httpClient.delete(API_ENDPOINTS.EVENTOS.DELETE(id));
+  } catch (error) {
+    const errorMessage = handleApiError(error, "deleteEvento");
     throw new Error(errorMessage);
   }
 };

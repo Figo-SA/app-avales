@@ -60,6 +60,36 @@ export default function SecretariaTabLayout() {
       />
 
       <Tabs.Screen
+        name="eventos"
+        options={{
+          title: "Eventos",
+          headerTitle: "Gestión de Eventos",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              size={24}
+              name={focused ? "calendar" : "calendar-outline"}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="deportistas"
+        options={{
+          title: "Deportistas",
+          headerTitle: "Gestión de Deportistas",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              size={24}
+              name={focused ? "fitness" : "fitness-outline"}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Perfil",

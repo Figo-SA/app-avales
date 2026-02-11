@@ -60,6 +60,51 @@ export default function AdminTabLayout() {
       />
 
       <Tabs.Screen
+        name="usuarios"
+        options={{
+          title: "Usuarios",
+          headerTitle: "Gestión de Usuarios",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              size={24}
+              name={focused ? "people" : "people-outline"}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="eventos"
+        options={{
+          title: "Eventos",
+          headerTitle: "Gestión de Eventos",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              size={24}
+              name={focused ? "calendar" : "calendar-outline"}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="deportistas"
+        options={{
+          title: "Deportistas",
+          headerTitle: "Gestión de Deportistas",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              size={24}
+              name={focused ? "fitness" : "fitness-outline"}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Perfil",

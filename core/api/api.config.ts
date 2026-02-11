@@ -63,8 +63,15 @@ export const API_ENDPOINTS = {
     LIST: "/users",
     ENTRENADORES: "/users/entrenadores",
     GET_BY_ID: (id: number) => `/users/${id}`,
+    CREATE: "/users",
+    UPDATE: (id: number) => `/users/${id}`,
+    DELETE: (id: number) => `/users/${id}`,
     UPDATE_PROFILE: "/users/profile",
     UPDATE_PUSH_TOKEN: "/users/me/push-token",
+  },
+  CATALOG: {
+    CATEGORIAS: "/catalog/categorias",
+    DISCIPLINAS: "/catalog/disciplinas",
   },
   STATISTICS: {
     ALL: "/statistics",

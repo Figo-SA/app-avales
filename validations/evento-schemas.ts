@@ -90,5 +90,33 @@ export const eventoFiltersSchema = z.object({
   limit: z.string().optional(),
 });
 
+export const adminEventoSchema = z.object({
+  nombre: z.string()
+    .min(3, 'El nombre debe tener al menos 3 caracteres')
+    .max(100, 'El nombre no puede exceder 100 caracteres'),
+  tipoEvento: z.string().min(1, 'El tipo de evento es requerido'),
+  tipoParticipacion: z.string().min(1, 'El tipo de participación es requerido'),
+  genero: z.string().min(1, 'Selecciona un género'),
+  disciplinaId: z.number({ required_error: 'Selecciona una disciplina' }).min(1, 'Selecciona una disciplina'),
+  categoriaId: z.number({ required_error: 'Selecciona una categoría' }).min(1, 'Selecciona una categoría'),
+  alcance: z.string().min(1, 'El alcance es requerido'),
+  lugar: z.string()
+    .min(3, 'El lugar debe tener al menos 3 caracteres')
+    .max(200, 'El lugar no puede exceder 200 caracteres'),
+  provincia: z.string().min(1, 'La provincia es requerida'),
+  ciudad: z.string().min(1, 'La ciudad es requerida'),
+  pais: z.string().min(1, 'El país es requerido'),
+  fechaInicio: z.date({ required_error: 'La fecha de inicio es requerida' }),
+  fechaFin: z.date({ required_error: 'La fecha de fin es requerida' }),
+  numEntrenadoresHombres: z.number().min(0, 'No puede ser negativo'),
+  numEntrenadoresMujeres: z.number().min(0, 'No puede ser negativo'),
+  numAtletasHombres: z.number().min(0, 'No puede ser negativo'),
+  numAtletasMujeres: z.number().min(0, 'No puede ser negativo'),
+}).refine((data) => data.fechaFin >= data.fechaInicio, {
+  message: 'La fecha de fin debe ser posterior o igual a la fecha de inicio',
+  path: ['fechaFin'],
+});
+
 export type EventoFormData = z.infer<typeof eventoSchema>;
 export type EventoFiltersData = z.infer<typeof eventoFiltersSchema>;
+export type AdminEventoFormData = z.infer<typeof adminEventoSchema>;
