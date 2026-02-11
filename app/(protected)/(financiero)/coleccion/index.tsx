@@ -41,9 +41,6 @@ export default function FinancieroColeccionDetail() {
     ? JSON.parse(params.data as string)
     : null;
 
-  // Determine if the item is editable based on the current stage
-  const isEditable = item?.etapa === "SECRETARIA";
-
   if (!item) {
     return (
       <ThemedView
@@ -57,15 +54,10 @@ export default function FinancieroColeccionDetail() {
     );
   }
 
-  const calculateTotalBudget = () => {
-    if (!item.avalTecnico?.requerimientos) return 0;
-    return item.avalTecnico.requerimientos.reduce(
-      (acc: number, req: any) => acc + (Number(req.cantidadDias) * Number(req.valorUnitario)),
-      0
-    );
-  };
-  
-  const totalBudget = calculateTotalBudget();
+  const totalBudget = item.evento.presupuesto?.reduce(
+    (sum, p) => sum + Number(p.presupuesto),
+    0
+  ) || 0;
 
   const handleAprobar = async () => {
     if (!user?.id) {
@@ -408,61 +400,42 @@ export default function FinancieroColeccionDetail() {
         </Card>
       </ScrollView>
 
-      {/* Footer Actions - Only if editable */}
-      {isEditable ? (
-        <Surface
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: 16,
-            backgroundColor: theme.colors.surface,
-            borderTopWidth: 1,
-            borderTopColor: theme.colors.outlineVariant,
-            flexDirection: "row",
-            gap: 12,
-          }}
-          elevation={4}
+      {/* Footer Actions */}
+      <Surface
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: 16,
+          backgroundColor: theme.colors.surface,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.outlineVariant,
+          flexDirection: "row",
+          gap: 12,
+        }}
+        elevation={4}
+      >
+        <Button
+          mode="outlined"
+          onPress={() => setShowRejectDialog(true)}
+          style={{ flex: 1, borderColor: theme.colors.error }}
+          textColor={theme.colors.error}
+          disabled={isProcessing}
         >
-          <Button
-            mode="outlined"
-            onPress={() => setShowRejectDialog(true)}
-            style={{ flex: 1, borderColor: theme.colors.error }}
-            textColor={theme.colors.error}
-            disabled={isProcessing}
-          >
-            Rechazar
-          </Button>
-          <Button
-            mode="contained"
-            onPress={handleAprobar}
-            style={{ flex: 1 }}
-            disabled={isProcessing}
-            loading={isProcessing}
-            icon="ion:checkmark-circle-outline"
-          >
-            Aprobar Pago
-          </Button>
-        </Surface>
-      ) : (
-        <Surface
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: 16,
-            backgroundColor: theme.colors.surfaceVariant,
-            alignItems: "center",
-          }}
-          elevation={4}
+          Rechazar
+        </Button>
+        <Button
+          mode="contained"
+          onPress={handleAprobar}
+          style={{ flex: 1 }}
+          disabled={isProcessing}
+          loading={isProcessing}
+          icon="ion:checkmark-circle-outline"
         >
-          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, fontWeight: "bold" }}>
-             Solicitud ya procesada ({item?.etapa})
-          </Text>
-        </Surface>
-      )}
+          Aprobar Pago
+        </Button>
+      </Surface>
 
       {/* Reject Dialog */}
       <Portal>

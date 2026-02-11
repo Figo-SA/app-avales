@@ -1,4 +1,4 @@
-import { getStatusConfig } from "@/core/avales/helpers/statusHelper";
+import { getEstadoBadge } from "@/core/constants/avales.constants";
 import { Aval } from "@/core/avales/interfaces/aval";
 import { router } from "expo-router";
 import React from "react";
@@ -6,8 +6,8 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { Card, Chip, Icon, Surface, Text, useTheme } from "react-native-paper";
 
 export const AvalCard = ({ aval }: { aval: Aval }) => {
-  const statusConfig = getStatusConfig(aval.status);
   const theme = useTheme();
+  const statusConfig = getEstadoBadge(aval.estado, aval.etapaActual, theme.dark);
 
   const handlePress = () => {
     router.push(`/(entrenador)/aval/${aval.id}`);

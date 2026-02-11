@@ -7,10 +7,10 @@ export const useAvalFilters = (avales: Aval[]) => {
   const counts = useMemo(() => {
     return {
       all: avales.length,
-      sent: avales.filter((a) => a.status === "sent").length,
-      pending: avales.filter((a) => a.status === "pending").length,
-      approved: avales.filter((a) => a.status === "approved").length,
-      rejected: avales.filter((a) => a.status === "rejected").length,
+      solicitado: avales.filter((a) => a.estado === "SOLICITADO").length,
+      borrador: avales.filter((a) => a.estado === "BORRADOR").length,
+      aceptado: avales.filter((a) => a.estado === "ACEPTADO").length,
+      rechazado: avales.filter((a) => a.estado === "RECHAZADO").length,
     };
   }, [avales]);
 
@@ -19,7 +19,7 @@ export const useAvalFilters = (avales: Aval[]) => {
     if (selectedStatus === "all") {
       return avales;
     }
-    return avales.filter((aval) => aval.status === selectedStatus);
+    return avales.filter((aval) => aval.estado === selectedStatus);
   }, [avales, selectedStatus]);
 
   return {

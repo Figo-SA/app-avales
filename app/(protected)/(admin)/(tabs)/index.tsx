@@ -9,14 +9,7 @@ import { ActivityIndicator, Surface, Text, useTheme } from "react-native-paper";
 
 const screenWidth = Dimensions.get("window").width;
 
-// Colores para las gráficas
-const ESTADO_COLORS: Record<string, string> = {
-  DISPONIBLE: "#9E9E9E",
-  BORRADOR: "#FF9800",
-  SOLICITADO: "#2196F3",
-  RECHAZADO: "#F44336",
-  ACEPTADO: "#4CAF50",
-};
+import { ESTADO_COLORS } from "@/core/constants/avales.constants";
 
 const CATEGORY_COLORS = ["#6366F1", "#8B5CF6", "#A855F7", "#D946EF", "#EC4899", "#F43F5E"];
 

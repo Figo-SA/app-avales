@@ -42,9 +42,6 @@ export default function ComprasPublicasColeccionDetail() {
     ? JSON.parse(params.data as string)
     : null;
 
-  // Determine if the item is editable based on the current stage
-  const isEditable = item?.etapa === "PDA";
-
   const openDocument = async (url: string | null | undefined) => {
     if (url) {
       await WebBrowser.openBrowserAsync(url);
@@ -228,7 +225,10 @@ export default function ComprasPublicasColeccionDetail() {
             <Divider style={{ marginVertical: 8 }} />
             <InfoRow label="Ciudad" value={item.evento.ciudad} />
             <Divider style={{ marginVertical: 8 }} />
-            <InfoRow label="Provincia" value={item.evento.provincia} />
+            <InfoRow
+              label="Provincia"
+              value={item.evento.provincia}
+            />
             <Divider style={{ marginVertical: 8 }} />
             <InfoRow
               label="Fecha"
@@ -289,17 +289,77 @@ export default function ComprasPublicasColeccionDetail() {
           </Card.Content>
         </Card>
 
-        {/* Items de Presupuesto - Placeholder */}
-        <SectionTitle title="Desglose de Presupuesto" icon="ion:receipt-outline" />
+        {/* Desglose Presupuestario Real */}
+        <SectionTitle title="Presupuesto Certificado" icon="ion:receipt-outline" />
         <Card style={{ marginHorizontal: 16 }} mode="outlined">
-          <Card.Content>
-            <View style={{ padding: 16, alignItems: "center" }}>
-              <Icon source="ion:construct-outline" size={32} color={theme.colors.outline} />
-              <Text
-                variant="bodyMedium"
-                style={{ color: theme.colors.outline, marginTop: 8, textAlign: "center" }}
-              >
-                El desglose del presupuesto estará disponible cuando se integre la API
+          <Card.Content style={{ padding: 0 }}>
+            {/* Table Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                backgroundColor: theme.colors.surfaceVariant,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderTopLeftRadius: 12,
+                borderTopRightRadius: 12,
+              }}
+            >
+              <Text variant="labelMedium" style={{ flex: 2, fontWeight: "bold" }}>Item</Text>
+              <Text variant="labelMedium" style={{ flex: 1, fontWeight: "bold", textAlign: "center" }}>Mes</Text>
+              <Text variant="labelMedium" style={{ flex: 1, fontWeight: "bold", textAlign: "right" }}>Monto</Text>
+            </View>
+
+            {/* Table Body */}
+            {item.evento.presupuesto && item.evento.presupuesto.length > 0 ? (
+              item.evento.presupuesto.map((p, index) => (
+                <View key={p.id}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      paddingVertical: 12,
+                      paddingHorizontal: 16,
+                      alignItems: "center",
+                    }}
+                  >
+                    <View style={{ flex: 2 }}>
+                      <Text variant="bodySmall" style={{ fontWeight: "bold" }}>
+                        {p.item.nombre}
+                      </Text>
+                      <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                        {p.item.numero}
+                      </Text>
+                    </View>
+                    <Text variant="bodySmall" style={{ flex: 1, textAlign: "center" }}>
+                      {["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"][p.mes - 1]}
+                    </Text>
+                    <Text variant="bodySmall" style={{ flex: 1, textAlign: "right", fontWeight: "600" }}>
+                      ${Number(p.presupuesto).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </Text>
+                  </View>
+                  {index < (item.evento.presupuesto?.length || 0) - 1 && <Divider />}
+                </View>
+              ))
+            ) : (
+                <View style={{ padding: 16, alignItems: "center" }}>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>
+                    No hay asignación presupuestaria registrada
+                  </Text>
+                </View>
+            )}
+
+            {/* Table Footer (Total) */}
+            <Divider />
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                padding: 16,
+                backgroundColor: "rgba(0,0,0,0.02)",
+              }}
+            >
+              <Text variant="titleMedium" style={{ fontWeight: "bold" }}>Total Certificado</Text>
+              <Text variant="titleMedium" style={{ fontWeight: "bold", color: theme.colors.primary }}>
+                ${(item.evento.presupuesto?.reduce((sum, p) => sum + Number(p.presupuesto), 0) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </Text>
             </View>
           </Card.Content>
@@ -338,60 +398,41 @@ export default function ComprasPublicasColeccionDetail() {
 
       </ScrollView>
 
-      {/* Footer Actions - Only if editable */}
-      {isEditable ? (
-        <Surface
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: 16,
-            backgroundColor: theme.colors.surface,
-            borderTopWidth: 1,
-            borderTopColor: theme.colors.outlineVariant,
-            flexDirection: "row",
-            gap: 12,
-          }}
-          elevation={4}
+      {/* Footer Actions */}
+      <Surface
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: 16,
+          backgroundColor: theme.colors.surface,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.outlineVariant,
+          flexDirection: "row",
+          gap: 12,
+        }}
+        elevation={4}
+      >
+        <Button
+          mode="outlined"
+          onPress={() => setShowRejectDialog(true)}
+          style={{ flex: 1, borderColor: theme.colors.error }}
+          textColor={theme.colors.error}
+          disabled={isProcessing}
         >
-          <Button
-            mode="outlined"
-            onPress={() => setShowRejectDialog(true)}
-            style={{ flex: 1, borderColor: theme.colors.error }}
-            textColor={theme.colors.error}
-            disabled={isProcessing}
-          >
-            Rechazar
-          </Button>
-          <Button
-            mode="contained"
-            onPress={handleAprobar}
-            style={{ flex: 1 }}
-            disabled={isProcessing}
-            loading={isProcessing}
-          >
-            Aprobar Contratación
-          </Button>
-        </Surface>
-      ) : (
-        <Surface
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: 16,
-            backgroundColor: theme.colors.surfaceVariant,
-            alignItems: "center",
-          }}
-          elevation={4}
+          Rechazar
+        </Button>
+        <Button
+          mode="contained"
+          onPress={handleAprobar}
+          style={{ flex: 1 }}
+          disabled={isProcessing}
+          loading={isProcessing}
         >
-          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, fontWeight: "bold" }}>
-             Solicitud ya procesada ({item?.etapa})
-          </Text>
-        </Surface>
-      )}
+          Aprobar Contratación
+        </Button>
+      </Surface>
 
       {/* Reject Dialog */}
       <Portal>
@@ -402,7 +443,7 @@ export default function ComprasPublicasColeccionDetail() {
           <Dialog.Title>Rechazar Solicitud</Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium" style={{ marginBottom: 12 }}>
-              Indica el motivo del rechazo:
+              Por favor, indica el motivo del rechazo:
             </Text>
             <TextInput
               label="Motivo"
@@ -410,7 +451,7 @@ export default function ComprasPublicasColeccionDetail() {
               onChangeText={setRejectReason}
               mode="outlined"
               multiline
-              numberOfLines={4}
+              numberOfLines={3}
             />
           </Dialog.Content>
           <Dialog.Actions>

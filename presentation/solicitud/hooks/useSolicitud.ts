@@ -4,44 +4,132 @@ import {
 } from "@/validations/solicitud-schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { uploadConvocatoria } from "@/core/solicitud/actions/solicitud-actions";
+import {
+  useSolicitudDraftStore,
+  type SolicitudDraft,
+} from "@/presentation/solicitud/store/useSolicitudDraftStore";
 import { toast } from "@backpackapp-io/react-native-toast";
 
+const DEFAULT_VALUES: SolicitudCompletaData = {
+  fechaSalida: undefined as any,
+  fechaRetorno: undefined as any,
+  lugarSalida: "",
+  lugarRetorno: "",
+  transporteSalida: "",
+  transporteRetorno: "",
+  objetivos: ["", ""],
+  criterios: ["", ""],
+  deportistas: [],
+  entrenadores: [],
+  documento: null,
+  certificadoMedico: null,
+  coleccionAvalId: undefined,
+  observaciones: "",
+};
+
 export const useSolicitud = (eventoId: string, initialStep: number = 1, existingColeccionId?: number) => {
-  const [step, setStep] = useState(initialStep);
+  // Si ya hay coleccionId existente, saltar paso 1 (documentos ya subidos)
+  const [step, setStep] = useState(existingColeccionId ? Math.max(initialStep, 2) : initialStep);
   const [isUploading, setIsUploading] = useState(false);
-  const totalSteps = 5;
+  const [isDraftLoading, setIsDraftLoading] = useState(true);
+  const totalSteps = 6;
+  const draftLoaded = useRef(false);
+  const prevEventoId = useRef(eventoId);
+
+  const { saveDraft, loadDraft } = useSolicitudDraftStore();
 
   // React Hook Form con validación de Zod
   const {
     control,
     watch,
     setValue,
+    getValues,
+    reset,
     formState: { errors, isValid },
     trigger,
   } = useForm<SolicitudCompletaData>({
     resolver: zodResolver(solicitudCompletaSchema),
     mode: "onChange",
     defaultValues: {
-      fechaSalida: undefined,
-      fechaRetorno: undefined,
-      transporteSalida: "",
-      transporteRetorno: "",
-      objetivos: ["", ""],
-      criterios: ["", ""],
-      deportistas: [],
-      entrenadores: [],
-      documento: null,
+      ...DEFAULT_VALUES,
       coleccionAvalId: existingColeccionId,
-      observaciones: "",
     },
   });
 
+  // Resetear formulario cuando cambia el eventoId
+  useEffect(() => {
+    if (prevEventoId.current !== eventoId) {
+      prevEventoId.current = eventoId;
+      draftLoaded.current = false;
+      reset({ ...DEFAULT_VALUES, coleccionAvalId: existingColeccionId });
+      setStep(existingColeccionId ? Math.max(initialStep, 2) : initialStep);
+      setIsDraftLoading(true);
+    }
+  }, [eventoId]);
+
   // Watch para acceder a los valores actuales del formulario
   const formData = watch();
+
+  // Construir draft serializable desde los valores actuales del form
+  const buildDraft = (currentStep: number): SolicitudDraft => {
+    const values = getValues();
+    return {
+      step: currentStep,
+      coleccionAvalId: values.coleccionAvalId,
+      fechaSalida: values.fechaSalida?.toISOString(),
+      fechaRetorno: values.fechaRetorno?.toISOString(),
+      lugarSalida: values.lugarSalida,
+      lugarRetorno: values.lugarRetorno,
+      transporteSalida: values.transporteSalida,
+      transporteRetorno: values.transporteRetorno,
+      objetivos: values.objetivos,
+      criterios: values.criterios,
+      deportistas: values.deportistas,
+      entrenadores: values.entrenadores,
+      observaciones: values.observaciones || "",
+    };
+  };
+
+  // Cargar draft al inicializar
+  useEffect(() => {
+    if (draftLoaded.current) return;
+    draftLoaded.current = true;
+
+    const restoreDraft = async () => {
+      try {
+        const draft = await loadDraft(eventoId);
+        if (!draft) return;
+
+        // Restaurar campos serializables
+        if (draft.fechaSalida) setValue("fechaSalida", new Date(draft.fechaSalida));
+        if (draft.fechaRetorno) setValue("fechaRetorno", new Date(draft.fechaRetorno));
+        if (draft.lugarSalida) setValue("lugarSalida", draft.lugarSalida);
+        if (draft.lugarRetorno) setValue("lugarRetorno", draft.lugarRetorno);
+        if (draft.transporteSalida) setValue("transporteSalida", draft.transporteSalida);
+        if (draft.transporteRetorno) setValue("transporteRetorno", draft.transporteRetorno);
+        if (draft.objetivos?.length) setValue("objetivos", draft.objetivos);
+        if (draft.criterios?.length) setValue("criterios", draft.criterios);
+        if (draft.deportistas?.length) setValue("deportistas", draft.deportistas);
+        if (draft.entrenadores?.length) setValue("entrenadores", draft.entrenadores);
+        if (draft.observaciones) setValue("observaciones", draft.observaciones);
+        if (draft.coleccionAvalId) setValue("coleccionAvalId", draft.coleccionAvalId);
+
+        // Si ya se subieron documentos, ir mínimo a paso 2
+        if (draft.coleccionAvalId) {
+          const restoredStep = Math.max(draft.step || 2, 2);
+          setStep(Math.min(restoredStep, totalSteps));
+        }
+      } finally {
+        setIsDraftLoading(false);
+      }
+    };
+
+    restoreDraft();
+  }, [eventoId]);
 
   // Actualizar un campo del formulario usando setValue de React Hook Form
   const updateFormData = (field: keyof SolicitudCompletaData, value: any) => {
@@ -97,15 +185,19 @@ export const useSolicitud = (eventoId: string, initialStep: number = 1, existing
   const getCanContinue = () => {
     switch (step) {
       case 1:
-        return formData.documento !== null && !errors.documento;
+        return formData.documento !== null && formData.certificadoMedico !== null && !errors.documento && !errors.certificadoMedico;
       case 2:
         return (
           formData.fechaSalida &&
           formData.fechaRetorno &&
+          formData.lugarSalida &&
+          formData.lugarRetorno &&
           formData.transporteSalida &&
           formData.transporteRetorno &&
           !errors.fechaSalida &&
           !errors.fechaRetorno &&
+          !errors.lugarSalida &&
+          !errors.lugarRetorno &&
           !errors.transporteSalida &&
           !errors.transporteRetorno
         );
@@ -126,6 +218,9 @@ export const useSolicitud = (eventoId: string, initialStep: number = 1, existing
           !errors.deportistas &&
           !errors.entrenadores
         );
+      case 6:
+        // Paso de resumen, siempre se puede enviar
+        return true;
       default:
         return false;
     }
@@ -139,12 +234,14 @@ export const useSolicitud = (eventoId: string, initialStep: number = 1, existing
 
     switch (step) {
       case 1:
-        fieldsToValidate = ["documento"];
+        fieldsToValidate = ["documento", "certificadoMedico"];
         break;
       case 2:
         fieldsToValidate = [
           "fechaSalida",
           "fechaRetorno",
+          "lugarSalida",
+          "lugarRetorno",
           "transporteSalida",
           "transporteRetorno",
         ];
@@ -158,6 +255,9 @@ export const useSolicitud = (eventoId: string, initialStep: number = 1, existing
       case 5:
         fieldsToValidate = ["deportistas", "entrenadores"];
         break;
+      case 6:
+        // Paso de resumen, no necesita validación adicional
+        break;
     }
 
     // Validar solo los campos del paso actual
@@ -168,16 +268,24 @@ export const useSolicitud = (eventoId: string, initialStep: number = 1, existing
       if (step === 1) {
         // Verificar si ya se subió (por si el usuario retrocedió)
         if (formData.coleccionAvalId) {
-          setStep(step + 1);
+          const nextStep = step + 1;
+          setStep(nextStep);
+          saveDraft(eventoId, buildDraft(nextStep));
           return;
         }
 
         try {
           setIsUploading(true);
-          const result = await uploadConvocatoria(Number(eventoId), formData.documento);
+          const result = await uploadConvocatoria(Number(eventoId), formData.documento, formData.certificadoMedico);
           setValue("coleccionAvalId", result.coleccionAvalId);
           toast.success("Convocatoria subida correctamente");
-          setStep(step + 1);
+          const nextStep = step + 1;
+          setStep(nextStep);
+          // Guardar draft con coleccionAvalId recién obtenido
+          saveDraft(eventoId, {
+            ...buildDraft(nextStep),
+            coleccionAvalId: result.coleccionAvalId,
+          });
         } catch (error) {
           console.error("Error al subir convocatoria:", error);
           toast.error(
@@ -187,15 +295,21 @@ export const useSolicitud = (eventoId: string, initialStep: number = 1, existing
           setIsUploading(false);
         }
       } else {
-        setStep(step + 1);
+        const nextStep = step + 1;
+        setStep(nextStep);
+        saveDraft(eventoId, buildDraft(nextStep));
       }
     }
   };
 
   // Retroceder al paso anterior
+  // Si ya se subieron documentos (coleccionAvalId), no volver a paso 1
   const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1);
+    const minStep = formData.coleccionAvalId ? 2 : 1;
+    if (step > minStep) {
+      const prevStep = step - 1;
+      setStep(prevStep);
+      saveDraft(eventoId, buildDraft(prevStep));
     } else {
       router.back();
     }
@@ -208,6 +322,7 @@ export const useSolicitud = (eventoId: string, initialStep: number = 1, existing
     formData,
     errors,
     isUploading,
+    isDraftLoading,
 
     // React Hook Form
     control,

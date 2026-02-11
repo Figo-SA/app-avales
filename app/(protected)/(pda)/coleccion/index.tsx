@@ -22,7 +22,7 @@ import {
   Surface,
   Text,
   TextInput,
-  useTheme,
+  useTheme
 } from "react-native-paper";
 
 export default function PdaColeccionDetail() {
@@ -35,14 +35,29 @@ export default function PdaColeccionDetail() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
+  const [formData, setFormData] = useState({
+    descripcion: "",
+    numeroPda: "",
+    numeroAval: "",
+    codigoActividad: "",
+    nombreFirmante: "",
+    cargoFirmante: "Metodólogo Provincial",
+  });
 
   // Parse data from params
   const item: ColeccionAval | null = params.data
     ? JSON.parse(params.data as string)
     : null;
 
-  // Determine if the item is editable based on the current stage
-  const isEditable = item?.etapa === "REVISION_DTM";
+  // Initialize form data when item loads
+  if (item && !formData.descripcion) {
+    setFormData((prev) => ({
+      ...prev,
+      descripcion: item.descripcion,
+      nombreFirmante: user ? `${user.nombre} ${user.apellido}`.trim() : "",
+    }));
+  }
 
   if (!item) {
     return (
@@ -281,91 +296,244 @@ export default function PdaColeccionDetail() {
         </Card>
 
         {/* Items de Presupuesto - Placeholder */}
-        <SectionTitle title="Desglose de Presupuesto" icon="ion:receipt-outline" />
+        {/* Desglose Presupuestario Real */}
+        <SectionTitle title="Certificación Presupuestaria" icon="ion:receipt-outline" />
         <Card style={{ marginHorizontal: 16 }} mode="outlined">
-          <Card.Content>
-            <View style={{ padding: 16, alignItems: "center" }}>
-              <Icon source="ion:construct-outline" size={32} color={theme.colors.outline} />
-              <Text
-                variant="bodyMedium"
-                style={{ color: theme.colors.outline, marginTop: 8, textAlign: "center" }}
-              >
-                El desglose del presupuesto estará disponible cuando se integre la API
+          <Card.Content style={{ padding: 0 }}>
+            {/* Table Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                backgroundColor: theme.colors.surfaceVariant,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                borderTopLeftRadius: 12,
+                borderTopRightRadius: 12,
+              }}
+            >
+              <Text variant="labelMedium" style={{ flex: 2, fontWeight: "bold" }}>Item</Text>
+              <Text variant="labelMedium" style={{ flex: 1, fontWeight: "bold", textAlign: "center" }}>Mes</Text>
+              <Text variant="labelMedium" style={{ flex: 1, fontWeight: "bold", textAlign: "right" }}>Monto</Text>
+            </View>
+
+            {/* Table Body */}
+            {item.evento.presupuesto && item.evento.presupuesto.length > 0 ? (
+              item.evento.presupuesto.map((p, index) => (
+                <View key={p.id}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      paddingVertical: 12,
+                      paddingHorizontal: 16,
+                      alignItems: "center",
+                    }}
+                  >
+                    <View style={{ flex: 2 }}>
+                      <Text variant="bodySmall" style={{ fontWeight: "bold" }}>
+                        {p.item.nombre}
+                      </Text>
+                      <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+                        {p.item.numero}
+                      </Text>
+                    </View>
+                    <Text variant="bodySmall" style={{ flex: 1, textAlign: "center" }}>
+                      {["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"][p.mes - 1]}
+                    </Text>
+                    <Text variant="bodySmall" style={{ flex: 1, textAlign: "right", fontWeight: "600" }}>
+                      ${Number(p.presupuesto).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </Text>
+                  </View>
+                  {index < (item.evento.presupuesto?.length || 0) - 1 && <Divider />}
+                </View>
+              ))
+            ) : (
+                <View style={{ padding: 16, alignItems: "center" }}>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.outline }}>
+                    No hay asignación presupuestaria registrada
+                  </Text>
+                </View>
+            )}
+
+            {/* Table Footer (Total) */}
+            <Divider />
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                padding: 16,
+                backgroundColor: "rgba(0,0,0,0.02)",
+              }}
+            >
+              <Text variant="titleMedium" style={{ fontWeight: "bold" }}>Total Certificado</Text>
+              <Text variant="titleMedium" style={{ fontWeight: "bold", color: theme.colors.primary }}>
+                ${(item.evento.presupuesto?.reduce((sum, p) => sum + Number(p.presupuesto), 0) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </Text>
             </View>
           </Card.Content>
         </Card>
 
-        <View style={{ margin: 16 }}>
-          <Button
-            mode="outlined"
-            icon="ion:document-text-outline"
-            onPress={() => {
-              toast.success("Descargando certificación... (Simulado)");
-              // TODO: Implement actual PDF download
-              // WebBrowser.openBrowserAsync(\`\${API_URL}/avales/\${item.id}/pda-pdf\`);
-            }}
-            style={{ borderColor: theme.colors.primary }}
-          >
-            Generar Certificación PDA
-          </Button>
-        </View>
+        <SectionTitle
+          title="Generar Documento PDA"
+          icon="ion:document-text-outline"
+        />
+        <Card style={{ marginHorizontal: 16 }} mode="outlined">
+          <Card.Content>
+            <TextInput
+              label="Descripción"
+              value={formData.descripcion}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, descripcion: text }))
+              }
+              mode="outlined"
+              multiline
+              numberOfLines={3}
+              style={{ marginBottom: 12 }}
+            />
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <TextInput
+                label="No. PDA"
+                value={formData.numeroPda}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, numeroPda: text }))
+                }
+                mode="outlined"
+                style={{ flex: 1, marginBottom: 12 }}
+              />
+              <TextInput
+                label="No. Aval"
+                value={formData.numeroAval}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, numeroAval: text }))
+                }
+                mode="outlined"
+                style={{ flex: 1, marginBottom: 12 }}
+              />
+            </View>
+            <TextInput
+              label="Cód. Actividad"
+              value={formData.codigoActividad}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, codigoActividad: text }))
+              }
+              mode="outlined"
+              style={{ marginBottom: 12 }}
+            />
+            <TextInput
+              label="Firmante"
+              value={formData.nombreFirmante}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, nombreFirmante: text }))
+              }
+              mode="outlined"
+              style={{ marginBottom: 12 }}
+            />
+            <TextInput
+              label="Cargo"
+              value={formData.cargoFirmante}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, cargoFirmante: text }))
+              }
+              mode="outlined"
+              style={{ marginBottom: 16 }}
+            />
+
+            <Button
+              mode="contained"
+              icon="ion:eye-outline"
+              onPress={() => setShowPreview(true)}
+              style={{ marginTop: 8 }}
+            >
+              Previsualizar Documento
+            </Button>
+          </Card.Content>
+        </Card>
       </ScrollView>
 
-      {/* Footer Actions - Only if editable */}
-      {isEditable ? (
-        <Surface
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: 16,
-            backgroundColor: theme.colors.surface,
-            borderTopWidth: 1,
-            borderTopColor: theme.colors.outlineVariant,
-            flexDirection: "row",
-            gap: 12,
-          }}
-          elevation={4}
-        >
-          <Button
-            mode="outlined"
-            onPress={() => setShowRejectDialog(true)}
-            style={{ flex: 1, borderColor: theme.colors.error }}
-            textColor={theme.colors.error}
-            disabled={isProcessing}
+      {/* Preview Modal */}
+      <Modal
+        animationType="slide"
+        visible={showPreview}
+        onRequestClose={() => setShowPreview(false)}
+        presentationStyle="pageSheet"
+      >
+        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: theme.colors.outlineVariant,
+            }}
           >
-            Rechazar
-          </Button>
-          <Button
-            mode="contained"
-            onPress={handleAprobar}
+            <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
+              Vista Previa PDA
+            </Text>
+            <Button onPress={() => setShowPreview(false)}>Cerrar</Button>
+          </View>
+          <WebView
+            source={{
+              uri: `https://admin.fedeloja.com/preview/pda/${item.id}?${new URLSearchParams(
+                formData
+              ).toString()}`,
+            }}
             style={{ flex: 1 }}
-            disabled={isProcessing}
-            loading={isProcessing}
-          >
-            Aprobar Certificación
-          </Button>
-        </Surface>
-      ) : (
-        <Surface
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: 16,
-            backgroundColor: theme.colors.surfaceVariant,
-            alignItems: "center",
-          }}
-          elevation={4}
+            startInLoadingState
+            renderLoading={() => (
+              <View
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text>Cargando vista previa...</Text>
+              </View>
+            )}
+          />
+        </View>
+      </Modal>
+
+      {/* Footer Actions */}
+      <Surface
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: 16,
+          backgroundColor: theme.colors.surface,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.outlineVariant,
+          flexDirection: "row",
+          gap: 12,
+        }}
+        elevation={4}
+      >
+        <Button
+          mode="outlined"
+          onPress={() => setShowRejectDialog(true)}
+          style={{ flex: 1, borderColor: theme.colors.error }}
+          textColor={theme.colors.error}
+          disabled={isProcessing}
         >
-          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, fontWeight: "bold" }}>
-             Solicitud ya procesada ({item?.etapa})
-          </Text>
-        </Surface>
-      )}
+          Rechazar
+        </Button>
+        <Button
+          mode="contained"
+          onPress={handleAprobar}
+          style={{ flex: 1 }}
+          disabled={isProcessing}
+          loading={isProcessing}
+        >
+          Aprobar PDA
+        </Button>
+      </Surface>
 
       {/* Reject Dialog */}
       <Portal>
@@ -376,7 +544,7 @@ export default function PdaColeccionDetail() {
           <Dialog.Title>Rechazar Solicitud</Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium" style={{ marginBottom: 12 }}>
-              Indica el motivo del rechazo:
+              Por favor, indica el motivo del rechazo:
             </Text>
             <TextInput
               label="Motivo"
@@ -384,7 +552,7 @@ export default function PdaColeccionDetail() {
               onChangeText={setRejectReason}
               mode="outlined"
               multiline
-              numberOfLines={4}
+              numberOfLines={3}
             />
           </Dialog.Content>
           <Dialog.Actions>

@@ -15,9 +15,10 @@ export default function EntrenadorLayout() {
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="solicitud/[eventoId]" options={{ headerShown: false }} />
+      <Stack.Screen name="solicitud/[eventoId]" options={{ headerShown: true, title: "Solicitud", headerBackTitle: "Volver" }} />
       <Stack.Screen name="evento/[id]" options={{ headerShown: true, title: "Detalle del Evento", headerBackTitle: "Volver" }} />
       <Stack.Screen name="aval/[id]" options={{ headerShown: true, title: "Detalle del Aval", headerBackTitle: "Volver" }} />
+      <Stack.Screen name="pdf-viewer" options={{ headerShown: true, title: "Documento" }} />
     </Stack>
   );
 }

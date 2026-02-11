@@ -27,6 +27,8 @@ export interface SolicitudData {
   coleccionAvalId: number;
   fechaHoraSalida: string;
   fechaHoraRetorno: string;
+  lugarSalida: string;
+  lugarRetorno: string;
   transporteSalida: string;
   transporteRetorno: string;
   observaciones?: string;
@@ -36,22 +38,26 @@ export interface SolicitudData {
   entrenadores: SolicitudEntrenador[];
 }
 
+export interface ArchivoFile {
+  uri: string;
+  name: string;
+  type: string;
+}
+
 export interface UploadSolicitudParams {
   eventoId: number;
-  archivo: {
-    uri: string;
-    name: string;
-    type: string;
-  };
+  archivo: ArchivoFile;
+  certificadoMedico: ArchivoFile;
   solicitudData: Omit<SolicitudData, "coleccionAvalId">;
 }
 
 /**
- * Paso 1: Subir convocatoria y crear ColeccionAval
+ * Paso 1: Subir convocatoria + certificado médico y crear ColeccionAval
  */
 export const uploadConvocatoria = async (
   eventoId: number,
-  archivo: { uri: string; name: string; type: string }
+  archivo: ArchivoFile,
+  certificadoMedico: ArchivoFile
 ): Promise<{ coleccionAvalId: number }> => {
   try {
     const formData = new FormData();
@@ -59,6 +65,11 @@ export const uploadConvocatoria = async (
       uri: archivo.uri,
       name: archivo.name,
       type: archivo.type,
+    } as any);
+    formData.append("certificadoMedico", {
+      uri: certificadoMedico.uri,
+      name: certificadoMedico.name,
+      type: certificadoMedico.type,
     } as any);
     formData.append("eventoId", eventoId.toString());
 
@@ -121,11 +132,12 @@ export const createAvalTecnico = async (
 export const uploadSolicitud = async ({
   eventoId,
   archivo,
+  certificadoMedico,
   solicitudData,
 }: UploadSolicitudParams): Promise<{ message: string; avalId?: number }> => {
   try {
-    // Paso 1: Subir convocatoria y crear ColeccionAval
-    const { coleccionAvalId } = await uploadConvocatoria(eventoId, archivo);
+    // Paso 1: Subir convocatoria + certificado médico y crear ColeccionAval
+    const { coleccionAvalId } = await uploadConvocatoria(eventoId, archivo, certificadoMedico);
 
     // Paso 2: Crear el aval técnico
     const { avalId } = await createAvalTecnico({

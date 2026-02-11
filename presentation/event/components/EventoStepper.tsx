@@ -1,162 +1,83 @@
+import { APPROVAL_STAGE_FLOW, type EtapaFlujo } from "@/core/constants/avales.constants";
 import { ThemedText } from "@/presentation/theme/components/ThemedText";
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { Icon, useTheme } from "react-native-paper";
-
-type EstadoEvento = "disponible" | "solicitado" | "aceptado" | "rechazado";
+import { ProgressBar, useTheme } from "react-native-paper";
 
 interface EventoStepperProps {
-  estado: EstadoEvento;
+  estado: string;
+  etapa?: EtapaFlujo | string;
 }
 
-export const EventoStepper = ({ estado }: EventoStepperProps) => {
+const STEP_LABELS: Record<string, string> = {
+  SOLICITUD: "Solicitud",
+  PDA: "PDA",
+  REVISION_METODOLOGO: "Metodólogo",
+  REVISION_DTM: "DTM",
+  CONTROL_PREVIO: "Control Previo",
+  SECRETARIA: "Secretaría",
+  FINANCIERO: "Financiero",
+  COMPRAS_PUBLICAS: "Compras Públicas",
+};
+
+export const EventoStepper = ({ estado, etapa }: EventoStepperProps) => {
   const theme = useTheme();
+  const estadoUpper = estado?.toUpperCase() || "SOLICITADO";
+  const totalStages = APPROVAL_STAGE_FLOW.length;
 
-  // Determinar qué pasos están activos/completados
-  const getStepStatus = (stepNumber: number) => {
-    switch (estado) {
-      case "disponible":
-        return stepNumber === 1 ? "active" : "pending";
-      case "solicitado":
-        return stepNumber === 1
-          ? "completed"
-          : stepNumber === 2
-          ? "active"
-          : "pending";
-      case "aceptado":
-        return stepNumber <= 3 ? "completed" : "active";
-      case "rechazado":
-        return stepNumber === 1 ? "completed" : "rejected";
-      default:
-        return "pending";
-    }
+  const currentStageIndex = etapa
+    ? APPROVAL_STAGE_FLOW.indexOf(etapa as EtapaFlujo)
+    : 0;
+
+  const currentLabel = etapa ? (STEP_LABELS[etapa as string] || etapa) : STEP_LABELS.SOLICITUD;
+
+  const getProgressColor = () => {
+    if (estadoUpper === "ACEPTADO") return "#10B981";
+    if (estadoUpper === "RECHAZADO") return "#EF4444";
+    return "#3B82F6";
   };
 
-  const getStepColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "#4CAF50"; // Verde
-      case "active":
-        return "#2196F3"; // Azul
-      case "rejected":
-        return "#F44336"; // Rojo
-      default:
-        return "#E0E0E0"; // Gris
-    }
+  const getProgress = () => {
+    if (estadoUpper === "ACEPTADO") return 1;
+    return (currentStageIndex + 1) / totalStages;
   };
 
-  const getStepIcon = (stepNumber: number, status: string) => {
-    if (status === "completed") return "checkmark";
-    if (status === "rejected") return "close";
-    if (status === "active") {
-      switch (stepNumber) {
-        case 1:
-          return "paper-plane";
-        case 2:
-          return "hourglass";
-        case 3:
-          return "checkmark-done";
-        case 4:
-          return "document-text";
-        default:
-          return "ellipse";
-      }
-    }
-    return "ellipse-outline";
+  const getStatusMessage = () => {
+    if (estadoUpper === "ACEPTADO") return "Solicitud aprobada";
+    if (estadoUpper === "RECHAZADO") return "Solicitud rechazada";
+    return "En revisión";
   };
 
-  const steps = [
-    { number: 1, label: "Solicitar" },
-    { number: 2, label: "Revisar" },
-    { number: 3, label: "Aprobar" },
-    { number: 4, label: "Aval" },
-  ];
-
+  const progressColor = getProgressColor();
   const styles = createStyles(theme);
 
   return (
     <View style={styles.container}>
-      <View style={styles.stepsContainer}>
-        {steps.map((step, index) => {
-          const status = getStepStatus(step.number);
-          const color = getStepColor(status);
-
-          return (
-            <React.Fragment key={step.number}>
-              {/* Step Circle */}
-              <View style={styles.stepItem}>
-                <View
-                  style={[
-                    styles.stepCircle,
-                    {
-                      backgroundColor: color,
-                      borderColor: color,
-                    },
-                  ]}
-                >
-                  <Icon
-                    source={getStepIcon(step.number, status)}
-                    size={10}
-                    color="#FFFFFF"
-                  />
-                </View>
-                <ThemedText
-                  style={[
-                    styles.stepLabel,
-                    {
-                      color:
-                        status === "active" || status === "completed"
-                          ? theme.colors.onSurface
-                          : theme.colors.onSurfaceDisabled,
-                      fontWeight: status === "active" ? "700" : "500",
-                    },
-                  ]}
-                >
-                  {step.label}
-                </ThemedText>
-              </View>
-
-              {/* Connector Line */}
-              {index < steps.length - 1 && (
-                <View
-                  style={[
-                    styles.connector,
-                    {
-                      backgroundColor:
-                        status === "completed"
-                          ? getStepColor("completed")
-                          : "#E0E0E0",
-                    },
-                  ]}
-                />
-              )}
-            </React.Fragment>
-          );
-        })}
+      <ProgressBar
+        progress={getProgress()}
+        color={progressColor}
+        style={styles.progressBar}
+      />
+      <View style={styles.labelRow}>
+        <ThemedText
+          style={[
+            styles.stageText,
+            { color: theme.colors.onSurfaceVariant },
+          ]}
+        >
+          Etapa {currentStageIndex + 1}/{totalStages} · {currentLabel}
+        </ThemedText>
       </View>
-
-      {/* Mensaje contextual */}
-      <View style={styles.messageContainer}>
-        {estado === "disponible" && (
-          <ThemedText style={styles.messageText}>
-            📤 Envía tu solicitud para comenzar
-          </ThemedText>
-        )}
-        {estado === "solicitado" && (
-          <ThemedText style={styles.messageText}>
-            ⏳ Esperando revisión del administrador...
-          </ThemedText>
-        )}
-        {estado === "aceptado" && (
-          <ThemedText style={[styles.messageText, styles.messageSuccess]}>
-            ✅ Solicitud aprobada
-          </ThemedText>
-        )}
-        {estado === "rechazado" && (
-          <ThemedText style={[styles.messageText, styles.messageError]}>
-            ❌ Solicitud rechazada
-          </ThemedText>
-        )}
+      <View style={[styles.messageContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
+        <ThemedText
+          style={[
+            styles.messageText,
+            { color: estadoUpper === "ACEPTADO" ? "#10B981" : estadoUpper === "RECHAZADO" ? "#EF4444" : theme.colors.onSurfaceVariant },
+            (estadoUpper === "ACEPTADO" || estadoUpper === "RECHAZADO") && styles.messageBold,
+          ]}
+        >
+          {getStatusMessage()}
+        </ThemedText>
       </View>
     </View>
   );
@@ -167,54 +88,31 @@ const createStyles = (theme: any) =>
     container: {
       gap: 6,
     },
-    stepsContainer: {
+    progressBar: {
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: theme.dark ? "#4B5563" : "#E5E7EB",
+    },
+    labelRow: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
-      paddingVertical: 4,
     },
-    stepItem: {
-      alignItems: "center",
-      gap: 4,
-      flex: 1,
-    },
-    stepCircle: {
-      width: 22,
-      height: 22,
-      borderRadius: 11,
-      borderWidth: 1.5,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    stepLabel: {
-      fontSize: 9,
-      textAlign: "center",
-      letterSpacing: 0.1,
-    },
-    connector: {
-      height: 1.5,
-      width: 12,
-      marginBottom: 12,
+    stageText: {
+      fontSize: 12,
+      fontWeight: "500",
     },
     messageContainer: {
-      backgroundColor: theme.colors.surfaceVariant,
       paddingHorizontal: 10,
       paddingVertical: 5,
       borderRadius: 6,
     },
     messageText: {
       fontSize: 11,
-      color: theme.colors.onSurfaceVariant,
       textAlign: "center",
       fontWeight: "500",
       lineHeight: 14,
     },
-    messageSuccess: {
-      color: "#4CAF50",
-      fontWeight: "700",
-    },
-    messageError: {
-      color: "#F44336",
+    messageBold: {
       fontWeight: "700",
     },
   });

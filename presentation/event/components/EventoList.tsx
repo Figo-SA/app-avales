@@ -59,8 +59,13 @@ export const EventoList = ({
     name: string;
     type: string;
   } | null>(null);
+  const [certificadoMedico, setCertificadoMedico] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const snapPoints = useMemo(() => ["50%", "80%"], []);
+  const snapPoints = useMemo(() => ["65%", "90%"], []);
 
   const queryClient = useQueryClient();
   const theme = useTheme();
@@ -87,7 +92,8 @@ export const EventoList = ({
     // Disponible: Abrir Bottom Sheet para subir convocatoria
     if (estadoEvento === "disponible") {
       setSelectedEventoForUpload(evento);
-      setDocumento(null); // Reset documento
+      setDocumento(null);
+      setCertificadoMedico(null);
       uploadSheetRef.current?.present();
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       return;
@@ -176,17 +182,46 @@ export const EventoList = ({
     }
   };
 
+  const seleccionarCertificadoMedico = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/pdf",
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        setCertificadoMedico({
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType || "application/pdf",
+        });
+      }
+    } catch (error) {
+      console.error("Error al seleccionar certificado médico:", error);
+      toast.error("No se pudo seleccionar el certificado médico");
+    }
+  };
+
   const handleUpload = async (continueToForm: boolean) => {
       if (!documento || !selectedEventoForUpload) {
-          toast.error("Debes seleccionar un documento");
+          toast.error("Debes seleccionar la convocatoria");
+          return;
+      }
+      if (!certificadoMedico) {
+          toast.error("Debes seleccionar el certificado médico");
           return;
       }
 
       try {
           setIsUploading(true);
-          const result = await uploadConvocatoria(Number(selectedEventoForUpload.id), documento);
+          const result = await uploadConvocatoria(Number(selectedEventoForUpload.id), documento, certificadoMedico);
           toast.success("Convocatoria subida exitosamente");
-          
+
+          // Refrescar lista de eventos para que muestre el estado actualizado
+          queryClient.invalidateQueries({ queryKey: ["eventos"] });
+          queryClient.invalidateQueries({ queryKey: ["eventos", "infinite"] });
+
           uploadSheetRef.current?.dismiss();
           
           if (continueToForm) {
@@ -240,9 +275,13 @@ export const EventoList = ({
               {selectedEventoForUpload?.nombre || "Iniciar Solicitud"}
           </Text>
           <Text variant="bodyMedium" style={[styles.sheetDesc, { color: theme.colors.onSurfaceVariant }]}>
-              Sube la convocatoria oficial para iniciar el trámite.
+              Sube la convocatoria oficial y el certificado médico para iniciar el trámite.
           </Text>
 
+          {/* Convocatoria */}
+          <Text variant="labelLarge" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
+            Convocatoria
+          </Text>
           <Button
             mode="outlined"
             icon="ion:cloud-upload-outline"
@@ -250,7 +289,7 @@ export const EventoList = ({
             style={styles.uploadButton}
             contentStyle={{ height: 48 }}
           >
-            {documento ? "Cambiar Documento" : "Seleccionar Convocatoria"}
+            {documento ? "Cambiar Convocatoria" : "Seleccionar Convocatoria"}
           </Button>
 
           {documento && (
@@ -258,26 +297,49 @@ export const EventoList = ({
               <Icon source="ion:document" size={24} color={theme.colors.primary} />
               <View style={{ flex: 1 }}>
                 <Text numberOfLines={1} style={{ fontWeight: '500', color: theme.colors.onSurface }}>{documento.name}</Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{(documento.uri.length/1024).toFixed(2)} KB</Text>
+              </View>
+              <Icon source="ion:checkmark-circle" size={20} color={theme.colors.primary} />
+            </Surface>
+          )}
+
+          {/* Certificado Médico */}
+          <Text variant="labelLarge" style={{ color: theme.colors.onSurface, fontWeight: '600', marginTop: 8 }}>
+            Certificado Médico
+          </Text>
+          <Button
+            mode="outlined"
+            icon="ion:medkit-outline"
+            onPress={seleccionarCertificadoMedico}
+            style={styles.uploadButton}
+            contentStyle={{ height: 48 }}
+          >
+            {certificadoMedico ? "Cambiar Certificado" : "Seleccionar Certificado Médico"}
+          </Button>
+
+          {certificadoMedico && (
+            <Surface style={[styles.filePreview, { backgroundColor: theme.colors.elevation.level1 }]} elevation={0}>
+              <Icon source="ion:medkit" size={24} color={theme.colors.primary} />
+              <View style={{ flex: 1 }}>
+                <Text numberOfLines={1} style={{ fontWeight: '500', color: theme.colors.onSurface }}>{certificadoMedico.name}</Text>
               </View>
               <Icon source="ion:checkmark-circle" size={20} color={theme.colors.primary} />
             </Surface>
           )}
 
           <View style={styles.sheetActions}>
-            <Button 
-                mode="contained" 
+            <Button
+                mode="contained"
                 onPress={() => handleUpload(true)}
-                disabled={!documento || isUploading}
+                disabled={!documento || !certificadoMedico || isUploading}
                 loading={isUploading}
                 style={styles.actionButton}
             >
                 Subir y Llenar Formulario
             </Button>
-            <Button 
-                mode="text" 
+            <Button
+                mode="text"
                 onPress={() => handleUpload(false)}
-                disabled={!documento || isUploading}
+                disabled={!documento || !certificadoMedico || isUploading}
                 style={styles.actionButton}
             >
                 Subir y Llenar Después
@@ -344,6 +406,7 @@ export const EventoList = ({
         onDismiss={() => {
             setSelectedEventoForUpload(null);
             setDocumento(null);
+            setCertificadoMedico(null);
         }}
       >
         {renderUploadSheet()}

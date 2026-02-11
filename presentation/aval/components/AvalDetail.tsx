@@ -1,4 +1,4 @@
-import { getStatusConfig } from "@/core/avales/helpers/statusHelper";
+import { getEstadoBadge } from "@/core/constants/avales.constants";
 import { Aval } from "@/core/avales/interfaces/aval";
 import React from "react";
 import { Linking, ScrollView, StyleSheet, View } from "react-native";
@@ -39,7 +39,7 @@ const InfoRow = ({ icon, label, value, theme }: any) => (
 
 export const AvalDetail = ({ aval }: AvalDetailProps) => {
   const theme = useTheme();
-  const statusConfig = getStatusConfig(aval.status);
+  const statusConfig = getEstadoBadge(aval.estado, aval.etapaActual, theme.dark);
 
   const totalDeportistas = aval.deportistas.length;
   const totalEntrenadores =
@@ -471,7 +471,7 @@ export const AvalDetail = ({ aval }: AvalDetailProps) => {
       </Card>
 
       {/* Actions */}
-      {aval.status === "approved" && (
+      {aval.estado === "ACEPTADO" && (
         <View style={styles.actionsContainer}>
           {aval.documentoUrl && (
             <Button

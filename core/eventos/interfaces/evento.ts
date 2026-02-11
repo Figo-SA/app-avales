@@ -1,12 +1,19 @@
-export type EventoEstado =
-  | "disponible"
-  | "solicitado"
-  | "rechazado"
-  | "aceptado"
-  | "DISPONIBLE"
-  | "SOLICITADO"
-  | "RECHAZADO"
-  | "ACEPTADO";
+import type { EtapaFlujo } from "@/core/constants/avales.constants";
+
+export type EventoEstado = "DISPONIBLE" | "SOLICITADO" | "RECHAZADO" | "ACEPTADO";
+
+export interface ItemPresupuestario {
+  id: number;
+  nombre: string;
+  numero: number;
+}
+
+export interface PresupuestoEvent {
+  id: number;
+  mes: number;
+  presupuesto: string;
+  item: ItemPresupuestario;
+}
 
 export interface Disciplina {
   id: number;
@@ -49,9 +56,10 @@ export interface Evento {
   deleted: boolean;
   disciplina: Disciplina;
   categoria: Categoria;
+  presupuesto?: PresupuestoEvent[];
   // Campos locales/UI
   estado?: EventoEstado; // Estado del evento para el usuario actual
-  etapa?: string; // Etapa actual del proceso (e.g., "REVISION_DTM", "COMPRAS_PUBLICAS")
+  etapa?: EtapaFlujo; // Etapa actual del proceso (e.g., "REVISION_DTM", "COMPRAS_PUBLICAS")
   motivoRechazo?: string; // Solo presente cuando estado === "rechazado"
 }
 

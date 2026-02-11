@@ -11,6 +11,14 @@ export const solicitudPaso1Schema = z
       required_error: "La fecha de retorno es requerida",
       invalid_type_error: "Debe seleccionar una fecha válida",
     }),
+    lugarSalida: z
+      .string({ required_error: "El lugar de salida es requerido" })
+      .min(3, "Debe tener al menos 3 caracteres")
+      .max(200, "Máximo 200 caracteres"),
+    lugarRetorno: z
+      .string({ required_error: "El lugar de retorno es requerido" })
+      .min(3, "Debe tener al menos 3 caracteres")
+      .max(200, "Máximo 200 caracteres"),
     transporteSalida: z
       .string({ required_error: "El transporte de salida es requerido" })
       .min(3, "Debe tener al menos 3 caracteres")
@@ -84,7 +92,18 @@ export const solicitudPaso5Schema = z.object({
     })
     .nullable()
     .refine((doc) => doc !== null, {
-      message: "Debe seleccionar un documento",
+      message: "Debe seleccionar la convocatoria",
+    }),
+  certificadoMedico: z
+    .object({
+      uri: z.string(),
+      name: z.string(),
+      size: z.number().optional(),
+      mimeType: z.string().optional(),
+    })
+    .nullable()
+    .refine((doc) => doc !== null, {
+      message: "Debe seleccionar el certificado médico",
     }),
   observaciones: z.string().max(1000, "Máximo 1000 caracteres").optional(),
 });
@@ -93,6 +112,8 @@ export const solicitudPaso5Schema = z.object({
 export const solicitudCompletaSchema = z.object({
   fechaSalida: z.date(),
   fechaRetorno: z.date(),
+  lugarSalida: z.string(),
+  lugarRetorno: z.string(),
   transporteSalida: z.string(),
   transporteRetorno: z.string(),
   objetivos: z.array(z.string()),
@@ -100,6 +121,7 @@ export const solicitudCompletaSchema = z.object({
   deportistas: z.array(z.any()),
   entrenadores: z.array(z.any()),
   documento: z.any(),
+  certificadoMedico: z.any(),
   coleccionAvalId: z.number().optional(),
   observaciones: z.string().optional(),
 });

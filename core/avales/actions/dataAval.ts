@@ -14,7 +14,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-03-12",
     fechaFin: "2025-03-16",
     categoria: "15-24 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d1",
@@ -67,7 +67,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-04-16",
     fechaFin: "2025-04-20",
     categoria: "10-14 AÑOS",
-    status: "sent",
+    estado: "SOLICITADO",
     deportistas: [],
     numeroDeportistasHombres: 0,
     numeroDeportistasMujeres: 0,
@@ -91,7 +91,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-06-01",
     fechaFin: "2025-06-30",
     categoria: "15-24 AÑOS",
-    status: "pending",
+    estado: "SOLICITADO",
     deportistas: [
       {
         id: "d4",
@@ -134,7 +134,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-10-01",
     fechaFin: "2025-10-30",
     categoria: "10-14 AÑOS",
-    status: "rejected",
+    estado: "RECHAZADO",
     deportistas: [],
     numeroDeportistasHombres: 0,
     numeroDeportistasMujeres: 0,
@@ -160,7 +160,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-04-16",
     fechaFin: "2025-04-20",
     categoria: "15-24 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d6",
@@ -213,7 +213,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-05-10",
     fechaFin: "2025-05-14",
     categoria: "10-14 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d9",
@@ -257,7 +257,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-07-05",
     fechaFin: "2025-07-10",
     categoria: "15-24 AÑOS",
-    status: "pending",
+    estado: "SOLICITADO",
     deportistas: [
       {
         id: "d11",
@@ -291,7 +291,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-08-15",
     fechaFin: "2025-08-19",
     categoria: "10-14 AÑOS",
-    status: "sent",
+    estado: "SOLICITADO",
     deportistas: [],
     numeroDeportistasHombres: 0,
     numeroDeportistasMujeres: 0,
@@ -315,7 +315,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-09-10",
     fechaFin: "2025-09-15",
     categoria: "15-24 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d12",
@@ -359,7 +359,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-11-20",
     fechaFin: "2025-11-25",
     categoria: "15-24 AÑOS",
-    status: "rejected",
+    estado: "RECHAZADO",
     deportistas: [],
     numeroDeportistasHombres: 0,
     numeroDeportistasMujeres: 0,
@@ -385,7 +385,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-12-01",
     fechaFin: "2025-12-05",
     categoria: "10-14 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d14",
@@ -420,7 +420,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-12-10",
     fechaFin: "2025-12-15",
     categoria: "15-24 AÑOS",
-    status: "pending",
+    estado: "SOLICITADO",
     deportistas: [
       {
         id: "d15",
@@ -454,7 +454,7 @@ export const avales: Aval[] = [
     fechaInicio: "2025-12-20",
     fechaFin: "2025-12-25",
     categoria: "15-24 AÑOS",
-    status: "sent",
+    estado: "SOLICITADO",
     deportistas: [],
     numeroDeportistasHombres: 0,
     numeroDeportistasMujeres: 0,
@@ -478,7 +478,7 @@ export const avales: Aval[] = [
     fechaInicio: "2026-01-10",
     fechaFin: "2026-01-15",
     categoria: "15-24 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d16",
@@ -513,7 +513,7 @@ export const avales: Aval[] = [
     fechaInicio: "2026-02-01",
     fechaFin: "2026-02-05",
     categoria: "15-24 AÑOS",
-    status: "rejected",
+    estado: "RECHAZADO",
     deportistas: [],
     numeroDeportistasHombres: 0,
     numeroDeportistasMujeres: 0,
@@ -539,7 +539,7 @@ export const avales: Aval[] = [
     fechaInicio: "2026-03-10",
     fechaFin: "2026-03-15",
     categoria: "10-14 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d17",
@@ -574,7 +574,7 @@ export const avales: Aval[] = [
     fechaInicio: "2026-04-01",
     fechaFin: "2026-04-05",
     categoria: "15-24 AÑOS",
-    status: "pending",
+    estado: "SOLICITADO",
     deportistas: [
       {
         id: "d18",
@@ -608,7 +608,7 @@ export const avales: Aval[] = [
     fechaInicio: "2026-05-10",
     fechaFin: "2026-05-14",
     categoria: "10-14 AÑOS",
-    status: "sent",
+    estado: "SOLICITADO",
     deportistas: [],
     numeroDeportistasHombres: 0,
     numeroDeportistasMujeres: 0,
@@ -632,7 +632,7 @@ export const avales: Aval[] = [
     fechaInicio: "2026-06-01",
     fechaFin: "2026-06-05",
     categoria: "15-24 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d19",
@@ -676,7 +676,7 @@ export const avales: Aval[] = [
     fechaInicio: "2026-07-10",
     fechaFin: "2026-07-15",
     categoria: "15-24 AÑOS",
-    status: "pending",
+    estado: "SOLICITADO",
     deportistas: [
       {
         id: "d21",
@@ -710,7 +710,7 @@ export const avales: Aval[] = [
     fechaInicio: "2026-08-01",
     fechaFin: "2026-08-05",
     categoria: "15-24 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d22",
@@ -745,7 +745,7 @@ export const avales: Aval[] = [
     fechaInicio: "2026-09-10",
     fechaFin: "2026-09-15",
     categoria: "10-14 AÑOS",
-    status: "sent",
+    estado: "SOLICITADO",
     deportistas: [],
     numeroDeportistasHombres: 0,
     numeroDeportistasMujeres: 0,
@@ -769,7 +769,7 @@ export const avales: Aval[] = [
     fechaInicio: "2026-10-01",
     fechaFin: "2026-10-05",
     categoria: "15-24 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d23",
@@ -804,7 +804,7 @@ export const avales: Aval[] = [
     fechaInicio: "2026-11-10",
     fechaFin: "2026-11-15",
     categoria: "15-24 AÑOS",
-    status: "pending",
+    estado: "SOLICITADO",
     deportistas: [
       {
         id: "d24",
@@ -838,7 +838,7 @@ export const avales: Aval[] = [
     fechaInicio: "2026-12-01",
     fechaFin: "2026-12-05",
     categoria: "15-24 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d25",
@@ -873,7 +873,7 @@ export const avales: Aval[] = [
     fechaInicio: "2027-01-10",
     fechaFin: "2027-01-15",
     categoria: "15-24 AÑOS",
-    status: "sent",
+    estado: "SOLICITADO",
     deportistas: [],
     numeroDeportistasHombres: 0,
     numeroDeportistasMujeres: 0,
@@ -897,7 +897,7 @@ export const avales: Aval[] = [
     fechaInicio: "2027-02-01",
     fechaFin: "2027-02-05",
     categoria: "15-24 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d26",
@@ -932,7 +932,7 @@ export const avales: Aval[] = [
     fechaInicio: "2027-03-10",
     fechaFin: "2027-03-15",
     categoria: "10-14 AÑOS",
-    status: "pending",
+    estado: "SOLICITADO",
     deportistas: [
       {
         id: "d27",
@@ -966,7 +966,7 @@ export const avales: Aval[] = [
     fechaInicio: "2027-04-01",
     fechaFin: "2027-04-05",
     categoria: "15-24 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d28",
@@ -1001,7 +1001,7 @@ export const avales: Aval[] = [
     fechaInicio: "2027-05-10",
     fechaFin: "2027-05-14",
     categoria: "15-24 AÑOS",
-    status: "rejected",
+    estado: "RECHAZADO",
     deportistas: [],
     numeroDeportistasHombres: 0,
     numeroDeportistasMujeres: 0,
@@ -1027,7 +1027,7 @@ export const avales: Aval[] = [
     fechaInicio: "2027-06-01",
     fechaFin: "2027-06-05",
     categoria: "15-24 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d29",
@@ -1062,7 +1062,7 @@ export const avales: Aval[] = [
     fechaInicio: "2027-07-10",
     fechaFin: "2027-07-15",
     categoria: "15-24 AÑOS",
-    status: "pending",
+    estado: "SOLICITADO",
     deportistas: [
       {
         id: "d30",
@@ -1096,7 +1096,7 @@ export const avales: Aval[] = [
     fechaInicio: "2027-08-10",
     fechaFin: "2027-08-15",
     categoria: "15-24 AÑOS",
-    status: "approved",
+    estado: "ACEPTADO",
     deportistas: [
       {
         id: "d31",
@@ -1140,7 +1140,7 @@ export const avales: Aval[] = [
     fechaInicio: "2027-09-10",
     fechaFin: "2027-09-15",
     categoria: "10-14 AÑOS",
-    status: "sent",
+    estado: "SOLICITADO",
     deportistas: [],
     numeroDeportistasHombres: 0,
     numeroDeportistasMujeres: 0,
@@ -1164,7 +1164,7 @@ export const avales: Aval[] = [
     fechaInicio: "2027-10-05",
     fechaFin: "2027-10-10",
     categoria: "15-24 AÑOS",
-    status: "pending",
+    estado: "SOLICITADO",
     deportistas: [
       {
         id: "d33",
@@ -1198,7 +1198,7 @@ export const avales: Aval[] = [
     fechaInicio: "2027-11-15",
     fechaFin: "2027-11-20",
     categoria: "15-24 AÑOS",
-    status: "rejected",
+    estado: "RECHAZADO",
     deportistas: [],
     numeroDeportistasHombres: 0,
     numeroDeportistasMujeres: 0,

@@ -1,3 +1,4 @@
+import { getEstadoBadge } from "@/core/constants/avales.constants";
 import { Evento } from "@/core/eventos/interfaces/evento";
 import { formatDateShort } from "@/helpers/date.helper";
 import { ThemedText } from "@/presentation/theme/components/ThemedText";
@@ -19,64 +20,19 @@ export const EventoCard = ({
     if (onPress) onPress();
   };
 
-  // Normalizar estado del backend (MAYÚSCULAS) a minúsculas
-  const estadoEvento = (evento.estado?.toLowerCase() || "disponible") as
-    | "disponible"
-    | "solicitado"
-    | "rechazado"
-    | "aceptado";
+  const estadoEvento = (evento.estado?.toUpperCase() || "DISPONIBLE") as
+    | "DISPONIBLE"
+    | "SOLICITADO"
+    | "RECHAZADO"
+    | "ACEPTADO";
 
-  const getEstadoConfig = () => {
-    switch (estadoEvento) {
-      case "disponible":
-        return {
-          label: "Disponible",
-          color: "#10B981",
-          bgColor: "#10B98115",
-          icon: "ion:checkmark-circle",
-        };
-      case "solicitado":
-        const etapaMap: Record<string, string> = {
-          REVISION_METODOLOGO: "Revisión Metodólogo",
-          REVISION_DTM: "Revisión DTM",
-          PDA: "Certificación PDA",
-          COMPRAS_PUBLICAS: "Compras Públicas",
-          CONTROL_PREVIO: "Control Previo",
-          FINANCIERO: "Aprobación Financiera",
-        };
-        const etapaLabel = evento.etapa ? (etapaMap[evento.etapa] || evento.etapa) : "En Revisión";
-
-        return {
-          label: etapaLabel,
-          color: "#F59E0B",
-          bgColor: "#F59E0B15",
-          icon: "ion:time",
-        };
-      case "rechazado":
-        return {
-          label: "Rechazado",
-          color: "#EF4444",
-          bgColor: "#EF444415",
-          icon: "ion:close-circle",
-        };
-      case "aceptado":
-        return {
-          label: "Aprobado",
-          color: "#3B82F6",
-          bgColor: "#3B82F615",
-          icon: "ion:checkmark-done-circle",
-        };
-      default:
-        return {
-          label: "Disponible",
-          color: "#10B981",
-          bgColor: "#10B98115",
-          icon: "ion:checkmark-circle",
-        };
-    }
+  const badgeInfo = getEstadoBadge(estadoEvento, evento.etapa, theme.dark);
+  const estadoConfig = {
+    label: badgeInfo.label,
+    color: badgeInfo.color,
+    bgColor: `${badgeInfo.color}15`,
+    icon: badgeInfo.icon,
   };
-
-  const estadoConfig = getEstadoConfig();
   const styles = createStyles(theme, estadoConfig);
 
   return (
@@ -133,10 +89,10 @@ export const EventoCard = ({
         </View>
 
         {/* Stepper de progreso - Solo si ya hay proceso iniciado */}
-        {estadoEvento !== "disponible" && <EventoStepper estado={estadoEvento} />}
+        {estadoEvento !== "DISPONIBLE" && <EventoStepper estado={estadoEvento} etapa={evento.etapa} />}
 
         {/* CTA para eventos disponibles */}
-        {estadoEvento === "disponible" && (
+        {estadoEvento === "DISPONIBLE" && (
           <View style={styles.ctaContainer}>
             <ThemedText style={styles.ctaText}>Solicitar aval</ThemedText>
             <Icon source="ion:chevron-forward" size={16} color={theme.colors.primary} />

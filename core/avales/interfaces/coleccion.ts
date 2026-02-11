@@ -1,3 +1,4 @@
+import type { Estado, EtapaFlujo } from "@/core/constants/avales.constants";
 import { Evento } from "@/core/eventos/interfaces/evento";
 
 export interface ColeccionAval {
@@ -5,12 +6,14 @@ export interface ColeccionAval {
   descripcion: string;
   eventoId: number;
   convocatoriaUrl?: string | null;
+  certificadoMedicoUrl?: string | null;
   dtmUrl?: string | null;
   pdaUrl?: string | null;
   solicitudUrl?: string | null;
   aval?: string | null;
-  estado: string;
-  etapa?: string; 
+  estado: Estado;
+  etapaActual?: EtapaFlujo;
+  etapa?: EtapaFlujo;
   comentario?: string | null;
   createdAt: string;
   updatedAt: string;

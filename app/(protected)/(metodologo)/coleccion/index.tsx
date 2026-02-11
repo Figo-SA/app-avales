@@ -3,6 +3,7 @@ import {
   rechazarSolicitud,
 } from "@/core/avales/actions/colecciones-actions";
 import { ColeccionAval } from "@/core/avales/interfaces/coleccion";
+import { getEstadoBadge } from "@/core/constants/avales.constants";
 import { formatDateLong } from "@/helpers/date.helper";
 import { useAuthStore } from "@/presentation/auth/store/useAuthStore";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
@@ -46,9 +47,6 @@ export default function ColeccionDetail() {
   const item: ColeccionAval | null = params.data
     ? JSON.parse(params.data as string)
     : null;
-
-  // Determine if the item is editable based on the current stage
-  const isEditable = item?.etapa === "SOLICITADO";
 
   const openDocument = async (url: string | null | undefined) => {
     if (url) {
@@ -140,42 +138,7 @@ export default function ColeccionDetail() {
     }
   };
 
-  const getEstadoInfo = () => {
-    const estado = item.estado?.toLowerCase() || "solicitado";
-    const isDark = theme.dark;
-    switch (estado) {
-      case "solicitado":
-        return {
-          label: "Pendiente",
-          color: isDark ? "#FBBF24" : "#D97706",
-          bg: isDark ? "#78350F" : "#FEF3C7",
-          icon: "ion:time-outline",
-        };
-      case "aceptado":
-        return {
-          label: "Aprobado",
-          color: isDark ? "#34D399" : "#059669",
-          bg: isDark ? "#064E3B" : "#D1FAE5",
-          icon: "ion:checkmark-circle",
-        };
-      case "rechazado":
-        return {
-          label: "Rechazado",
-          color: isDark ? "#F87171" : "#DC2626",
-          bg: isDark ? "#7F1D1D" : "#FEE2E2",
-          icon: "ion:close-circle",
-        };
-      default:
-        return {
-          label: "Pendiente",
-          color: theme.colors.primary,
-          bg: theme.colors.primaryContainer,
-          icon: "ion:time-outline",
-        };
-    }
-  };
-
-  const estado = getEstadoInfo();
+  const estado = getEstadoBadge(item.estado, item.etapaActual || item.etapa, theme.dark);
   const isPending = item.estado !== "ACEPTADO" && item.estado !== "RECHAZADO";
 
   return (
@@ -410,77 +373,44 @@ export default function ColeccionDetail() {
             <View style={{ flex: 1 }}>
               <Text style={[styles.alertTitle, { color: estado.color }]}>Motivo del Rechazo</Text>
               <Text style={[styles.alertText, { color: estado.color }]}>{item.comentario}</Text>
-```javascript
             </View>
           </Surface>
         )}
       </ScrollView>
 
-      {/* Footer Actions - Only if editable */}
-      {isEditable ? (
-        <Surface
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: 16,
-            backgroundColor: theme.colors.surface,
-            borderTopWidth: 1,
-            borderTopColor: theme.colors.outlineVariant,
-            flexDirection: "row",
-            gap: 12,
-          }}
-          elevation={4}
-        >
+      {/* Footer Actions - Only show if pending */}
+      {isPending && (
+        <Surface style={[styles.footer, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]} elevation={4}>
           <Button
             mode="outlined"
             onPress={() => setShowRejectDialog(true)}
-            style={{ flex: 1, borderColor: theme.colors.error }}
+            style={[styles.footerButton, { borderColor: theme.colors.error }]}
             textColor={theme.colors.error}
             disabled={isProcessing}
+            icon="ion:close-circle-outline"
           >
             Rechazar
           </Button>
           <Button
             mode="contained"
             onPress={handleAprobar}
-            style={{ flex: 1 }}
+            style={styles.footerButton}
             disabled={isProcessing}
             loading={isProcessing}
+            icon="ion:checkmark-circle-outline"
           >
             Aprobar
           </Button>
-        </Surface>
-      ) : (
-        <Surface
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: 16,
-            backgroundColor: theme.colors.surfaceVariant,
-            alignItems: "center",
-          }}
-          elevation={4}
-        >
-          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, fontWeight: "bold" }}>
-             Solicitud ya procesada ({item?.etapa})
-          </Text>
         </Surface>
       )}
 
       {/* Reject Dialog */}
       <Portal>
-        <Dialog
-          visible={showRejectDialog}
-          onDismiss={() => setShowRejectDialog(false)}
-        >
+        <Dialog visible={showRejectDialog} onDismiss={() => setShowRejectDialog(false)}>
           <Dialog.Title>Rechazar Solicitud</Dialog.Title>
           <Dialog.Content>
-            <Text variant="bodyMedium" style={{ marginBottom: 12 }}>
-              Indica el motivo del rechazo:
+            <Text variant="bodyMedium" style={{ marginBottom: 12, color: theme.colors.onSurfaceVariant }}>
+              Por favor, indica el motivo del rechazo:
             </Text>
             <TextInput
               label="Motivo"
@@ -488,7 +418,7 @@ export default function ColeccionDetail() {
               onChangeText={setRejectReason}
               mode="outlined"
               multiline
-              numberOfLines={4}
+              numberOfLines={3}
             />
           </Dialog.Content>
           <Dialog.Actions>

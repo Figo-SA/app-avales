@@ -1,3 +1,4 @@
+import { getEstadoBadge } from "@/core/constants/avales.constants";
 import { ColeccionAval } from "@/core/avales/interfaces/coleccion";
 import { formatDateLong } from "@/helpers/date.helper";
 import * as Haptics from "expo-haptics";
@@ -25,51 +26,7 @@ export const ColeccionCard = ({
     });
   };
 
-  const getEstadoInfo = (estado: string) => {
-    const isDark = theme.dark;
-    switch (estado?.toUpperCase()) {
-      case "SOLICITADO":
-        const etapaMap: Record<string, string> = {
-          REVISION_METODOLOGO: "Revisión Metodólogo",
-          REVISION_DTM: "Revisión DTM",
-          PDA: "Certificación PDA",
-          COMPRAS_PUBLICAS: "Compras Públicas",
-          CONTROL_PREVIO: "Control Previo",
-          FINANCIERO: "Aprobación Financiera",
-        };
-        const label = item.etapa ? (etapaMap[item.etapa] || item.etapa) : "Pendiente";
-        
-        return {
-          label: label,
-          color: isDark ? "#FBBF24" : "#D97706",
-          bg: isDark ? "#78350F" : "#FEF3C7",
-          icon: "ion:time-outline",
-        };
-      case "ACEPTADO":
-        return {
-          label: "Aprobado",
-          color: isDark ? "#34D399" : "#059669",
-          bg: isDark ? "#064E3B" : "#D1FAE5",
-          icon: "ion:checkmark-circle",
-        };
-      case "RECHAZADO":
-        return {
-          label: "Rechazado",
-          color: isDark ? "#F87171" : "#DC2626",
-          bg: isDark ? "#7F1D1D" : "#FEE2E2",
-          icon: "ion:close-circle",
-        };
-      default:
-        return {
-          label: "Pendiente",
-          color: isDark ? "#FBBF24" : "#D97706",
-          bg: isDark ? "#78350F" : "#FEF3C7",
-          icon: "ion:time-outline",
-        };
-    }
-  };
-
-  const estado = getEstadoInfo(item.estado);
+  const estado = getEstadoBadge(item.estado, item.etapaActual || item.etapa, theme.dark);
   const totalParticipantes = item.avalTecnico
     ? item.avalTecnico.atletas + item.avalTecnico.entrenadores
     : 0;

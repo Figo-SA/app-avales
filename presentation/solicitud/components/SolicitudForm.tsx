@@ -2,21 +2,24 @@ import { Participante } from "@/core/participants/interfaces/participante";
 import { useEventos } from "@/presentation/event/hooks/useEvento";
 import { AgregarParticipanteModal } from "@/presentation/participants/components/AgregarParticipanteModal";
 import { DateTimeInput } from "@/presentation/solicitud/components/DateTimeInput";
+import { SolicitudPreviewHtml } from "@/presentation/solicitud/components/SolicitudPreviewHtml";
 import { TransporteSelector } from "@/presentation/solicitud/components/TransporteSelector";
 import { useSolicitud } from "@/presentation/solicitud/hooks/useSolicitud";
 import { useSolicitudMutation } from "@/presentation/solicitud/hooks/useSolicitudMutation";
+import { useSolicitudDraftStore } from "@/presentation/solicitud/store/useSolicitudDraftStore";
 import { ThemedText } from "@/presentation/theme/components/ThemedText";
 import { ThemedView } from "@/presentation/theme/components/ThemedView";
 import { toast } from "@backpackapp-io/react-native-toast";
 import * as DocumentPicker from "expo-document-picker";
 import { router } from "expo-router";
-import React, { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   ActivityIndicator,
   Button,
   Chip,
+  Divider,
   Icon,
   ProgressBar,
   Surface,
@@ -36,6 +39,7 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
   const { eventoQuery } = useEventos(eventoId);
   const evento = eventoQuery.data;
   const solicitudMutation = useSolicitudMutation();
+  const { clearDraft } = useSolicitudDraftStore();
 
   // Usar el hook personalizado para toda la lógica del formulario
   const {
@@ -51,6 +55,7 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
     addArrayItem,
     canContinue,
     isUploading,
+    isDraftLoading,
   } = useSolicitud(eventoId, initialStep, coleccionId);
 
   const [documento, setDocumento] = useState<{
@@ -58,8 +63,19 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
     name: string;
     type: string;
   } | null>(null);
+  const [certificadoMedicoLocal, setCertificadoMedicoLocal] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
 
-
+  // Limpiar estados locales cuando cambia el evento
+  useEffect(() => {
+    setDocumento(null);
+    setCertificadoMedicoLocal(null);
+    setDeportistasSeleccionados([]);
+    setEntrenadoresSeleccionados([]);
+  }, [eventoId]);
 
   const [modalState, setModalState] = useState<{
     visible: boolean;
@@ -161,6 +177,28 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
     }
   };
 
+  const seleccionarCertificadoMedico = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/pdf",
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        setCertificadoMedicoLocal({
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType || "application/pdf",
+        });
+        updateFormData("certificadoMedico", file);
+      }
+    } catch (error) {
+      console.error("Error al seleccionar certificado médico:", error);
+      toast.error("No se pudo seleccionar el certificado médico");
+    }
+  };
+
 
 
 
@@ -184,6 +222,8 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
         coleccionAvalId: formData.coleccionAvalId,
         fechaHoraSalida: formData.fechaSalida.toISOString(),
         fechaHoraRetorno: formData.fechaRetorno.toISOString(),
+        lugarSalida: formData.lugarSalida,
+        lugarRetorno: formData.lugarRetorno,
         transporteSalida: formData.transporteSalida,
         transporteRetorno: formData.transporteRetorno,
         observaciones: formData.observaciones || "",
@@ -209,6 +249,7 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
         solicitudData,
       });
 
+      await clearDraft(eventoId);
       toast.success("Solicitud enviada correctamente");
       router.back();
     } catch (error) {
@@ -319,6 +360,34 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
         minimumDate={formData.fechaSalida}
         error={errors.fechaRetorno?.message}
       />
+
+      <TextInput
+        label="Lugar de Salida *"
+        mode="outlined"
+        value={formData.lugarSalida}
+        onChangeText={(text) => updateFormData("lugarSalida", text)}
+        placeholder="Ej: Terminal Terrestre de Loja"
+        error={!!errors.lugarSalida}
+      />
+      {errors.lugarSalida && (
+        <Text variant="bodySmall" style={{ color: theme.colors.error, marginTop: -8 }}>
+          {errors.lugarSalida.message}
+        </Text>
+      )}
+
+      <TextInput
+        label="Lugar de Retorno *"
+        mode="outlined"
+        value={formData.lugarRetorno}
+        onChangeText={(text) => updateFormData("lugarRetorno", text)}
+        placeholder="Ej: Terminal Terrestre de Quito"
+        error={!!errors.lugarRetorno}
+      />
+      {errors.lugarRetorno && (
+        <Text variant="bodySmall" style={{ color: theme.colors.error, marginTop: -8 }}>
+          {errors.lugarRetorno.message}
+        </Text>
+      )}
 
       <TransporteSelector
         control={control}
@@ -604,20 +673,21 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
           size={24}
           color={theme.colors.primary}
         />
-        <ThemedText style={styles.stepTitle}>Convocatoria / Solicitud</ThemedText>
+        <ThemedText style={styles.stepTitle}>Documentos Requeridos</ThemedText>
       </View>
 
       <View style={styles.infoBox}>
         <Icon source="ion:information-circle-outline" size={20} color={theme.colors.onSurfaceVariant} />
         <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
-          Para iniciar tu solicitud de aval, primero debes subir la convocatoria oficial.
+          Para iniciar tu solicitud de aval, debes subir la convocatoria oficial y el certificado médico.
           {"\n\n"}
-          Una vez subida, podrás completar el formulario con los detalles técnicos (fechas, objetivos y participantes).
+          Una vez subidos, podrás completar el formulario con los detalles técnicos (fechas, objetivos y participantes).
         </Text>
       </View>
 
+      {/* Convocatoria */}
       <ThemedText style={styles.helperText}>
-        Sube la convocatoria o documento oficial de solicitud
+        Convocatoria oficial del evento
       </ThemedText>
 
       <Button
@@ -626,7 +696,7 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
         onPress={seleccionarDocumento}
         style={styles.uploadButton}
       >
-        {documento ? "Cambiar Documento" : "Seleccionar Documento"}
+        {documento ? "Cambiar Convocatoria" : "Seleccionar Convocatoria"}
       </Button>
 
       {documento && (
@@ -644,6 +714,35 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
         </Surface>
       )}
 
+      {/* Certificado Médico */}
+      <ThemedText style={styles.helperText}>
+        Certificado médico de los participantes
+      </ThemedText>
+
+      <Button
+        mode="outlined"
+        icon="ion:medkit-outline"
+        onPress={seleccionarCertificadoMedico}
+        style={styles.uploadButton}
+      >
+        {certificadoMedicoLocal ? "Cambiar Certificado Médico" : "Seleccionar Certificado Médico"}
+      </Button>
+
+      {certificadoMedicoLocal && (
+        <Surface style={styles.documentPreview} elevation={1}>
+          <Icon source="ion:medkit" size={40} color={theme.colors.primary} />
+          <View style={styles.documentInfo}>
+            <ThemedText style={styles.documentName}>
+              {certificadoMedicoLocal.name}
+            </ThemedText>
+            <ThemedText style={styles.documentSize}>
+              {certificadoMedicoLocal.type}
+            </ThemedText>
+          </View>
+          <Icon source="ion:checkmark-circle" size={24} color="#4CAF50" />
+        </Surface>
+      )}
+
       <TextInput
         label="Observaciones (Opcional)"
         mode="outlined"
@@ -654,14 +753,218 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
     </View>
   );
 
+  const TRANSPORTE_LABELS: Record<string, string> = {
+    AEREO: "Transporte Aéreo",
+    TERRESTRE: "Transporte Terrestre",
+    VEHICULO_PROPIO: "Vehículo Propio",
+    MARITIMO: "Transporte Marítimo",
+    OTRO: "Otro",
+  };
+
+  const [showHtmlPreview, setShowHtmlPreview] = useState(false);
+
+  const renderResumenSection = (
+    icon: string,
+    title: string,
+    children: React.ReactNode
+  ) => (
+    <Surface
+      style={[styles.resumenSection, { backgroundColor: theme.colors.surface }]}
+      elevation={1}
+    >
+      <View style={styles.resumenSectionHeader}>
+        <Icon source={icon} size={20} color={theme.colors.primary} />
+        <Text
+          variant="titleSmall"
+          style={{ fontWeight: "600", color: theme.colors.onSurface }}
+        >
+          {title}
+        </Text>
+      </View>
+      <Divider style={{ marginVertical: 8 }} />
+      {children}
+    </Surface>
+  );
+
+  const ResumenRow = ({
+    label,
+    value,
+  }: {
+    label: string;
+    value: string;
+  }) => (
+    <View style={styles.resumenRow}>
+      <Text
+        variant="bodySmall"
+        style={{ color: theme.colors.onSurfaceVariant, flex: 1 }}
+      >
+        {label}
+      </Text>
+      <Text
+        variant="bodySmall"
+        style={{ color: theme.colors.onSurface, fontWeight: "500", flex: 2, textAlign: "right" }}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+
+  const formatResumenDate = (date?: Date | null) => {
+    if (!date) return "-";
+    return date.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const renderStepResumen = () => {
+    if (!evento) return null;
+
+    return (
+      <View style={styles.stepContainer}>
+        <View style={styles.stepTitleContainer}>
+          <Icon source="ion:document-text" size={24} color={theme.colors.primary} />
+          <ThemedText style={styles.stepTitle}>Resumen de Solicitud</ThemedText>
+        </View>
+
+        <ThemedText style={styles.helperText}>
+          Revisa los datos antes de enviar. Puedes regresar a cualquier paso para
+          editar.
+        </ThemedText>
+
+        {/* Logística */}
+        {renderResumenSection("ion:calendar-outline", "Fechas y Transporte", (
+          <>
+            <ResumenRow label="Salida" value={formatResumenDate(formData.fechaSalida)} />
+            <ResumenRow label="Retorno" value={formatResumenDate(formData.fechaRetorno)} />
+            <ResumenRow label="Lugar salida" value={formData.lugarSalida || "-"} />
+            <ResumenRow label="Lugar retorno" value={formData.lugarRetorno || "-"} />
+            <ResumenRow label="Transporte salida" value={TRANSPORTE_LABELS[formData.transporteSalida] || formData.transporteSalida || "-"} />
+            <ResumenRow label="Transporte retorno" value={TRANSPORTE_LABELS[formData.transporteRetorno] || formData.transporteRetorno || "-"} />
+          </>
+        ))}
+
+        {/* Objetivos */}
+        {renderResumenSection("ion:flag-outline", "Objetivos", (
+          <View style={{ gap: 6 }}>
+            {formData.objetivos
+              .filter((o) => o.trim())
+              .map((objetivo, index) => (
+                <View key={index} style={styles.resumenListItem}>
+                  <Text variant="bodySmall" style={{ color: theme.colors.primary, fontWeight: "700", minWidth: 20 }}>
+                    {index + 1}.
+                  </Text>
+                  <Text variant="bodySmall" style={{ color: theme.colors.onSurface, flex: 1 }}>
+                    {objetivo}
+                  </Text>
+                </View>
+              ))}
+          </View>
+        ))}
+
+        {/* Criterios */}
+        {renderResumenSection("ion:checkmark-done", "Criterios de Selección", (
+          <View style={{ gap: 6 }}>
+            {formData.criterios
+              .filter((c) => c.trim())
+              .map((criterio, index) => (
+                <View key={index} style={styles.resumenListItem}>
+                  <Text variant="bodySmall" style={{ color: theme.colors.primary, fontWeight: "700", minWidth: 20 }}>
+                    {index + 1}.
+                  </Text>
+                  <Text variant="bodySmall" style={{ color: theme.colors.onSurface, flex: 1 }}>
+                    {criterio}
+                  </Text>
+                </View>
+              ))}
+          </View>
+        ))}
+
+        {/* Participantes */}
+        {renderResumenSection("ion:people-outline", "Participantes", (
+          <>
+            <View style={styles.resumenParticipantRow}>
+              <View style={[styles.resumenParticipantBox, { backgroundColor: theme.colors.primaryContainer }]}>
+                <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.primary }}>
+                  {deportistasSeleccionados.length}
+                </Text>
+                <Text variant="labelSmall" style={{ color: theme.colors.onPrimaryContainer }}>
+                  Deportistas
+                </Text>
+              </View>
+              <View style={[styles.resumenParticipantBox, { backgroundColor: theme.colors.secondaryContainer }]}>
+                <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.secondary }}>
+                  {entrenadoresSeleccionados.length}
+                </Text>
+                <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer }}>
+                  Entrenadores
+                </Text>
+              </View>
+            </View>
+            {deportistasSeleccionados.length > 0 && (
+              <View style={{ marginTop: 8 }}>
+                <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 4 }}>
+                  Deportistas:
+                </Text>
+                <View style={styles.chipsContainer}>
+                  {deportistasSeleccionados.map((d) => (
+                    <Chip key={d.id} compact style={{ marginBottom: 2 }}>
+                      {d.nombres} {d.apellidos}
+                    </Chip>
+                  ))}
+                </View>
+              </View>
+            )}
+            {entrenadoresSeleccionados.length > 0 && (
+              <View style={{ marginTop: 8 }}>
+                <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 4 }}>
+                  Entrenadores:
+                </Text>
+                <View style={styles.chipsContainer}>
+                  {entrenadoresSeleccionados.map((e) => (
+                    <Chip key={e.id} compact style={{ marginBottom: 2 }}>
+                      {e.nombres} {e.apellidos}
+                    </Chip>
+                  ))}
+                </View>
+              </View>
+            )}
+          </>
+        ))}
+
+        {/* Observaciones */}
+        {formData.observaciones?.trim() && (
+          renderResumenSection("ion:chatbox-outline", "Observaciones", (
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurface }}>
+              {formData.observaciones}
+            </Text>
+          ))
+        )}
+
+        {/* Botón ver preview HTML */}
+        <Button
+          mode="outlined"
+          icon="ion:eye-outline"
+          onPress={() => setShowHtmlPreview(true)}
+          style={{ borderRadius: 8, marginTop: 4 }}
+        >
+          Ver vista previa del documento
+        </Button>
+      </View>
+    );
+  };
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <ThemedView style={styles.container}>
-        {eventoQuery.isLoading ? (
+        {eventoQuery.isLoading || isDraftLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
             <Text variant="bodyLarge" style={{ marginTop: 16 }}>
-              Cargando información del evento...
+              {isDraftLoading ? "Cargando borrador..." : "Cargando información del evento..."}
             </Text>
           </View>
         ) : eventoQuery.isError ? (
@@ -694,7 +997,37 @@ export const SolicitudForm = ({ eventoId, initialStep = 1, coleccionId }: Solici
               {step === 3 && renderStepObjetivos()}
               {step === 4 && renderStepCriterios()}
               {step === 5 && renderStepParticipantes()}
+              {step === 6 && renderStepResumen()}
             </ScrollView>
+
+            {/* Modal de preview HTML */}
+            <Modal
+              visible={showHtmlPreview}
+              animationType="slide"
+              presentationStyle="pageSheet"
+              onRequestClose={() => setShowHtmlPreview(false)}
+            >
+              <View style={[styles.previewModalContainer, { backgroundColor: theme.colors.background }]}>
+                <View style={[styles.previewModalHeader, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.surfaceVariant }]}>
+                  <Text variant="titleMedium" style={{ fontWeight: "600", color: theme.colors.onSurface }}>
+                    Vista Previa del Documento
+                  </Text>
+                  <TouchableOpacity onPress={() => setShowHtmlPreview(false)}>
+                    <Icon source="ion:close" size={24} color={theme.colors.onSurface} />
+                  </TouchableOpacity>
+                </View>
+                <View style={{ flex: 1 }}>
+                  {evento && (
+                    <SolicitudPreviewHtml
+                      evento={evento}
+                      formData={formData}
+                      deportistas={deportistasSeleccionados}
+                      entrenadores={entrenadoresSeleccionados}
+                    />
+                  )}
+                </View>
+              </View>
+            </Modal>
 
             {/* Footer con botones */}
 
@@ -1027,6 +1360,50 @@ const styles = StyleSheet.create({
   sheetMainBtn: {
       borderRadius: 8,
       paddingVertical: 6,
+  },
+  // Resumen Styles
+  resumenSection: {
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 4,
+  },
+  resumenSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  resumenRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  resumenListItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 4,
+  },
+  resumenParticipantRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  resumenParticipantBox: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    gap: 2,
+  },
+  // Preview Modal Styles
+  previewModalContainer: {
+    flex: 1,
+  },
+  previewModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
   },
   // Empty State Styles
   emptyStateContainer: {

@@ -1,3 +1,5 @@
+import type { Estado, EtapaFlujo } from "@/core/constants/avales.constants";
+
 export interface Deportista {
   id: string;
   nombre: string;
@@ -23,7 +25,8 @@ export interface Aval {
   categoria: string;
 
   // Estado de la Solicitud/Aval
-  status: "pending" | "sent" | "approved" | "rejected";
+  estado: Estado;
+  etapaActual?: EtapaFlujo;
 
   // Deportistas y Entrenadores agregados
   deportistas: Deportista[];
@@ -47,4 +50,4 @@ export interface Aval {
   usuarioNombre: string;
 }
 
-export type AvalStatus = "pending" | "sent" | "approved" | "rejected";
+export type { Estado, EtapaFlujo };

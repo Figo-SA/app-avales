@@ -1,5 +1,6 @@
 import { getColeccionByEvento } from "@/core/avales/actions/colecciones-actions";
 import { ColeccionAval } from "@/core/avales/interfaces/coleccion";
+import { getEstadoBadge } from "@/core/constants/avales.constants";
 import { getEventoById } from "@/core/eventos/actions/eventos-actions";
 import { Evento } from "@/core/eventos/interfaces/evento";
 import { uploadConvocatoria } from "@/core/solicitud/actions/solicitud-actions";
@@ -12,12 +13,12 @@ import {
   BottomSheetModal,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as DocumentPicker from "expo-document-picker";
 import * as Haptics from "expo-haptics";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -38,6 +39,7 @@ import {
 export default function EventoDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
+  const queryClient = useQueryClient();
 
   // State for upload
   const [documento, setDocumento] = useState<{
@@ -45,7 +47,20 @@ export default function EventoDetailScreen() {
     name: string;
     type: string;
   } | null>(null);
+  const [certificadoMedico, setCertificadoMedico] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadedColeccionId, setUploadedColeccionId] = useState<number | null>(null);
+
+  // Limpiar estados cuando cambia el evento
+  useEffect(() => {
+    setDocumento(null);
+    setCertificadoMedico(null);
+    setUploadedColeccionId(null);
+  }, [id]);
 
   // Ref para el Bottom Sheet
   const bottomSheetRef = useRef<BottomSheetModal>(null);
@@ -68,13 +83,30 @@ export default function EventoDetailScreen() {
   const { data: coleccion } = useQuery<ColeccionAval | null>({
     queryKey: ["coleccion-evento", id],
     queryFn: () => getColeccionByEvento(Number(id)),
-    enabled: !!id && evento?.estado !== "DISPONIBLE",
+    enabled: !!id && (evento?.estado !== "DISPONIBLE" || !!uploadedColeccionId),
   });
 
-  const openDocument = async (url: string | null | undefined) => {
+  const snapPoints = useMemo(() => ["65%", "90%"], []);
+
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+      />
+    ),
+    []
+  );
+
+  const openDocument = (url: string | null | undefined, title?: string) => {
     if (url) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      await WebBrowser.openBrowserAsync(url);
+      router.push({
+        pathname: "/pdf-viewer",
+        params: { url, title: title || "Documento" },
+      });
     }
   };
 
@@ -102,66 +134,18 @@ export default function EventoDetailScreen() {
     );
   }
 
-  const estadoEvento = evento.estado?.toLowerCase() || "disponible";
+  const estadoEvento = evento.estado?.toUpperCase() || "DISPONIBLE";
 
-  const getEstadoInfo = () => {
-    const isDark = theme.dark;
-    switch (estadoEvento) {
-      case "solicitado":
-        return {
-          label: "En Revisión",
-          color: isDark ? "#FBBF24" : "#D97706",
-          bg: isDark ? "#78350F" : "#FEF3C7",
-          icon: "ion:time-outline"
-        };
-      case "aceptado":
-        return {
-          label: "Aprobado",
-          color: isDark ? "#34D399" : "#059669",
-          bg: isDark ? "#064E3B" : "#D1FAE5",
-          icon: "ion:checkmark-circle"
-        };
-      case "rechazado":
-        return {
-          label: "Rechazado",
-          color: isDark ? "#F87171" : "#DC2626",
-          bg: isDark ? "#7F1D1D" : "#FEE2E2",
-          icon: "ion:close-circle"
-        };
-      default:
-        return {
-          label: "Disponible",
-          color: theme.colors.primary,
-          bg: theme.colors.primaryContainer,
-          icon: "ion:checkmark-circle-outline"
-        };
-    }
-  };
-
-  const estado = getEstadoInfo();
-
-
-  const snapPoints = useMemo(() => ["50%", "80%"], []);
-
-  const renderBackdrop = useCallback(
-    (props: any) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.5}
-      />
-    ),
-    []
-  );
+  const estado = getEstadoBadge(estadoEvento, evento.etapa, theme.dark);
 
   const handleSolicitar = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // Si ya existe una colección, navegar directamente al formulario (Paso 2)
-    if (coleccion) {
+    // Si ya existe una colección (del query o recién subida), navegar al formulario
+    const coleccionId = coleccion?.id || uploadedColeccionId;
+    if (coleccionId) {
         router.push({
             pathname: "/solicitud/[eventoId]",
-            params: { eventoId: evento.id, initialStep: 2, coleccionId: coleccion.id }
+            params: { eventoId: evento.id, initialStep: 2, coleccionId }
         });
     } else {
         // Si no, abrir el bottom sheet para subir la convocatoria
@@ -190,19 +174,50 @@ export default function EventoDetailScreen() {
     }
   };
 
+  const seleccionarCertificadoMedico = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/pdf",
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        setCertificadoMedico({
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType || "application/pdf",
+        });
+      }
+    } catch (error) {
+      console.error("Error al seleccionar certificado médico:", error);
+      toast.error("No se pudo seleccionar el certificado médico");
+    }
+  };
+
   const handleUpload = async (continueToForm: boolean) => {
       if (!documento) {
-          toast.error("Debes seleccionar un documento");
+          toast.error("Debes seleccionar la convocatoria");
+          return;
+      }
+      if (!certificadoMedico) {
+          toast.error("Debes seleccionar el certificado médico");
           return;
       }
 
       try {
           setIsUploading(true);
-          const result = await uploadConvocatoria(Number(evento.id), documento);
-          toast.success("Convocatoria subida exitosamente");
-          
+          const result = await uploadConvocatoria(Number(evento.id), documento, certificadoMedico);
+          setUploadedColeccionId(result.coleccionAvalId);
+          toast.success("Documentos subidos exitosamente");
+
+          // Refrescar datos del evento y colección
+          queryClient.invalidateQueries({ queryKey: ["evento", id] });
+          queryClient.invalidateQueries({ queryKey: ["coleccion-evento", id] });
+          queryClient.invalidateQueries({ queryKey: ["eventos"] });
+
           bottomSheetRef.current?.dismiss();
-          
+
           if (continueToForm) {
               router.push({
                   pathname: "/solicitud/[eventoId]",
@@ -224,9 +239,13 @@ export default function EventoDetailScreen() {
               Iniciar Solicitud
           </Text>
           <Text variant="bodyMedium" style={[styles.sheetDesc, { color: theme.colors.onSurfaceVariant }]}>
-              Para solicitar el aval, primero debes subir la convocatoria oficial del evento.
+              Para solicitar el aval, debes subir la convocatoria oficial y el certificado médico.
           </Text>
 
+          {/* Convocatoria */}
+          <Text variant="labelLarge" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
+            Convocatoria
+          </Text>
           <Button
             mode="outlined"
             icon="ion:cloud-upload-outline"
@@ -234,7 +253,7 @@ export default function EventoDetailScreen() {
             style={styles.uploadButton}
             contentStyle={{ height: 48 }}
           >
-            {documento ? "Cambiar Documento" : "Seleccionar Convocatoria"}
+            {documento ? "Cambiar Convocatoria" : "Seleccionar Convocatoria"}
           </Button>
 
           {documento && (
@@ -242,26 +261,49 @@ export default function EventoDetailScreen() {
               <Icon source="ion:document" size={24} color={theme.colors.primary} />
               <View style={{ flex: 1 }}>
                 <Text numberOfLines={1} style={{ fontWeight: '500', color: theme.colors.onSurface }}>{documento.name}</Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{(documento.uri.length/1024).toFixed(2)} KB</Text>
+              </View>
+              <Icon source="ion:checkmark-circle" size={20} color={theme.colors.primary} />
+            </Surface>
+          )}
+
+          {/* Certificado Médico */}
+          <Text variant="labelLarge" style={{ color: theme.colors.onSurface, fontWeight: '600', marginTop: 8 }}>
+            Certificado Médico
+          </Text>
+          <Button
+            mode="outlined"
+            icon="ion:medkit-outline"
+            onPress={seleccionarCertificadoMedico}
+            style={styles.uploadButton}
+            contentStyle={{ height: 48 }}
+          >
+            {certificadoMedico ? "Cambiar Certificado" : "Seleccionar Certificado Médico"}
+          </Button>
+
+          {certificadoMedico && (
+            <Surface style={[styles.filePreview, { backgroundColor: theme.colors.elevation.level1 }]} elevation={0}>
+              <Icon source="ion:medkit" size={24} color={theme.colors.primary} />
+              <View style={{ flex: 1 }}>
+                <Text numberOfLines={1} style={{ fontWeight: '500', color: theme.colors.onSurface }}>{certificadoMedico.name}</Text>
               </View>
               <Icon source="ion:checkmark-circle" size={20} color={theme.colors.primary} />
             </Surface>
           )}
 
           <View style={styles.sheetActions}>
-            <Button 
-                mode="contained" 
+            <Button
+                mode="contained"
                 onPress={() => handleUpload(true)}
-                disabled={!documento || isUploading}
+                disabled={!documento || !certificadoMedico || isUploading}
                 loading={isUploading}
                 style={styles.actionButton}
             >
                 Subir y Llenar Formulario
             </Button>
-            <Button 
-                mode="text" 
+            <Button
+                mode="text"
                 onPress={() => handleUpload(false)}
-                disabled={!documento || isUploading}
+                disabled={!documento || !certificadoMedico || isUploading}
                 style={styles.actionButton}
             >
                 Subir y Llenar Después
@@ -414,6 +456,15 @@ export default function EventoDetailScreen() {
                     onPress={openDocument}
                   />
                 )}
+                {coleccion.certificadoMedicoUrl && (
+                  <DocumentRow
+                    label="Certificado Médico"
+                    icon="ion:medkit-outline"
+                    url={coleccion.certificadoMedicoUrl}
+                    theme={theme}
+                    onPress={openDocument}
+                  />
+                )}
                 {coleccion.dtmUrl && (
                   <DocumentRow
                     label="Aval DTM"
@@ -450,7 +501,7 @@ export default function EventoDetailScreen() {
                     onPress={openDocument}
                   />
                 )}
-                {!coleccion.convocatoriaUrl && !coleccion.dtmUrl && !coleccion.pdaUrl && !coleccion.solicitudUrl && !coleccion.aval && (
+                {!coleccion.convocatoriaUrl && !coleccion.certificadoMedicoUrl && !coleccion.dtmUrl && !coleccion.pdaUrl && !coleccion.solicitudUrl && !coleccion.aval && (
                   <Text style={[styles.noDocuments, { color: theme.colors.onSurfaceVariant }]}>
                     No hay documentos disponibles aún
                   </Text>
@@ -461,7 +512,7 @@ export default function EventoDetailScreen() {
         )}
 
         {/* Alertas de estado */}
-        {estadoEvento === "solicitado" && (
+        {estadoEvento === "SOLICITADO" && (
           <Surface style={[styles.alertBox, { backgroundColor: estado.bg }]} elevation={0}>
             <Icon source="ion:time-outline" size={18} color={estado.color} />
             <Text style={[styles.alertText, { color: estado.color }]}>
@@ -470,7 +521,7 @@ export default function EventoDetailScreen() {
           </Surface>
         )}
 
-        {estadoEvento === "aceptado" && (
+        {estadoEvento === "ACEPTADO" && (
           <Surface style={[styles.alertBox, { backgroundColor: estado.bg }]} elevation={0}>
             <Icon source="ion:checkmark-circle" size={18} color={estado.color} />
             <Text style={[styles.alertText, { color: estado.color }]}>
@@ -479,7 +530,7 @@ export default function EventoDetailScreen() {
           </Surface>
         )}
 
-        {estadoEvento === "rechazado" && (
+        {estadoEvento === "RECHAZADO" && (
           <Surface style={[styles.alertBox, { backgroundColor: estado.bg }]} elevation={0}>
             <Icon source="ion:close-circle" size={18} color={estado.color} />
             <View style={{ flex: 1 }}>
@@ -496,14 +547,15 @@ export default function EventoDetailScreen() {
         )}
 
         {/* Botón */}
-        {estadoEvento === "disponible" && (
+        {estadoEvento === "DISPONIBLE" && (
           <Button
             mode="contained"
             onPress={handleSolicitar}
             style={styles.button}
             labelStyle={styles.buttonLabel}
+            icon={uploadedColeccionId || coleccion ? "ion:create-outline" : undefined}
           >
-            Solicitar Participación
+            {uploadedColeccionId || coleccion ? "Continuar Solicitud" : "Solicitar Participación"}
           </Button>
         )}
 
@@ -554,11 +606,11 @@ const DocumentRow = ({
   icon: string;
   url: string;
   theme: any;
-  onPress: (url: string) => void;
+  onPress: (url: string, title?: string) => void;
 }) => (
   <TouchableOpacity
     style={[documentRowStyles.container, { borderBottomColor: theme.colors.surfaceVariant }]}
-    onPress={() => onPress(url)}
+    onPress={() => onPress(url, label)}
     activeOpacity={0.7}
   >
     <View style={[documentRowStyles.iconContainer, { backgroundColor: theme.colors.primaryContainer }]}>

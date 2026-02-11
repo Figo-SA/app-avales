@@ -35,7 +35,6 @@ export default function Index() {
       case ROLES.SUPER_ADMIN:
         return <Redirect href={"/(protected)/(admin)" as any} />;
       case ROLES.DTM:
-      case ROLES.DTM_EIDE:
         return <Redirect href={"/(protected)/(dtm)" as any} />;
       case ROLES.PDA:
         return <Redirect href={"/(protected)/(pda)" as any} />;
