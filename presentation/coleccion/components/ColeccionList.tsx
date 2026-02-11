@@ -25,6 +25,8 @@ interface ColeccionListProps {
   onRefresh?: () => void;
   isRefreshing?: boolean;
   routePath?: string;
+  isPending?: boolean;
+  actionLabel?: string;
 }
 
 export const ColeccionList = ({
@@ -41,6 +43,8 @@ export const ColeccionList = ({
   onRefresh,
   isRefreshing = false,
   routePath,
+  isPending,
+  actionLabel,
 }: ColeccionListProps) => {
   const theme = useTheme();
   const [isRefreshingInternal, setIsRefreshingInternal] = useState(false);
@@ -56,9 +60,9 @@ export const ColeccionList = ({
   const renderItem = useCallback(
     ({ item }: { item: ColeccionAval }) => {
       if (!item) return null;
-      return <ColeccionCard item={item} routePath={routePath} />;
+      return <ColeccionCard item={item} routePath={routePath} isPending={isPending} actionLabel={actionLabel} />;
     },
-    [routePath]
+    [routePath, isPending, actionLabel]
   );
 
   const renderFooter = useCallback(() => {

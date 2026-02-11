@@ -40,6 +40,8 @@ export const API_ENDPOINTS = {
     DTM_PDF: (id: number) => `/avales/${id}/dtm-pdf`,
     PDA_PDF: (id: number) => `/avales/${id}/pda-pdf`,
     DTM_PDF_BY_EVENTO: (eventoId: number) => `/avales/evento/${eventoId}/dtm-pdf`,
+    CREATE_PDA: (id: number) => `/avales/${id}/pda`,
+    CREATE_COMPRAS_PUBLICAS: (id: number) => `/avales/${id}/compras-publicas`,
   },
   EVENTOS: {
     LIST: "/events",

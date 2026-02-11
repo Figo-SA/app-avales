@@ -13,6 +13,7 @@ export default function ComprasPublicasDashboard() {
 
   const { coleccionesQuery, loadNextPage } = useColecciones({
     etapa: activeTab === "validar" ? "PDA" : "COMPRAS_PUBLICAS",
+    estado: activeTab === "validar" ? "SOLICITADO" : undefined,
   });
 
   const colecciones =
@@ -84,6 +85,8 @@ export default function ComprasPublicasDashboard() {
           emptyStateProps={getEmptyStateProps()}
           filterKey={activeTab}
           routePath="/(protected)/(compras-publicas)/coleccion"
+          isPending={activeTab === "validar"}
+          actionLabel="Validar Compras"
           onEndReached={() => {
             if (
               coleccionesQuery.hasNextPage &&

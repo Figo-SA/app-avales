@@ -9,20 +9,24 @@ import { Card, Icon, Text, useTheme } from "react-native-paper";
 interface ColeccionCardProps {
   item: ColeccionAval;
   routePath?: string;
+  isPending?: boolean;
+  actionLabel?: string;
 }
 
 export const ColeccionCard = ({
   item,
   routePath = "/(protected)/(dtm)/coleccion",
+  isPending,
+  actionLabel,
 }: ColeccionCardProps) => {
   const theme = useTheme();
   const router = useRouter();
 
-  const handlePress = () => {
+  const navigate = (mode: "view" | "edit") => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
       pathname: routePath as any,
-      params: { data: JSON.stringify(item) },
+      params: { data: JSON.stringify(item), mode },
     });
   };
 
@@ -32,10 +36,13 @@ export const ColeccionCard = ({
     : 0;
 
   return (
-    <TouchableOpacity activeOpacity={0.7} onPress={handlePress}>
-      <Card
-        style={[styles.card, { backgroundColor: theme.colors.surface }]}
-        mode="elevated"
+    <Card
+      style={[styles.card, { backgroundColor: theme.colors.surface }]}
+      mode="elevated"
+    >
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => navigate("view")}
       >
         <Card.Content style={styles.cardContent}>
           {/* Header con estado */}
@@ -113,7 +120,7 @@ export const ColeccionCard = ({
           {/* Footer con tipo y alcance */}
           <View
             style={[
-              styles.footer,
+              styles.metaRow,
               { borderTopColor: theme.colors.surfaceVariant },
             ]}
           >
@@ -143,25 +150,60 @@ export const ColeccionCard = ({
                 {item.evento.alcance}
               </Text>
             </View>
-            <View style={{ flex: 1 }} />
-            <Icon
-              source="ion:chevron-forward"
-              size={20}
-              color={theme.colors.outline}
-            />
           </View>
         </Card.Content>
-      </Card>
-    </TouchableOpacity>
+      </TouchableOpacity>
+
+      {/* Action buttons */}
+      <View
+        style={[
+          styles.actionsRow,
+          { borderTopColor: theme.colors.surfaceVariant },
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.6}
+          onPress={() => navigate("view")}
+          style={[
+            styles.actionBtn,
+            { backgroundColor: theme.colors.surfaceVariant },
+          ]}
+        >
+          <Icon source="ion:eye-outline" size={16} color={theme.colors.onSurfaceVariant} />
+          <Text style={[styles.actionBtnText, { color: theme.colors.onSurfaceVariant }]}>
+            Ver detalle
+          </Text>
+        </TouchableOpacity>
+
+        {isPending && actionLabel && (
+          <TouchableOpacity
+            activeOpacity={0.6}
+            onPress={() => navigate("edit")}
+            style={[
+              styles.actionBtn,
+              { backgroundColor: theme.colors.primaryContainer },
+            ]}
+          >
+            <Icon source="ion:create-outline" size={16} color={theme.colors.primary} />
+            <Text style={[styles.actionBtnText, { color: theme.colors.primary }]}>
+              {actionLabel}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </Card>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
     borderRadius: 14,
+    overflow: "hidden",
   },
   cardContent: {
     gap: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
   cardHeader: {
     flexDirection: "row",
@@ -208,7 +250,7 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 11,
   },
-  footer: {
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 10,
@@ -227,5 +269,25 @@ const styles = StyleSheet.create({
     width: 1,
     height: 12,
     marginHorizontal: 4,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  actionBtnText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
 });

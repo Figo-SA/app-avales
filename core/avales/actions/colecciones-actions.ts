@@ -24,6 +24,26 @@ export const getColeccionByEvento = async (
   }
 };
 
+/**
+ * Obtiene una colección por su ID (con datos completos anidados)
+ */
+export const getColeccionById = async (
+  id: number
+): Promise<ColeccionAval | null> => {
+  try {
+    const response = await httpClient.get<ColeccionAval>(
+      API_ENDPOINTS.AVALES.GET_BY_ID(id)
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error?.response?.status === 404) {
+      return null;
+    }
+    const errorMessage = handleApiError(error, "getColeccionById");
+    throw new Error(errorMessage);
+  }
+};
+
 export type ColeccionEstado = "SOLICITADO" | "ACEPTADO" | "RECHAZADO";
 
 export const getColecciones = async (
@@ -89,6 +109,52 @@ export const aprobarSolicitud = async (
     await httpClient.patch(API_ENDPOINTS.AVALES.APROBAR(avalId), payload);
   } catch (error) {
     const errorMessage = handleApiError(error, "aprobarSolicitud");
+    throw new Error(errorMessage);
+  }
+};
+
+export interface CreatePdaPayload {
+  descripcion: string;
+  numeroPda?: string;
+  numeroAval?: string;
+  codigoActividad?: string;
+  nombreFirmante?: string;
+  cargoFirmante?: string;
+}
+
+export const createPda = async (
+  avalId: number,
+  payload: CreatePdaPayload
+): Promise<void> => {
+  try {
+    await httpClient.post(API_ENDPOINTS.AVALES.CREATE_PDA(avalId), payload);
+  } catch (error) {
+    const errorMessage = handleApiError(error, "createPda");
+    throw new Error(errorMessage);
+  }
+};
+
+export interface CreateComprasPublicasPayload {
+  numeroCertificado?: string;
+  realizoProceso?: boolean;
+  codigoNecesidad?: string;
+  objetoContratacion?: string;
+  nombreFirmante?: string;
+  cargoFirmante?: string;
+  fechaEmision?: string;
+}
+
+export const createComprasPublicas = async (
+  avalId: number,
+  payload: CreateComprasPublicasPayload
+): Promise<void> => {
+  try {
+    await httpClient.post(
+      API_ENDPOINTS.AVALES.CREATE_COMPRAS_PUBLICAS(avalId),
+      payload
+    );
+  } catch (error) {
+    const errorMessage = handleApiError(error, "createComprasPublicas");
     throw new Error(errorMessage);
   }
 };

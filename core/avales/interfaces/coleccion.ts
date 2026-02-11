@@ -80,17 +80,18 @@ export interface DeportistaAval {
 
 export interface Deportista {
   id: number;
-  nombres: string;
-  apellidos: string;
+  nombre?: string;
+  nombres?: string;
+  apellidos?: string;
   cedula: string;
-  fechaNacimiento: string;
-  categoriaId: number;
-  disciplinaId: number;
-  afiliacion: boolean;
+  fechaNacimiento?: string;
+  categoriaId?: number;
+  disciplinaId?: number;
+  afiliacion?: boolean;
   genero: string;
-  createdAt: string;
-  updatedAt: string;
-  deleted: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  deleted?: boolean;
 }
 
 export interface EntrenadorColeccion {
@@ -104,17 +105,19 @@ export interface EntrenadorColeccion {
 
 export interface Entrenador {
   id: number;
-  nombres: string;
-  apellidos: string;
-  cedula: string;
-  fechaNacimiento: string;
-  categoriaId: number;
-  disciplinaId: number;
-  afiliacion: boolean;
-  genero: string;
-  createdAt: string;
-  updatedAt: string;
-  deleted: boolean;
+  nombre?: string;
+  nombres?: string;
+  apellidos?: string;
+  cedula?: string;
+  email?: string;
+  fechaNacimiento?: string;
+  categoriaId?: number;
+  disciplinaId?: number;
+  afiliacion?: boolean;
+  genero?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  deleted?: boolean;
 }
 
 export interface ColeccionCounts {

@@ -12,7 +12,8 @@ export default function PdaDashboard() {
   const [activeTab, setActiveTab] = useState<"certificar" | "historial">("certificar");
 
   const { coleccionesQuery, loadNextPage } = useColecciones({
-    etapa: activeTab === "certificar" ? "REVISION_DTM" : "PDA",
+    etapa: activeTab === "certificar" ? "SOLICITUD" : "PDA",
+    estado: activeTab === "certificar" ? "SOLICITADO" : undefined,
   });
 
   const colecciones =
@@ -84,6 +85,8 @@ export default function PdaDashboard() {
           emptyStateProps={getEmptyStateProps()}
           filterKey={activeTab}
           routePath="/(protected)/(pda)/coleccion"
+          isPending={activeTab === "certificar"}
+          actionLabel="Certificar PDA"
           onEndReached={() => {
             if (
               coleccionesQuery.hasNextPage &&

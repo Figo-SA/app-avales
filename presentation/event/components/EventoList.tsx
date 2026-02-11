@@ -70,7 +70,8 @@ export const EventoList = ({
   const queryClient = useQueryClient();
   const theme = useTheme();
 
-  const handleEventoPress = async (evento: Evento) => {
+  // Navigate to event detail screen (view only)
+  const handleViewDetail = (evento: Evento) => {
     const estadoEvento = evento.estado?.toLowerCase() || "disponible";
 
     // Rechazado: Mostrar bottom sheet con motivo
@@ -80,14 +81,15 @@ export const EventoList = ({
       return;
     }
 
-    // Solicitado: Navegar a pantalla de resumen
-    if (estadoEvento === "solicitado") {
-      router.push({
-        pathname: "/(protected)/(entrenador)/evento/[id]",
-        params: { id: evento.id }
-      } as any);
-      return;
-    }
+    router.push({
+      pathname: "/(protected)/(entrenador)/evento/[id]",
+      params: { id: evento.id }
+    } as any);
+  };
+
+  // Action handler per estado
+  const handleEventoAction = async (evento: Evento) => {
+    const estadoEvento = evento.estado?.toLowerCase() || "disponible";
 
     // Disponible: Abrir Bottom Sheet para subir convocatoria
     if (estadoEvento === "disponible") {
@@ -99,41 +101,79 @@ export const EventoList = ({
       return;
     }
 
-    // Aceptado: Navegar a resumen también
-    if (estadoEvento === "aceptado") {
-      router.push({
-        pathname: "/(protected)/(entrenador)/evento/[id]",
-        params: { id: evento.id }
-      } as any);
+    // Borrador: Recuperar colección y continuar formulario (Paso 2)
+    if (estadoEvento === "borrador") {
+      try {
+        toast.loading("Recuperando borrador...", { id: "loading-draft" });
+        const coleccion = await getColeccionByEvento(evento.id);
+        toast.dismiss("loading-draft");
+
+        if (coleccion) {
+          router.push({
+            pathname: "/(protected)/(entrenador)/solicitud/[eventoId]",
+            params: {
+              eventoId: evento.id,
+              initialStep: 2,
+              coleccionId: coleccion.id
+            }
+          } as any);
+        } else {
+          toast.error("No se pudo recuperar el borrador");
+        }
+      } catch (error) {
+        toast.dismiss("loading-draft");
+        console.error("Error fetching draft collection:", error);
+        toast.error("Error al abrir el borrador");
+      }
       return;
     }
 
-    // Borrador: Recuperar colección y continuar formulario (Paso 2)
-    if (estadoEvento === "borrador") {
-        try {
-            // Mostrar indicador de carga si es necesario, o toast
-            toast.loading("Recuperando borrador...", { id: "loading-draft" });
-            const coleccion = await getColeccionByEvento(evento.id);
-            toast.dismiss("loading-draft");
+    // Rechazado: Recuperar colección y corregir
+    if (estadoEvento === "rechazado") {
+      try {
+        toast.loading("Cargando solicitud...", { id: "loading-rejected" });
+        const coleccion = await getColeccionByEvento(evento.id);
+        toast.dismiss("loading-rejected");
 
-            if (coleccion) {
-                router.push({
-                    pathname: "/(protected)/(entrenador)/solicitud/[eventoId]",
-                    params: { 
-                        eventoId: evento.id, 
-                        initialStep: 2, 
-                        coleccionId: coleccion.id 
-                    }
-                } as any);
-            } else {
-                toast.error("No se pudo recuperar el borrador");
+        if (coleccion) {
+          router.push({
+            pathname: "/(protected)/(entrenador)/solicitud/[eventoId]",
+            params: {
+              eventoId: evento.id,
+              initialStep: 2,
+              coleccionId: coleccion.id
             }
-        } catch (error) {
-            toast.dismiss("loading-draft");
-            console.error("Error fetching draft collection:", error);
-            toast.error("Error al abir el borrador");
+          } as any);
+        } else {
+          toast.error("No se pudo recuperar la solicitud");
         }
-        return;
+      } catch (error) {
+        toast.dismiss("loading-rejected");
+        console.error("Error fetching rejected collection:", error);
+        toast.error("Error al cargar la solicitud");
+      }
+      return;
+    }
+  };
+
+  // Get action label based on estado
+  const getActionLabel = (evento: Evento): string | undefined => {
+    const estadoEvento = evento.estado?.toLowerCase() || "disponible";
+    switch (estadoEvento) {
+      case "disponible": return "Solicitar Aval";
+      case "borrador": return "Continuar Solicitud";
+      case "rechazado": return "Corregir";
+      default: return undefined;
+    }
+  };
+
+  // Legacy single-press handler (fallback for cards without action buttons)
+  const handleEventoPress = (evento: Evento) => {
+    const estadoEvento = evento.estado?.toLowerCase() || "disponible";
+    if (estadoEvento === "disponible" || estadoEvento === "borrador" || estadoEvento === "rechazado") {
+      handleEventoAction(evento);
+    } else {
+      handleViewDetail(evento);
     }
   };
 
@@ -366,7 +406,12 @@ export const EventoList = ({
         data={eventos}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <EventoCard evento={item} onPress={() => handleEventoPress(item)} />
+          <EventoCard
+            evento={item}
+            onPress={() => handleViewDetail(item)}
+            actionLabel={getActionLabel(item)}
+            onActionPress={getActionLabel(item) ? () => handleEventoAction(item) : undefined}
+          />
         )}
         onEndReached={onEndReached}
         onEndReachedThreshold={onEndReachedThreshold}

@@ -19,7 +19,7 @@ import {
   View,
 } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
-import { Surface, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
@@ -98,7 +98,7 @@ const LoginScreen = () => {
           </ThemedView>
 
           {/* Form Section */}
-          <Surface style={styles.formCard} elevation={2}>
+          <ThemedView style={styles.formSection}>
             <ThemedView style={styles.inputContainer}>
               <Controller
                 control={control}
@@ -167,7 +167,7 @@ const LoginScreen = () => {
             >
               {isSubmitting ? "Iniciando sesión..." : "Iniciar sesión"}
             </ThemeButton>
-          </Surface>
+          </ThemedView>
 
           {/* Footer */}
           <ThemedView style={styles.footerContainer}>
@@ -229,9 +229,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     paddingHorizontal: 16,
   },
-  formCard: {
-    borderRadius: 24,
-    padding: 24,
+  formSection: {
     marginBottom: 24,
   },
   inputContainer: {
